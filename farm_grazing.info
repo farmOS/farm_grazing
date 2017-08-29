@@ -1,0 +1,4 @@
+name = Farm Grazing
+description = Holistic herd management.
+core = 7.x
+package = farmOS Contrib
