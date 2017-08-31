@@ -134,5 +134,5 @@ function farm_grazing_schema() {
     'primary key' => array('id'),
   );
 
-  return array();
+  return $schema;
 }
