@@ -19,5 +19,11 @@ function farm_grazing_menu() {
     'file' => 'farm_grazing.pages.inc',
     'type' => MENU_LOCAL_TASK,
   );
+  $items['farm/grazing/plan'] = array(
+    'title' => 'Plan',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 0,
+  );
+
   return $items;
 }
