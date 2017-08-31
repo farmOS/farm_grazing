@@ -251,5 +251,20 @@ function farm_grazing_plan_form_details_submit($form, &$form_state) {
  * Load plan options.
  */
 function farm_grazing_plan_options() {
-  return array();
+
+  // Start with an empty array.
+  $plan_options = array();
+
+  // Query the database for plans.
+  $query = db_query('SELECT id, name, start_date, end_date FROM {farm_grazing_plan} ORDER BY end_date DESC');
+
+  // Build a list of plan options.
+  $date_format = 'M j Y';
+  $records = $query->fetchAll();
+  foreach ($records as $record) {
+    $plan_options[$record->id] = $record->name . ' (' . date($date_format, $record->start_date) . ' - ' . date($date_format, $record->end_date) . ')';
+  }
+
+  // Return the options array.
+  return $plan_options;
 }
