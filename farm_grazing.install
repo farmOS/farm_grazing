@@ -13,36 +13,36 @@ function farm_grazing_schema() {
   $schema['farm_grazing_plan'] = array(
     'description' => 'Farm Grazing Plan Data',
     'fields' => array(
-        'id' => array(
-            'description' => 'Farm Grazing Plan ID',
-            'type' => 'serial',
-            'not null' => TRUE,
-        ),
-        'plan_type' => array(
-            'description' => '0=growing season, 1=non-growing season',
-            'type' => 'int',
-            'not null' => TRUE,
-            'default' => 0,
-        ),
-        'name' => array(
-            'description' => 'Display name for plan',
-            'type' => 'varchar',
-            'length' => '255',
-            'not null' => TRUE,
-        ),
-        'start_date' => array(
-            'description' => 'Timestamp for when plan should start',
-            'type' => 'int',
-        ),
-        'end_date' => array(
-            'description' => 'Timestamp for when plan should end',
-            'type' => 'int',
-        ),
-        'factors' => array(
-            'description' => 'Memo field to hold planning factors',
-            'type' => 'text',
-            'length' => '4096',
-        ),
+      'id' => array(
+        'description' => 'Farm Grazing Plan ID',
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'plan_type' => array(
+        'description' => '0=growing season, 1=non-growing season',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'name' => array(
+        'description' => 'Display name for plan',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+      ),
+      'start_date' => array(
+        'description' => 'Timestamp for when plan should start',
+        'type' => 'int',
+      ),
+      'end_date' => array(
+        'description' => 'Timestamp for when plan should end',
+        'type' => 'int',
+      ),
+      'factors' => array(
+        'description' => 'Memo field to hold planning factors',
+        'type' => 'text',
+        'length' => '4096',
+      ),
     ),
     'primary key' => array('id'),
   );
@@ -50,48 +50,48 @@ function farm_grazing_schema() {
   $schema['farm_grazing_rotations'] = array(
     'description' => 'Defines one herd rotation in a paddock in a plan',
     'fields' => array(
-        'id' => array(
-            'description' => 'ID for this rotation',
-            'type' => 'serial',
-            'not null' => TRUE,
-        ),
-        'plan_id' => array(
-            'description' => 'FK reference to a plan',
-            'type' => 'int',
-            'not null' => TRUE,
-            'unsigned' => TRUE,
-        ),
-        'herd_id' => array(
-            'description' => 'FK reference to a herd',
-            'type' => 'int',
-            'not null' => TRUE,
-            'unsigned' => TRUE,
-        ),
-        'paddock_id' => array(
-            'description' => 'FK reference to paddock',
-            'type' => 'int',
-            'not null' => TRUE,
-            'unsigned' => TRUE,
-        ),
-        'duration' => array(
-            'description' => 'Planned number of grazing days in paddock for this herd',
-            'type' => 'int',
-            'unsigned' => TRUE,
-        ),
-        #
-        # this is actually computed as plan start date + sum(paddock durations)
-        # proceeding this rotation and adjusted for actuals
-        #
-        'start_date' => array(
-            'description' => 'Planned start date for rotation into paddock',
-            'type' => 'int',
-        ),
-        'log_id' => array(
-            'description' => 'FK reference to the movement log',
-            'type' => 'int',
-            'not null' => TRUE,
-            'unsigned' => TRUE,
-        ),
+      'id' => array(
+        'description' => 'ID for this rotation',
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'plan_id' => array(
+        'description' => 'FK reference to a plan',
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'herd_id' => array(
+        'description' => 'FK reference to a herd',
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'paddock_id' => array(
+        'description' => 'FK reference to paddock',
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'duration' => array(
+        'description' => 'Planned number of grazing days in paddock for this herd',
+        'type' => 'int',
+        'unsigned' => TRUE,
+      ),
+      #
+      # this is actually computed as plan start date + sum(paddock durations)
+      # proceeding this rotation and adjusted for actuals
+      #
+      'start_date' => array(
+        'description' => 'Planned start date for rotation into paddock',
+        'type' => 'int',
+      ),
+      'log_id' => array(
+        'description' => 'FK reference to the movement log',
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
     ),
     'primary key' => array('id'),
   );
@@ -99,41 +99,39 @@ function farm_grazing_schema() {
   $schema['farm_grazing_paddock_exclusions'] = array(
     'description' => '',
     'fields' => array(
-        'id' => array(
-            'description' => 'Exclusion ID',
-            'type' => 'serial',
-            'not null' => TRUE,
-        ),
-        'paddock_id' => array(
-            'description' => '',
-            'type' => 'int',
-            'not null' => TRUE,
-            'unsigned' => TRUE,
-        ),
-        'start_date' => array(
-            'description' => 'Planned start date for exclusion from paddock',
-            'type' => 'int',
-        ),
-        'end_date' => array(
-            'description' => 'Planned end date for exclusion from paddock',
-            'type' => 'int',
-        ),
-        'exclusion_type' => array(
-            'description' => '0=livestock, 1=special attention',
-            'type' => 'int',
-            'not null' => TRUE,
-            'default' => '0',
-        ),
-        'reason' => array(
-            'description' => 'Description of reason for exclusion',
-            'type' => 'varchar',
-            'length' => '255',
-        ),
+      'id' => array(
+        'description' => 'Exclusion ID',
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'paddock_id' => array(
+        'description' => '',
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'start_date' => array(
+        'description' => 'Planned start date for exclusion from paddock',
+        'type' => 'int',
+      ),
+      'end_date' => array(
+        'description' => 'Planned end date for exclusion from paddock',
+        'type' => 'int',
+      ),
+      'exclusion_type' => array(
+        'description' => '0=livestock, 1=special attention',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => '0',
+      ),
+      'reason' => array(
+        'description' => 'Description of reason for exclusion',
+        'type' => 'varchar',
+        'length' => '255',
+      ),
     ),
     'primary key' => array('id'),
   );
-
-
 
   return array();
 }
