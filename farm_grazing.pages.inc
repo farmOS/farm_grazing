@@ -40,6 +40,17 @@ function farm_grazing_plan_form($form, &$form_state) {
     return $form;
   }
 
+  // If a plan was selected, load it.
+  if (is_numeric($form_state['values']['plan'])) {
+    $query = db_query('SELECT * FROM {farm_grazing_plan} WHERE id = :id', array(':id' => $form_state['values']['plan']));
+    $plan = $query->fetch();
+  }
+
+  // If the plan didn't load, bail.
+  if (empty($plan)) {
+    return $form;
+  }
+
   // Make the container into a set of vertical tabs.
   $form['container']['#type'] = 'vertical_tabs';
 
@@ -108,6 +119,16 @@ function farm_grazing_plan_form($form, &$form_state) {
     '#type' => 'fieldset',
     '#title' => t('Implement the plan'),
   );
+
+  // Plan details.
+  $form['container']['details'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Plan details'),
+  );
+  $form['container']['details']['edit'] = farm_grazing_plan_form_details($plan);
+
+  // Add the plan form details submit function.
+  $form['#submit'][] = 'farm_grazing_plan_form_details_submit';
 
   // Return the form.
   return $form;
