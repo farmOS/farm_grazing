@@ -21,7 +21,7 @@ function farm_grazing_schema() {
         'plan_type' => array(
             'description' => '0=growing season, 1=non-growing season',
             'type' => 'int',
-            ''not null' => TRUE,
+            'not null' => TRUE,
             'default' => 0,
         ),
         'name' => array(
@@ -41,7 +41,7 @@ function farm_grazing_schema() {
         'factors' => array(
             'description' => 'Memo field to hold planning factors',
             'type' => 'text',
-            'length' => 4096',
+            'length' => '4096',
         ),
     ),
     'primary key' => array('id'),
@@ -105,7 +105,7 @@ function farm_grazing_schema() {
             'not null' => TRUE,
         ),
         'paddock_id' => array(
-            'description' => ''
+            'description' => '',
             'type' => 'int',
             'not null' => TRUE,
             'unsigned' => TRUE,
