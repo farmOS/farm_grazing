@@ -25,5 +25,15 @@ function farm_grazing_menu() {
     'weight' => 0,
   );
 
+  // Plan creation form.
+  $items['farm/grazing/plan/create'] = array(
+    'title' => 'Create a grazing plan',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('farm_grazing_plan_create_form'),
+    'access arguments' => array('access farm dashboard'),
+    'file' => 'farm_grazing.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
 }

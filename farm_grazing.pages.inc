@@ -34,7 +34,7 @@ function farm_grazing_plan_form($form, &$form_state) {
   if (empty($form_state['values']['plan'])) {
 
     // Message.
-    $form['container']['#markup'] = t('Please select a plan above.');
+    $form['container']['#markup'] = t('Please select a plan above, or !create.', array('!create' => l(t('create a new plan'), 'farm/grazing/plan/create')));
 
     // Return the form, we're done.
     return $form;
@@ -118,6 +118,112 @@ function farm_grazing_plan_form($form, &$form_state) {
  */
 function farm_grazing_plan_form_ajax($form, $form_state) {
   return $form['container'];
+}
+
+/**
+ * Form for creating a new plan.
+ */
+function farm_grazing_plan_create_form($form, &$form_state) {
+
+  // Load the plan details form elements and wrap them in a fieldset with
+  // title and description.
+  $form = farm_grazing_plan_form_details();
+  $form['#type'] = 'fieldset';
+  $form['#title'] = t('Plan details');
+  $form['#description'] = t('Use the fields below to define a new grazing plan.');
+
+  // Submit button.
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save plan'),
+  );
+
+  // Add the plan form details submit function.
+  $form['#submit'][] = 'farm_grazing_plan_form_details_submit';
+
+  // Return the form.
+  return $form;
+}
+
+/**
+ * Provides fields for adding/editing a plan's details.
+ *
+ * @param $plan
+ *   Optionally provide an existing plan, to provide default values.
+ *
+ * @return array
+ *   Returns a form array.
+ */
+function farm_grazing_plan_form_details($plan = NULL) {
+
+  // Plan ID.
+  $form['plan_id'] = array(
+    '#type' => 'hidden',
+    '#value' => !empty($plan->id) ? $plan->id : NULL,
+  );
+
+  // Plan name.
+  $form['plan_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Plan name'),
+    '#maxlength' => 255,
+    '#required' => TRUE,
+    '#default_value' => !empty($plan->name) ? $plan->name : '',
+  );
+
+  // Start and end dates.
+  $form['plan_start_date'] = array(
+    '#type' => 'date_popup',
+    '#title' => t('Start date'),
+    '#date_label_position' => 'within',
+    '#date_format' => 'M j Y',
+    '#date_type' => DATE_FORMAT_UNIX,
+    '#date_year_range' => '-10:+3',
+    '#required' => TRUE,
+    '#default_value' => !empty($plan->start_date) ? date('Y-m-d', $plan->start_date) : '',
+  );
+  $form['plan_end_date'] = array(
+    '#type' => 'date_popup',
+    '#title' => t('End date'),
+    '#date_label_position' => 'within',
+    '#date_format' => 'M j Y',
+    '#date_type' => DATE_FORMAT_UNIX,
+    '#date_year_range' => '-10:+3',
+    '#required' => TRUE,
+    '#default_value' => !empty($plan->end_date) ? date('Y-m-d', $plan->end_date) : '',
+  );
+
+  // Growing season?
+  $form['plan_growing_season'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Growing season'),
+    '#description' => t('Does this plan take place during the growing season?'),
+    '#default_value' => !empty($plan->growing_season) ? TRUE : FALSE,
+  );
+
+  // Return the form array.
+  return $form;
+}
+
+/**
+ * Submit function for plan details. This needs to be manually added to any
+ * forms that include the fields.
+ */
+function farm_grazing_plan_form_details_submit($form, &$form_state) {
+
+  // Save the plan.
+  $plan = array(
+    'id' => $form_state['values']['plan_id'],
+    'name' => $form_state['values']['plan_name'],
+    'start_date' => strtotime($form_state['values']['plan_start_date']),
+    'end_date' => strtotime($form_state['values']['plan_end_date']),
+    'growing_season' => !empty($form_state['values']['plan_growing_season']) ? TRUE : FALSE,
+  );
+  $key = !empty($plan['id']) ? array('id') : array();
+  drupal_write_record('farm_grazing_plan', $plan, $key);
+
+  // Redirect to /farm/grazing.
+  $form_state['redirect'] = 'farm/grazing';
 }
 
 /**
