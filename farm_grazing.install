@@ -18,12 +18,6 @@ function farm_grazing_schema() {
         'type' => 'serial',
         'not null' => TRUE,
       ),
-      'plan_type' => array(
-        'description' => '0=growing season, 1=non-growing season',
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
-      ),
       'name' => array(
         'description' => 'Display name for plan',
         'type' => 'varchar',
@@ -37,6 +31,13 @@ function farm_grazing_schema() {
       'end_date' => array(
         'description' => 'Timestamp for when plan should end',
         'type' => 'int',
+      ),
+      'growing_season' => array(
+        'description' => '1=growing season, 0=non-growing season',
+        'type' => 'int',
+        'size' => 'small',
+        'not null' => TRUE,
+        'default' => 0,
       ),
       'factors' => array(
         'description' => 'Memo field to hold planning factors',
