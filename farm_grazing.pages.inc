@@ -50,6 +50,12 @@ function farm_grazing_plan_form($form, &$form_state) {
   if (empty($plan)) {
     return $form;
   }
+  // probably should save the plan id and restore it
+  // not sure if this is the best way to save it,
+  // and not sure where to restore it
+//  else {  // remember the active plan
+//    variable_set('farm_grazing_active_plan', $form_state['values']['plan']);
+//  }
 
   // Make the container into a set of vertical tabs.
   $form['container']['#type'] = 'vertical_tabs';
@@ -221,6 +227,15 @@ function farm_grazing_plan_form_details($plan = NULL) {
     '#description' => t('Does this plan take place during the growing season?'),
     '#default_value' => !empty($plan->growing_season) ? TRUE : FALSE,
   );
+
+  // Submit button.
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save plan'),
+  );
+
+  // Add the plan form details submit function.
+  $form['#submit'][] = 'farm_grazing_plan_form_details_submit';
 
   // Return the form array.
   return $form;
