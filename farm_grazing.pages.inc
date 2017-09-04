@@ -139,7 +139,7 @@ function farm_grazing_plan_form($form, &$form_state) {
     '#type' => 'fieldset',
     '#title' => t('Plan details'),
   );
-  $form['container']['details']['edit'] = farm_grazing_plan_form_details($plan);
+  $form['container']['details']['edit'] = farm_grazing_plan_form_details($plan, $form_state);
 
   // Return the form.
   return $form;
@@ -173,11 +173,23 @@ function farm_grazing_plan_create_form($form, &$form_state) {
  *
  * @param $plan
  *   Optionally provide an existing plan, to provide default values.
+ * @param $form_state
+ *   Optionally provide the form state from the parent form. If plan details
+ *   are present in the form state input, they will be unset. This ensures that
+ *   reloading this form via Drupal's #ajax will reload the new plan details.
  *
  * @return array
  *   Returns a form array.
  */
-function farm_grazing_plan_form_details($plan = NULL) {
+function farm_grazing_plan_form_details($plan = NULL, &$form_state = array()) {
+
+  // If plan details are present in the form state input, unset them.
+  if (!empty($form_state['input'])) {
+    unset($form_state['input']['plan_name']);
+    unset($form_state['input']['plan_start_date']);
+    unset($form_state['input']['plan_end_date']);
+    unset($form_state['input']['plan_growing_season']);
+  }
 
   // Plan ID.
   $form['plan_id'] = array(
