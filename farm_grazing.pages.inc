@@ -68,78 +68,105 @@ function farm_grazing_plan_form($form, &$form_state) {
   // Make the container into a set of vertical tabs.
   $form['container']['#type'] = 'vertical_tabs';
 
+  // Mange Plans.
+  $form['container']['manage'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Manage Plan'),
+  );
+  $form['container']['manage']['content'] = array(
+    '#markup' => '<p>You can create new plans, edit plan details and archive plans from this page.</p>',
+  );
+  $form['container']['manage']['edit'] = farm_grazing_plan_form_details($plan, $form_state);
+
   // Getting started.
   $form['container']['start'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Getting started'),
+  '#type' => 'fieldset',
+  '#title' => t('Getting started'),
   );
 
-  // Identify planning factors.
-  $form['container']['factors'] = array(
+  $form['container']['start']['content'] = array(
+    '#markup' => '<h1>Getting Started</h1>
+
+    <p>Welcome to the Holistic Planning Application.</p>
+
+    <h1>For the First Time</h1>
+    <p>To get started, you need to define your ranch\'s paddocks. This is done on the "Areas" tab at the top of the page. This needs to be done once initially and anytime you decide to change the layout of paddocks on the ranch.</p>
+
+    <h1>Making a New Plan</h1>
+    <p>If you have already defined your Paddocks for the ranch, then you need to create a Plan, use the [New Plan] button above, or select an existing plan from the drop down menu. When you start the application it will automatically select the last plan created.</p>
+
+    <p>Now that you have a plan to work with, you can follow the planning process by using the tabs on the left of the "Planning" tab. The process follows the order of the tabs from top to bottom. You can revisit any tab as needed to review or change your inputs. Click the "Completed" checkbox to indicate that you have competed that tab. This is just a simple bookkeeping feature so you can easily remember what still needs to be worked out. You can still go back to a "completed" tab as needed and make changes or toggle the checkbox on/off.</p>
+
+    <p>The "Calendar" tab above will be an essential part of the planning application. Most elements of your plan will have dates associated with them and anything with a related date or date range will get rendered in the Calendar. This provides you with critical information like whether events conflict time-wise and may need to be moved around or other actions may need to be planned to accomdate the conflicts.</p>
+
+    <p>Next Steps: Simple go to the next tab "Identify Planning Factors" and work your way down the planning list. Each tab has a context specific [Help] button to discuss issues and concerns related to that planning step.</p>',
+    );
+
+  // Display tabs for growing season plans.
+  if (!empty($plan->growing_season)) {
+
+    // Identify planning factors.
+    $form['container']['factors'] = array(
     '#type' => 'fieldset',
     '#title' => t('Identify planning factors'),
-  );
+    );
 
-  // Management concerns.
-  $form['container']['concerns'] = array(
+    // Management concerns.
+    $form['container']['concerns'] = array(
     '#type' => 'fieldset',
     '#title' => t('Management concerns'),
-  );
+    );
 
-  // Select paddocks and exclusions.
-  $form['container']['paddocks'] = array(
+    // Select paddocks and exclusions.
+    $form['container']['paddocks'] = array(
     '#type' => 'fieldset',
     '#title' => t('Select paddocks and exclusions'),
-  );
+    );
 
-  // Define the herd(s).
-  $form['container']['herds'] = array(
+    // Define the herd(s).
+    $form['container']['herds'] = array(
     '#type' => 'fieldset',
     '#title' => t('Define the herd(s)'),
-  );
+    );
 
-  // Check historical grazing patterns.
-  $form['container']['history'] = array(
+    // Check historical grazing patterns.
+    $form['container']['history'] = array(
     '#type' => 'fieldset',
     '#title' => t('Check historical grazing patterns'),
-  );
+    );
 
-  // Rate paddock productivity.
-  $form['container']['productivity'] = array(
+    // Rate paddock productivity.
+    $form['container']['productivity'] = array(
     '#type' => 'fieldset',
     '#title' => t('Rate paddock productivity'),
-  );
+    );
 
-  // Determine recovery periods.
-  $form['container']['recovery'] = array(
+    // Determine recovery periods.
+    $form['container']['recovery'] = array(
     '#type' => 'fieldset',
     '#title' => t('Determine recovery periods'),
-  );
+    );
 
-  // Check grazing periods.
-  $form['container']['periods'] = array(
+    // Check grazing periods.
+    $form['container']['periods'] = array(
     '#type' => 'fieldset',
     '#title' => t('Check grazing periods'),
-  );
+    );
 
-  // Plot grazings on calendar.
-  $form['container']['calendar'] = array(
+    // Plot grazings on calendar.
+    $form['container']['calendar'] = array(
     '#type' => 'fieldset',
     '#title' => t('Plot grazings on calendar'),
-  );
+    );
 
-  // Implement the plan.
-  $form['container']['implement'] = array(
+    // Implement the plan.
+    $form['container']['implement'] = array(
     '#type' => 'fieldset',
     '#title' => t('Implement the plan'),
-  );
-
-  // Plan details.
-  $form['container']['details'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Plan details'),
-  );
-  $form['container']['details']['edit'] = farm_grazing_plan_form_details($plan, $form_state);
+    );
+  // Display tabs for non-growing season plans
+  } else {
+  }
 
   // Return the form.
   return $form;
