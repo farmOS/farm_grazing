@@ -133,9 +133,6 @@ function farm_grazing_plan_form($form, &$form_state) {
   );
   $form['container']['details']['edit'] = farm_grazing_plan_form_details($plan);
 
-  // Add the plan form details submit function.
-  $form['#submit'][] = 'farm_grazing_plan_form_details_submit';
-
   // Return the form.
   return $form;
 }
@@ -158,15 +155,6 @@ function farm_grazing_plan_create_form($form, &$form_state) {
   $form['#type'] = 'fieldset';
   $form['#title'] = t('Plan details');
   $form['#description'] = t('Use the fields below to define a new grazing plan.');
-
-  // Submit button.
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Save plan'),
-  );
-
-  // Add the plan form details submit function.
-  $form['#submit'][] = 'farm_grazing_plan_form_details_submit';
 
   // Return the form.
   return $form;
@@ -232,10 +220,8 @@ function farm_grazing_plan_form_details($plan = NULL) {
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save plan'),
+    '#submit' => array('farm_grazing_plan_form_details_submit'),
   );
-
-  // Add the plan form details submit function.
-  $form['#submit'][] = 'farm_grazing_plan_form_details_submit';
 
   // Return the form array.
   return $form;
