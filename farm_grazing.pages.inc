@@ -10,6 +10,19 @@
  */
 function farm_grazing_plan_form($form, &$form_state) {
 
+  // Three scenarios:
+  // 1) No plans exist. No default plan is set. No dropdown option selected.
+  // 2) An existing plan was selected from the dropdown. Make it the default.
+  // 3) The default plan is loaded automatically.
+
+  // If a dropdown option was selected, make it the new default.
+  if (!empty($form_state['values']['plan']) && is_numeric($form_state['values']['plan'])) {
+    variable_set('farm_grazing_default_plan', $form_state['values']['plan']);
+  }
+
+  // Load the default plan ID (or NULL if not available).
+  $default_plan = variable_get('farm_grazing_default_plan', NULL);
+
   // Plan select list.
   $form['plan'] = array(
     '#type' => 'select',
@@ -20,6 +33,7 @@ function farm_grazing_plan_form($form, &$form_state) {
       'wrapper' => 'grazing-plan',
       'callback' => 'farm_grazing_plan_form_ajax',
     ),
+    '#default_value' => $default_plan,
   );
 
   // Create a container element. This will either contain a set of vertical
@@ -30,8 +44,8 @@ function farm_grazing_plan_form($form, &$form_state) {
     '#suffix' => '</div>',
   );
 
-  // If no plan is selected, display a message.
-  if (empty($form_state['values']['plan'])) {
+  // If no default plan is set, display a message.
+  if (empty($default_plan)) {
 
     // Message.
     $form['container']['#markup'] = t('Please select a plan above, or !create.', array('!create' => l(t('create a new plan'), 'farm/grazing/plan/create')));
@@ -40,9 +54,9 @@ function farm_grazing_plan_form($form, &$form_state) {
     return $form;
   }
 
-  // If a plan was selected, load it.
-  if (is_numeric($form_state['values']['plan'])) {
-    $query = db_query('SELECT * FROM {farm_grazing_plan} WHERE id = :id', array(':id' => $form_state['values']['plan']));
+  // Load the default plan.
+  if (is_numeric($default_plan)) {
+    $query = db_query('SELECT * FROM {farm_grazing_plan} WHERE id = :id', array(':id' => $default_plan));
     $plan = $query->fetch();
   }
 
@@ -50,12 +64,6 @@ function farm_grazing_plan_form($form, &$form_state) {
   if (empty($plan)) {
     return $form;
   }
-  // probably should save the plan id and restore it
-  // not sure if this is the best way to save it,
-  // and not sure where to restore it
-//  else {  // remember the active plan
-//    variable_set('farm_grazing_active_plan', $form_state['values']['plan']);
-//  }
 
   // Make the container into a set of vertical tabs.
   $form['container']['#type'] = 'vertical_tabs';
@@ -243,6 +251,11 @@ function farm_grazing_plan_form_details_submit($form, &$form_state) {
   );
   $key = !empty($plan['id']) ? array('id') : array();
   drupal_write_record('farm_grazing_plan', $plan, $key);
+
+  // If a default plan is not already set, make this one the default.
+  if (empty(variable_get('farm_grazing_default_plan', NULL))) {
+    variable_set('farm_grazing_default_plan', $plan['id']);
+  }
 
   // Redirect to /farm/grazing.
   $form_state['redirect'] = 'farm/grazing';
