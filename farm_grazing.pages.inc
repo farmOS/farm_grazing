@@ -433,10 +433,9 @@ function farm_grazing_exclusions_form() {
       t('Exc. Start'),
       t('Exc. End'),
       t('Reason'),
-      t('Edit'),
     ),
     'rows' => array(),
-    'empty' => t('No exclusions found.')
+    'empty' => t('No exclusions found.'),
   );
   $records = $query->fetchAll();
   foreach ($records as $record) {
@@ -480,7 +479,7 @@ function farm_grazing_exclusions_form() {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
-  $form['add']['paddock'] = array(
+  $form['add']['paddock_id'] = array(
     '#type' => 'select',
     '#title' => t('Paddock'),
     '#description' => t('Select the paddock to create an exclusion for.'),
@@ -528,20 +527,13 @@ function farm_grazing_exclusions_form() {
  */
 function farm_grazing_exclusions_form_submit($form, &$form_state) {
 
-  // Gather the values
-  // ie: $form_state['values']['end_date']
-
-  // Convert dates to timestamps.
-  // ie: strtotime($form_state['values']['end_date'])
-
-//  // Build a record to save to the database.
-//  $record = array(
-//    'id' => NULL,
-//    'paddock_id' => $form_state['values']['paddock_id'],
-//    'start_date' => '',
-//    'end_date' => '',
-//    'reason' => '',
-//  );
-//  drupal_write_record('farm_grazing_paddock_exclusions', $record);
-
+  // Build a record and save it to the database.
+  $record = array(
+    'id' => NULL,
+    'paddock_id' => $form_state['values']['paddock_id'],
+    'start_date' => strtotime($form_state['values']['start_date']),
+    'end_date' => strtotime($form_state['values']['end_date']),
+    'reason' => $form_state['values']['reason'],
+  );
+  drupal_write_record('farm_grazing_paddock_exclusions', $record);
 }
