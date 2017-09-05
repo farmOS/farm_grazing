@@ -106,7 +106,7 @@ function farm_grazing_schema() {
         'not null' => TRUE,
       ),
       'paddock_id' => array(
-        'description' => '',
+        'description' => 'FK reference to a paddock',
         'type' => 'int',
         'not null' => TRUE,
         'unsigned' => TRUE,
