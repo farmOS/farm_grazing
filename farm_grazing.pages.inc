@@ -156,6 +156,7 @@ function farm_grazing_plan_form($form, &$form_state) {
       '#markup' => t('<h1>Paddock Livestock Exclusions and Special Attention</h1>
       <p>Enter dates when a paddock can not under any circomstanceces have a herd on it and select type "Livestock". Also enter dates for paddocks that need special attention and select type "Special". Such paddocks could include a sacrificial paddock where you plan to run some animals on continuous graze, bare, eroding ground that needs healing, areas you want to rest for brush cover for wildlife, areas where you need to remove forage for fire protection, paddocks you plan to strip graze. Review the list of planning factors.</p>'),
     );
+    $form['container']['exclusions']['form'] = farm_grazing_exclusions_form();
 
     // Rate paddock productivity.
     $form['container']['productivity'] = array(
@@ -415,4 +416,128 @@ function farm_grazing_plan_options() {
 
   // Return the options array.
   return $plan_options;
+}
+
+/**
+ * Exclusions list, add, edit form.
+ */
+function farm_grazing_exclusions_form() {
+
+  // Load a list of exclusions from the database.
+  $query = db_query('SELECT * FROM {farm_grazing_paddock_exclusions}');
+
+  // Build a themed table of exclusions.
+  $table = array(
+    'header' => array(
+      t('Paddock'),
+      t('Exc. Start'),
+      t('Exc. End'),
+      t('Reason'),
+      t('Edit'),
+    ),
+    'rows' => array(),
+    'empty' => t('No exclusions found.')
+  );
+  $records = $query->fetchAll();
+  foreach ($records as $record) {
+
+    // If the paddock ID is not available, skip it.
+    if (empty($record->paddock_id)) {
+      continue;
+    }
+
+    // Load the paddock.
+    $term = taxonomy_term_load($record->paddock_id);
+
+    // Format the start and end dates.
+    $format = 'Y-m-d';
+    $start_date = date($format, $record->start_date);
+    $end_date = date($format, $record->end_date);
+
+    // Assemble the row.
+    $table['rows'][] = array(
+      $term->name,
+      $start_date,
+      $end_date,
+      $record->reason,
+    );
+  }
+  $form['table'] = array(
+    '#markup' => theme('table', $table),
+  );
+
+  // Form for adding a new exclusion.
+  $form['add'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Add an exclusion'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['add']['paddock'] = array(
+    '#type' => 'select',
+    '#title' => t('Paddock'),
+    '#description' => t('Select the paddock to create an exclusion for.'),
+    '#options' => array(
+      1 => t('Paddock 1'),
+      2 => t('Paddock 2'),
+    ),
+    '#required' => TRUE,
+  );
+  $form['add']['start_date'] = array(
+    '#type' => 'date_popup',
+    '#title' => t('Start date'),
+    '#description' => t('When does the exclusion begin?'),
+    '#date_label_position' => 'within',
+    '#date_format' => 'M j Y',
+    '#date_type' => DATE_FORMAT_UNIX,
+    '#date_year_range' => '-10:+3',
+    '#required' => TRUE,
+  );
+  $form['add']['end_date'] = array(
+    '#type' => 'date_popup',
+    '#title' => t('End date'),
+    '#description' => t('When does the exclusion end?'),
+    '#date_label_position' => 'within',
+    '#date_format' => 'M j Y',
+    '#date_type' => DATE_FORMAT_UNIX,
+    '#date_year_range' => '-10:+3',
+    '#required' => TRUE,
+  );
+  $form['add']['reason'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Reason'),
+    '#description' => t('Describe the reason for this exclusion.'),
+    '#required' => TRUE,
+  );
+  $form['add']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save exclusion'),
+    '#submit' => array('farm_grazing_exclusions_form_submit'),
+  );
+
+  // Return the form.
+  return $form;
+}
+
+/**
+ * Submit function for the exclusions form.
+ */
+function farm_grazing_exclusions_form_submit($form, &$form_state) {
+
+  // Gather the values
+  // ie: $form_state['values']['end_date']
+
+  // Convert dates to timestamps.
+  // ie: strtotime($form_state['values']['end_date'])
+
+//  // Build a record to save to the database.
+//  $record = array(
+//    'id' => NULL,
+//    'paddock_id' => $form_state['values']['paddock_id'],
+//    'start_date' => '',
+//    'end_date' => '',
+//    'reason' => '',
+//  );
+//  drupal_write_record('farm_grazing_paddock_exclusions', $record);
+
 }
