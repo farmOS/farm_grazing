@@ -466,6 +466,13 @@ function farm_grazing_exclusions_form() {
     '#markup' => theme('table', $table),
   );
 
+  // Load all paddocks and generate an options list.
+  $paddocks = farm_area_load_areas('paddock');
+  $paddock_options = array();
+  foreach ($paddocks as $paddock) {
+    $paddock_options[$paddock->tid] = $paddock->name;
+  }
+
   // Form for adding a new exclusion.
   $form['add'] = array(
     '#type' => 'fieldset',
@@ -477,10 +484,7 @@ function farm_grazing_exclusions_form() {
     '#type' => 'select',
     '#title' => t('Paddock'),
     '#description' => t('Select the paddock to create an exclusion for.'),
-    '#options' => array(
-      1 => t('Paddock 1'),
-      2 => t('Paddock 2'),
-    ),
+    '#options' => $paddock_options,
     '#required' => TRUE,
   );
   $form['add']['start_date'] = array(
