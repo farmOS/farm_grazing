@@ -5,6 +5,7 @@ package = farmOS Contrib
 dependencies[] = ctools
 dependencies[] = date
 dependencies[] = entity
+dependencies[] = farm_area
 dependencies[] = farm_fields
 dependencies[] = farm_plan
 dependencies[] = features
