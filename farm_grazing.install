@@ -10,44 +10,6 @@
  */
 function farm_grazing_schema() {
 
-  $schema['farm_grazing_plan'] = array(
-    'description' => 'Farm Grazing Plan Data',
-    'fields' => array(
-      'id' => array(
-        'description' => 'Farm Grazing Plan ID',
-        'type' => 'serial',
-        'not null' => TRUE,
-      ),
-      'name' => array(
-        'description' => 'Display name for plan',
-        'type' => 'varchar',
-        'length' => '255',
-        'not null' => TRUE,
-      ),
-      'start_date' => array(
-        'description' => 'Timestamp for when plan should start',
-        'type' => 'int',
-      ),
-      'end_date' => array(
-        'description' => 'Timestamp for when plan should end',
-        'type' => 'int',
-      ),
-      'growing_season' => array(
-        'description' => '1=growing season, 0=non-growing season',
-        'type' => 'int',
-        'size' => 'small',
-        'not null' => TRUE,
-        'default' => 0,
-      ),
-      'factors' => array(
-        'description' => 'Memo field to hold planning factors',
-        'type' => 'text',
-        'length' => '4096',
-      ),
-    ),
-    'primary key' => array('id'),
-  );
-
   $schema['farm_grazing_rotations'] = array(
     'description' => 'Defines one herd rotation in a paddock in a plan',
     'fields' => array(

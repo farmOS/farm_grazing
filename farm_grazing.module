@@ -5,6 +5,8 @@
  * Farm grazing module.
  */
 
+include_once 'farm_grazing.features.inc';
+
 /**
  * Implements hook_menu().
  */
@@ -19,21 +21,151 @@ function farm_grazing_menu() {
     'file' => 'farm_grazing.pages.inc',
     'type' => MENU_LOCAL_TASK,
   );
-  $items['farm/grazing/plan'] = array(
-    'title' => 'Plan',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => 0,
-  );
 
-  // Plan creation form.
-  $items['farm/grazing/plan/create'] = array(
-    'title' => 'Create a grazing plan',
+  // Exclusions form.
+  $items['farm/plan/%/exclusions'] = array(
+    'title' => 'Exclusions',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('farm_grazing_plan_create_form'),
+    'page arguments' => array('farm_grazing_exclusions_form'),
     'access arguments' => array('access farm dashboard'),
     'file' => 'farm_grazing.pages.inc',
-    'type' => MENU_CALLBACK,
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 10,
+  );
+
+  // Management concerns.
+  $items['farm/plan/%farm_plan/concerns'] = array(
+    'title' => 'Concerns',
+    'page callback' => 'farm_grazing_plan_concerns_page',
+    'page arguments' => array(2),
+    'access arguments' => array('access farm dashboard'),
+    'file' => 'farm_grazing.pages.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 20,
+  );
+
+  // Paddock productivity.
+  $items['farm/plan/%farm_plan/productivity'] = array(
+    'title' => 'Productivity',
+    'page callback' => 'farm_grazing_plan_productivity_page',
+    'page arguments' => array(2),
+    'access arguments' => array('access farm dashboard'),
+    'file' => 'farm_grazing.pages.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 30,
+  );
+
+  // Recovery.
+  $items['farm/plan/%farm_plan/recovery'] = array(
+    'title' => 'Recovery',
+    'page callback' => 'farm_grazing_plan_recovery_page',
+    'page arguments' => array(2),
+    'access arguments' => array('access farm dashboard'),
+    'file' => 'farm_grazing.pages.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 40,
+  );
+
+  // Herds.
+  $items['farm/plan/%farm_plan/herds'] = array(
+    'title' => 'Herds',
+    'page callback' => 'farm_grazing_plan_herds_page',
+    'page arguments' => array(2),
+    'access arguments' => array('access farm dashboard'),
+    'file' => 'farm_grazing.pages.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 50,
+  );
+
+  // Paddocks.
+  $items['farm/plan/%farm_plan/paddocks'] = array(
+    'title' => 'Paddocks',
+    'page callback' => 'farm_grazing_plan_paddocks_page',
+    'page arguments' => array(2),
+    'access arguments' => array('access farm dashboard'),
+    'file' => 'farm_grazing.pages.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 60,
+  );
+
+  // History.
+  $items['farm/plan/%farm_plan/history'] = array(
+    'title' => 'History',
+    'page callback' => 'farm_grazing_plan_history_page',
+    'page arguments' => array(2),
+    'access arguments' => array('access farm dashboard'),
+    'file' => 'farm_grazing.pages.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 70,
+  );
+
+  // Periods.
+  $items['farm/plan/%farm_plan/periods'] = array(
+    'title' => 'Periods',
+    'page callback' => 'farm_grazing_plan_periods_page',
+    'page arguments' => array(2),
+    'access arguments' => array('access farm dashboard'),
+    'file' => 'farm_grazing.pages.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 80,
+  );
+
+  // Implement.
+  $items['farm/plan/%farm_plan/implement'] = array(
+    'title' => 'Implement',
+    'page callback' => 'farm_grazing_plan_implement_page',
+    'page arguments' => array(2),
+    'access arguments' => array('access farm dashboard'),
+    'file' => 'farm_grazing.pages.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 90,
   );
 
   return $items;
+}
+
+/**
+ * Load an array of grazing plan options.
+ */
+function farm_grazing_plan_options() {
+
+  // Start with an empty array.
+  $plan_options = array();
+
+  // Query the database for plans.
+  $query = db_query("SELECT id, name FROM {farm_plan} WHERE type = 'grazing' AND active = 1");
+
+  // Build a list of plan options.
+  $records = $query->fetchAll();
+  foreach ($records as $record) {
+    $plan_options[$record->id] = $record->name;
+  }
+
+  // Return the options array.
+  return $plan_options;
+}
+
+/**
+ * Implements hook_entity_view().
+ */
+function farm_grazing_entity_view($entity, $type, $view_mode, $langcode) {
+
+  // If the entity is not a farm_plan, bail.
+  if ($type != 'farm_plan') {
+    return;
+  }
+
+  // Add introductory text.
+  $entity->content['introduction'] = array(
+    '#markup' => t('<h1>Getting Started</h1>
+      <p>Welcome to the Holistic Planning Application.</p>
+      <h1>For the First Time</h1>
+      <p>To get started, you need to define your ranch\'s paddocks. This is done on the "Areas" tab at the top of the page. This needs to be done once initially and anytime you decide to change the layout of paddocks on the ranch.</p>
+      <h1>Making a New Plan</h1>
+      <p>If you have already defined your Paddocks for the ranch, then you need to create a Plan, use the [Manage Plan] tab on the left, or select an existing plan from the drop down menu. When you start the application it will automatically remember the plan you used last.</p>
+      <p>Now that you have a "active" plan to work with, you can follow the planning process by using the tabs on the left in "Grazing Plan". The process follows the order of the tabs from top to bottom. You can revisit any tab as needed to review or change your inputs.</p>
+      <p>The "Calendar" tab on the left will be an essential part of the planning application. Most elements of your plan will have dates associated with them and anything with a related date or date range will get rendered in the Calendar. This provides you with critical information like whether events conflict time-wise and may need to be moved around or other actions may need to be planned to accomdate the conflicts.</p>
+      <p>Next Steps: Simple go to the next tab "Identify Planning Factors" and work your way down the planning list. Each tab has a context specific [Help] button to discuss issues and concerns related to that planning step.</p>'),
+    '#weight' => 100,
+  );
 }
