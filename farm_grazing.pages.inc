@@ -6,34 +6,6 @@
  */
 
 /**
- * Form for selecting plan.
- */
-function farm_grazing_plan_form($form, &$form_state) {
-
-  // Plan select list.
-  $form['plan'] = array(
-    '#type' => 'select',
-    '#title' => t('Select plan'),
-    '#description' => t('Please select a plan from the list, or !create.', array('!create' => l(t('create a new plan'), 'farm/plan/add/grazing'))),
-    '#options' => farm_grazing_plan_options(),
-    '#required' => TRUE,
-    '#attributes' => array('onchange' => 'this.form.submit();'),
-  );
-  return $form;
-}
-
-/**
- * Submit function for the plan selection form.
- */
-function farm_grazing_plan_form_submit($form, &$form_state) {
-
-  // If a plan was selected, go to it.
-  if (!empty($form_state['values']['plan'])) {
-    $form_state['redirect'] = 'farm/plan/' . check_plain($form_state['values']['plan']);
-  }
-}
-
-/**
  * Paddock exclusions list, add, edit form.
  */
 function farm_grazing_exclusions_form() {

@@ -27,16 +27,6 @@ function farm_grazing_farm_ui_entities() {
  */
 function farm_grazing_menu() {
 
-  // Grazing plan (dashboard).
-  $items['farm/grazing'] = array(
-    'title' => 'Grazing Plan',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('farm_grazing_plan_form'),
-    'access arguments' => array('access farm dashboard'),
-    'file' => 'farm_grazing.pages.inc',
-    'type' => MENU_LOCAL_TASK,
-  );
-
   // Exclusions form.
   $items['farm/plan/%/exclusions'] = array(
     'title' => 'Exclusions',
