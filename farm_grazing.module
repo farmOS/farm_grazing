@@ -8,6 +8,21 @@
 include_once 'farm_grazing.features.inc';
 
 /**
+ * Implements hook_farm_ui_entities().
+ */
+function farm_grazing_farm_ui_entities() {
+  return array(
+    'farm_plan' => array(
+      'grazing' => array(
+        'label' => t('Grazing Plan'),
+        'label_plural' => t('Grazing Plans'),
+        'view' => 'farm_grazing_plan',
+      ),
+    ),
+  );
+}
+
+/**
  * Implements hook_menu().
  */
 function farm_grazing_menu() {
