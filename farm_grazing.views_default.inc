@@ -103,6 +103,10 @@ function farm_grazing_views_default_views() {
     'multiple_to' => '',
     'show_remaining_days' => 0,
   );
+  /* Field: Farm plan: Growing season */
+  $handler->display->display_options['fields']['field_grazing_growing_season']['id'] = 'field_grazing_growing_season';
+  $handler->display->display_options['fields']['field_grazing_growing_season']['table'] = 'field_data_field_grazing_growing_season';
+  $handler->display->display_options['fields']['field_grazing_growing_season']['field'] = 'field_grazing_growing_season';
   /* Field: Farm plan: Active */
   $handler->display->display_options['fields']['active']['id'] = 'active';
   $handler->display->display_options['fields']['active']['table'] = 'farm_plan';
@@ -143,6 +147,16 @@ function farm_grazing_views_default_views() {
   $handler->display->display_options['filters']['name']['expose']['label'] = 'Name';
   $handler->display->display_options['filters']['name']['expose']['operator'] = 'name_op';
   $handler->display->display_options['filters']['name']['expose']['identifier'] = 'name';
+  /* Filter criterion: Farm plan: Growing season (field_grazing_growing_season) */
+  $handler->display->display_options['filters']['field_grazing_growing_season_value']['id'] = 'field_grazing_growing_season_value';
+  $handler->display->display_options['filters']['field_grazing_growing_season_value']['table'] = 'field_data_field_grazing_growing_season';
+  $handler->display->display_options['filters']['field_grazing_growing_season_value']['field'] = 'field_grazing_growing_season_value';
+  $handler->display->display_options['filters']['field_grazing_growing_season_value']['group'] = 1;
+  $handler->display->display_options['filters']['field_grazing_growing_season_value']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['field_grazing_growing_season_value']['expose']['operator_id'] = 'field_grazing_growing_season_value_op';
+  $handler->display->display_options['filters']['field_grazing_growing_season_value']['expose']['label'] = 'Growing season';
+  $handler->display->display_options['filters']['field_grazing_growing_season_value']['expose']['operator'] = 'field_grazing_growing_season_value_op';
+  $handler->display->display_options['filters']['field_grazing_growing_season_value']['expose']['identifier'] = 'field_grazing_growing_season_value';
   /* Filter criterion: Farm plan: Active */
   $handler->display->display_options['filters']['active']['id'] = 'active';
   $handler->display->display_options['filters']['active']['table'] = 'farm_plan';
@@ -185,6 +199,7 @@ function farm_grazing_views_default_views() {
     t('.'),
     t('Name'),
     t('Date range'),
+    t('Growing season'),
     t('Active'),
     t('Plan type'),
     t('Page'),
