@@ -8,7 +8,7 @@
 /**
  * Paddock exclusions list, add, edit form.
  */
-function farm_grazing_exclusions_form() {
+function farm_grazing_exclusions_form($form, &$form_state) {
 
   // Set the page title.
   drupal_set_title(t('Paddock exclusions'));
