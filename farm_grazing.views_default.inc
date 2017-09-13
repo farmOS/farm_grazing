@@ -90,7 +90,7 @@ function farm_grazing_views_default_views() {
   $handler->display->display_options['fields']['name']['field'] = 'name';
   $handler->display->display_options['fields']['name']['alter']['make_link'] = TRUE;
   $handler->display->display_options['fields']['name']['alter']['path'] = 'farm/plan/[id]';
-  /* Field: Field: Date range */
+  /* Field: Field: Date Range */
   $handler->display->display_options['fields']['field_farm_date_range']['id'] = 'field_farm_date_range';
   $handler->display->display_options['fields']['field_farm_date_range']['table'] = 'field_data_field_farm_date_range';
   $handler->display->display_options['fields']['field_farm_date_range']['field'] = 'field_farm_date_range';
@@ -178,32 +178,6 @@ function farm_grazing_views_default_views() {
   $handler->display->display_options['menu']['name'] = 'farm';
   $handler->display->display_options['menu']['context'] = 0;
   $handler->display->display_options['menu']['context_only_inline'] = 0;
-  $translatables['farm_grazing_plan'] = array(
-    t('Master'),
-    t('Grazing Plans'),
-    t('more'),
-    t('Apply'),
-    t('Reset'),
-    t('Sort by'),
-    t('Asc'),
-    t('Desc'),
-    t('Items per page'),
-    t('- All -'),
-    t('Offset'),
-    t('« first'),
-    t('‹ previous'),
-    t('next ›'),
-    t('last »'),
-    t('No plans found.'),
-    t('Plan ID'),
-    t('.'),
-    t('Name'),
-    t('Date range'),
-    t('Growing season'),
-    t('Active'),
-    t('Plan type'),
-    t('Page'),
-  );
   $export['farm_grazing_plan'] = $view;
 
   return $export;

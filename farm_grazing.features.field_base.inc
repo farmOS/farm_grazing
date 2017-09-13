@@ -10,6 +10,51 @@
 function farm_grazing_field_default_field_bases() {
   $field_bases = array();
 
+  // Exported field_base: 'field_days_bulk_feeding'.
+  $field_bases['field_days_bulk_feeding'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_days_bulk_feeding',
+    'indexes' => array(),
+    'locked' => 0,
+    'module' => 'number',
+    'settings' => array(),
+    'translatable' => 0,
+    'type' => 'number_integer',
+  );
+
+  // Exported field_base: 'field_days_of_drought_reserve'.
+  $field_bases['field_days_of_drought_reserve'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_days_of_drought_reserve',
+    'indexes' => array(),
+    'locked' => 0,
+    'module' => 'number',
+    'settings' => array(),
+    'translatable' => 0,
+    'type' => 'number_integer',
+  );
+
+  // Exported field_base: 'field_expected_days_non_growth'.
+  $field_bases['field_expected_days_non_growth'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_expected_days_non_growth',
+    'indexes' => array(),
+    'locked' => 0,
+    'module' => 'number',
+    'settings' => array(),
+    'translatable' => 0,
+    'type' => 'number_integer',
+  );
+
   // Exported field_base: 'field_farm_grazing_factors'.
   $field_bases['field_farm_grazing_factors'] = array(
     'active' => 1,

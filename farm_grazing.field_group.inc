@@ -23,8 +23,8 @@ function farm_grazing_field_group_info() {
     'label' => 'General information',
     'weight' => '0',
     'children' => array(
-      0 => 'field_grazing_growing_season',
-      1 => 'field_farm_grazing_factors',
+      0 => 'field_farm_grazing_factors',
+      1 => 'field_grazing_growing_season',
       2 => 'name',
     ),
     'format_type' => 'fieldset',
@@ -40,9 +40,40 @@ function farm_grazing_field_group_info() {
   );
   $field_groups['group_farm_general|farm_plan|grazing|form'] = $field_group;
 
+  $field_group = new stdClass();
+  $field_group->disabled = FALSE; /* Edit this to true to make a default field_group disabled initially */
+  $field_group->api_version = 1;
+  $field_group->identifier = 'group_non_growing|farm_plan|grazing|form';
+  $field_group->group_name = 'group_non_growing';
+  $field_group->entity_type = 'farm_plan';
+  $field_group->bundle = 'grazing';
+  $field_group->mode = 'form';
+  $field_group->parent_name = '';
+  $field_group->data = array(
+    'label' => 'Non-growing',
+    'weight' => '6',
+    'children' => array(
+      0 => 'field_expected_days_non_growth',
+      1 => 'field_days_bulk_feeding',
+      2 => 'field_days_of_drought_reserve',
+    ),
+    'format_type' => 'fieldset',
+    'format_settings' => array(
+      'formatter' => 'collapsible',
+      'instance_settings' => array(
+        'description' => '',
+        'classes' => 'group-non-growing field-group-fieldset',
+        'required_fields' => 1,
+        'id' => '',
+      ),
+    ),
+  );
+  $field_groups['group_non_growing|farm_plan|grazing|form'] = $field_group;
+
   // Translatables
   // Included for use with string extractors like potx.
   t('General information');
+  t('Non-growing');
 
   return $field_groups;
 }
