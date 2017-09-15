@@ -46,7 +46,8 @@ function farm_grazing_menu() {
     'description' => 'Define management and ranch events that could impact planning.',
     'page callback' => 'farm_grazing_plan_concerns_page',
     'page arguments' => array(2),
-    'access arguments' => array('access farm dashboard'),
+    'access callback' => 'farm_grazing_plan_access',
+    'access arguments' => array(2),
     'file' => 'farm_grazing.pages.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 10,
@@ -59,7 +60,8 @@ function farm_grazing_menu() {
     'description' => 'Identify paddocks that should be available for this plan.',
     'page callback' => 'farm_grazing_plan_paddocks_select_page',
     'page arguments' => array(2),
-    'access arguments' => array('access farm dashboard'),
+    'access callback' => 'farm_grazing_plan_access',
+    'access arguments' => array(2),
     'file' => 'farm_grazing.pages.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 20,
@@ -71,7 +73,8 @@ function farm_grazing_menu() {
     'description' => 'Manage herds in the plan (Select/Add/Combine/Split/Ship)',
     'page callback' => 'farm_grazing_plan_herds_page',
     'page arguments' => array(2),
-    'access arguments' => array('access farm dashboard'),
+    'access callback' => 'farm_grazing_plan_access',
+    'access arguments' => array(2),
     'file' => 'farm_grazing.pages.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 30,
@@ -83,7 +86,8 @@ function farm_grazing_menu() {
     'description' => 'Implement the plan and monitor results.',
     'page callback' => 'farm_grazing_plan_implement_page',
     'page arguments' => array(2),
-    'access arguments' => array('access farm dashboard'),
+    'access callback' => 'farm_grazing_plan_access',
+    'access arguments' => array(2),
     'file' => 'farm_grazing.pages.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 40,
@@ -103,7 +107,8 @@ function farm_grazing_menu() {
     'description' => 'Define exclusion periods for paddocks.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('farm_grazing_exclusions_form'),
-    'access arguments' => array('access farm dashboard'),
+    'access callback' => 'farm_grazing_plan_access',
+    'access arguments' => array(2),
     'file' => 'farm_grazing.pages.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 20,
@@ -115,7 +120,8 @@ function farm_grazing_menu() {
     'description' => 'Set productivity for each paddock.',
     'page callback' => 'farm_grazing_plan_productivity_page',
     'page arguments' => array(2),
-    'access arguments' => array('access farm dashboard'),
+    'access callback' => 'farm_grazing_plan_access',
+    'access arguments' => array(2),
     'file' => 'farm_grazing.pages.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 30,
@@ -127,7 +133,8 @@ function farm_grazing_menu() {
     'description' => 'Set min and max recovery periods for paddocks.',
     'page callback' => 'farm_grazing_plan_recovery_page',
     'page arguments' => array(2),
-    'access arguments' => array('access farm dashboard'),
+    'access callback' => 'farm_grazing_plan_access',
+    'access arguments' => array(2),
     'file' => 'farm_grazing.pages.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 40,
@@ -139,7 +146,8 @@ function farm_grazing_menu() {
     'description' => 'Review summary information about paddocks.',
     'page callback' => 'farm_grazing_plan_summary_page',
     'page arguments' => array(2),
-    'access arguments' => array('access farm dashboard'),
+    'access callback' => 'farm_grazing_plan_access',
+    'access arguments' => array(2),
     'file' => 'farm_grazing.pages.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 50,
@@ -158,7 +166,8 @@ function farm_grazing_menu() {
     'description' => 'Select paddocks for herd rotations.',
     'page callback' => 'farm_grazing_plan_herds_paddocks_page',
     'page arguments' => array(2),
-    'access arguments' => array('access farm dashboard'),
+    'access callback' => 'farm_grazing_plan_access',
+    'access arguments' => array(2),
     'file' => 'farm_grazing.pages.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 20,
@@ -170,7 +179,8 @@ function farm_grazing_menu() {
     'description' => 'Review historical grazing patterns',
     'page callback' => 'farm_grazing_plan_history_page',
     'page arguments' => array(2),
-    'access arguments' => array('access farm dashboard'),
+    'access callback' => 'farm_grazing_plan_access',
+    'access arguments' => array(2),
     'file' => 'farm_grazing.pages.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 30,
@@ -181,7 +191,8 @@ function farm_grazing_menu() {
     'title' => 'Rotations',
     'page callback' => 'farm_grazing_plan_rotations_page',
     'page arguments' => array(2),
-    'access arguments' => array('access farm dashboard'),
+    'access callback' => 'farm_grazing_plan_access',
+    'access arguments' => array(2),
     'file' => 'farm_grazing.pages.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 40,
@@ -201,13 +212,28 @@ function farm_grazing_menu() {
     'description' => 'Get status of the current plan.',
     'page callback' => 'farm_grazing_plan_implement_status_page',
     'page arguments' => array(2),
-    'access arguments' => array('access farm dashboard'),
+    'access callback' => 'farm_grazing_plan_access',
+    'access arguments' => array(2),
     'file' => 'farm_grazing.pages.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 20,
   );
 
   return $items;
+}
+
+/**
+ * Access callback function for grazing plan pages.
+ */
+function farm_grazing_plan_access($plan, $account = NULL) {
+
+  // If the plan is not a grazing plan, deny access.
+  if ($plan->type != 'grazing') {
+    return FALSE;
+  }
+
+  // Otherwise, check to see if the user has access to edit grazing plans.
+  return user_access('edit any grazing farm plans', $account);
 }
 
 /**
