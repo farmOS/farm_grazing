@@ -63,7 +63,7 @@ function farm_grazing_menu() {
     'access arguments' => array('access farm dashboard'),
     'access callback' => TRUE,
     'file' => 'farm_grazing.pages.inc',
-    'type' => MENU_NORMAL_ITEM,
+    'type' => MENU_LOCAL_TASK,
     'weight' => 20,
   );
 
@@ -76,7 +76,7 @@ function farm_grazing_menu() {
     'access arguments' => array('access farm dashboard'),
     'access callback' => TRUE,
     'file' => 'farm_grazing.pages.inc',
-    'type' => MENU_NORMAL_ITEM,
+    'type' => MENU_LOCAL_TASK,
     'weight' => 30,
   );
 
@@ -89,7 +89,7 @@ function farm_grazing_menu() {
     'access arguments' => array('access farm dashboard'),
     'access callback' => TRUE,
     'file' => 'farm_grazing.pages.inc',
-    'type' => MENU_NORMAL_ITEM,
+    'type' => MENU_LOCAL_TASK,
     'weight' => 40,
   );
 
