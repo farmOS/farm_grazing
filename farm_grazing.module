@@ -262,8 +262,8 @@ function farm_grazing_plan_options() {
  */
 function farm_grazing_entity_view($entity, $type, $view_mode, $langcode) {
 
-  // If the entity is not a farm_plan, bail.
-  if ($type != 'farm_plan') {
+  // If the entity is not a grazing plan, bail.
+  if (!($type == 'farm_plan' && $entity->type == 'grazing')) {
     return;
   }
 
