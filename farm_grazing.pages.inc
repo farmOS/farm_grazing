@@ -5,6 +5,62 @@
  * Grazing pages code.
  */
 
+  //'page callback' => 'farm_grazing_plan_concerns_page',
+  //'page callback' => 'farm_grazing_plan_paddocks_select_page',
+  //'page callback' => 'drupal_get_form',
+  //'page callback' => 'farm_grazing_plan_productivity_page',
+  //'page callback' => 'farm_grazing_plan_recovery_page',
+  //'page callback' => 'farm_grazing_plan_summary_page',
+  //'page callback' => 'farm_grazing_plan_herds_page',
+  //'page callback' => 'farm_grazing_plan_herds_paddocks_page',
+  //'page callback' => 'farm_grazing_plan_history_page',
+  //'page callback' => 'farm_grazing_plan_rotations_page',
+  //'page callback' => 'farm_grazing_plan_implement_page',
+  //'page callback' => 'farm_grazing_plan_implement_status_page',
+
+
+/**
+ * Management concerns page callback.
+ */
+function farm_grazing_plan_concerns_page($plan) {
+
+  // Set the page title.
+  drupal_set_title(t('Management concerns'));
+
+  // Return markup.
+  return array(
+    '#markup' => t('
+      <p>In this section, think about various factors that influence your calendar for the plan. Consider:</p>
+      <ul>
+          <li>Livestock events like birthing, breeding, weaning, etc and when these are planned.
+          <li>Management events such as vacations, family or community events that need to be planned around.
+          <li>Other specific events like hunting seasons that might influence the sequence of paddock moves.
+      </ul>
+      <p>Enter these events into the Calendar on the "Calendar" tab. You will come back to this later when you are planning your moves and it will be helpful to be able to see these events while planning moves.</p>
+      <ul>
+        <li>Go to the Calendar tab and enter these events.
+        <li>Go to the Identify Planning Factors tab and add more factors that you want to remember.
+      </ul>'),
+  );
+}
+
+/**
+ * Paddocks selection page callback
+ */
+function farm_grazing_plan_paddocks_select_page($plan) {
+  
+  // Set the page title
+  drupal_set_title(t('Select paddocks to consider for plan'));
+
+  // Return markup
+  return array(
+    '#markup' => t('
+      <p>In this section select the paddocks that you want to be considered in this plan. You can ignore paddocks that for whatever reason you don\'t want considered at all, but you can include paddocks that might have partial exclusions.<p>
+      <p><b>TODO:</b> Make a list of paddocks with checkboxes to select.</p>
+    '),
+  );
+}
+
 /**
  * Paddock exclusions list, add, edit form.
  */
@@ -129,39 +185,14 @@ function farm_grazing_exclusions_form_submit($form, &$form_state) {
 }
 
 /**
- * Management concerns page callback.
- */
-function farm_grazing_plan_concerns_page($plan) {
-
-  // Set the page title.
-  drupal_set_title(t('Management concerns'));
-
-  // Return markup.
-  return array(
-    '#markup' => t('
-      <p>In this section, think about various factors that influence your calendar for the plan. Consider:</p>
-      <ul>
-          <li>Livestock events like birthing, breeding, weaning, etc and when these are planned.
-          <li>Management events such as vacations, family or community events that need to be planned around.
-          <li>Other specific events like hunting seasons that might influence the sequence of paddock moves.
-      </ul>
-      <p>Enter these events into the Calendar on the "Calendar" tab. You will come back to this later when you are planning your moves and it will be helpful to be able to see these events while planning moves.</p>
-      <ul>
-        <li>Go to the Calendar tab and enter these events.
-        <li>Go to the Identify Planning Factors tab and add more factors that you want to remember.
-      </ul>'),
-  );
-}
-
-/**
- * Paddock productivity page callback.
+ * Set paddock productivity page callback
  */
 function farm_grazing_plan_productivity_page($plan) {
+  
+  // Set the page title
+  drupal_set_title(t('Rate Paddock Productivity'));
 
-  // Set the page title.
-  drupal_set_title(t('Rate paddock productivity'));
-
-  // Return markup.
+  // Return markup
   return array(
     '#markup' => t('
       <p>Enter a value for each paddock in the Forage Quality field, then click the [Save] button. See the Help button for more information.</p>
@@ -186,26 +217,46 @@ function farm_grazing_plan_recovery_page($plan) {
 }
 
 /**
+ * Paddock summary page callback
+ */
+function farm_grazing_plan_summary_page($plan) {
+  
+  // Set the page title
+  drupal_set_title(t('Paddock Summary and Grazing Periods'));
+
+  // Return markup
+  return array(
+    '#markup' => t('
+      <p>Check to see that recovery periods are adequate in paddocks with longer grazing periods. Use the Check Min/Max Recovery Period below and if any recovery period is much too short, you must add days to the minimum grazing periods in other paddocks that can absorb them. Follow the same procedure for maximum grazing periods, though the problems will probably be less critical if you can\'t make complete adjustments.</p>
+      <h1>Actual Min/Max Grazing Periods</h1>
+      <p><b>TODO</b></p>
+    '),
+  );
+}
+
+/**
  * Herd page callback.
  */
 function farm_grazing_plan_herds_page($plan) {
 
   // Set the page title.
-  drupal_set_title(t('Define the herd(s)'));
+  drupal_set_title(t('Manage Herds (Add/Combine/Split/Ship)'));
 
   // Return markup.
   return array(
     '#markup' => t('
-      <p>A herd is defined as a group of animals that will be rotated between paddock to together regardless of the make up of animals in the herd.</p>
-      <p>Most smaller ranches will only have a single herd as you will need more paddocks to support multiple herds and allow for adequate recovery periods of the paddocks.</p>
-      <p>If you are new to this planning method or you have a smaller ranch, try to keep your plan simple to start with and built it based on a single herd.</p>'),
+      <p>A herd is defined as a group of animals that will be rotated between paddocks to together regardless of the make up of animals in the herd.</p>
+      <p>Herds are defined in farmOS as groups under the "Assets -> Animals" menu, then they can be selected here. You can also add to a herd, combine herds, split some animals out of a herd, or ship animals out of the plan.</p>
+      <p><b>TODO:</b> List herds</p>
+      <p><b>TODO:</b> Add tools to add/combine/split/ship animals or herd</p>
+    '),
   );
 }
 
 /**
  * Paddocks page callback.
  */
-function farm_grazing_plan_paddocks_page($plan) {
+function farm_grazing_plan_herds_paddocks_page($plan) {
 
   // Set the page title.
   drupal_set_title(t('Select paddocks for a herd'));
@@ -237,16 +288,16 @@ function farm_grazing_plan_history_page($plan) {
 /**
  * Periods page callback.
  */
-function farm_grazing_plan_periods_page($plan) {
+function farm_grazing_plan_rotations_page($plan) {
 
   // Set the page title.
-  drupal_set_title(t('Check grazing periods'));
+  drupal_set_title(t('Select paddock rotation order for each herd'));
 
   // Return markup.
   return array(
-    '#markup' => t('
-      <p>Check to see that recovery periods are adequate in paddocks with longer grazing periods. Use the Check Min/Max Recovery Period below and if any recovery period is much too short, you must add days to the minimum grazing periods in other paddocks that can absorb them. Follow the same procedure for maximum grazing periods, though the problems will probably be less critical if you can\'t make complete adjustments.</p>
-      <h1>Actual Min/Max Grazing Periods</h1>'),
+    '#markup' => '
+      <p><b>TODO</b></p>
+    '
   );
 }
 
@@ -270,5 +321,21 @@ function farm_grazing_plan_implement_page($plan) {
       <p>Check the condition of the paddock that you are moving the herd into and add a monitor event using the button above.</p>
       <h2>How to Replan if Needed</h2>
       <p>You can make changes to your plan at any time. Actual events obviously can not be changed, but you can replan future events. There are two approaches to replanning. 1) is to just update the current plan for minor changes, 2) another is to create a new plan, for major changes, based on the remaining days and abandon the old plan for now. The advantage to making a new plan is that you can keep the original plan around for archival purposes and look at it in the future to re-assess assumptions or conditions that changed and forced the replan. On the new plan, you might need to sell stock to reduce the requirements for intake if you are in a drought or had a fire that burnt through some padocks or add more paddocks that you had not planned to use in the original plan. If you only need to make minor changes then use your existing plan, otherwise start a new plan.</p>'),
+  );
+}
+
+/**
+ *
+ */
+function farm_grazing_plan_implement_status_page($plan) {
+
+  // Set the page title
+  drupal_set_title(t('Plan Status'));
+
+  // Return markup
+  return array(
+    '#markup' => t('
+      <p><b>TODO:</b> generate plan status report.</p>
+    '),
   );
 }
