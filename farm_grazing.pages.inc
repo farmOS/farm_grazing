@@ -69,6 +69,13 @@ function farm_grazing_exclusions_form($form, &$form_state) {
   // Set the page title.
   drupal_set_title(t('Paddock exclusions'));
 
+  // Add page instructional information
+  $form['text'] = array(
+    '#markup' => t('<h2>Paddock Livestock Exclusions and Special Attention</h2>
+    <p>Enter dates when a paddock can not under any circomstanceces have a herd on it and select type "Livestock". Also enter dates for paddocks that need special attention and select type "Special". Such paddocks could include a sacrificial paddock where you plan to run some animals on continuous graze, bare, eroding ground that needs healing, areas you want to rest for brush cover for wildlife, areas where you need to remove forage for fire protection, paddocks you plan to strip graze. Review the list of planning factors.</p>
+    '),
+  );
+
   // Load a list of exclusions from the database.
   $query = db_query('SELECT * FROM {farm_grazing_paddock_exclusions}');
 
@@ -339,3 +346,43 @@ function farm_grazing_plan_implement_status_page($plan) {
     '),
   );
 }
+
+/**
+ * hook_help
+ */
+function farm_grazing_help($path, $arg) {
+  switch ($path) {
+    case 'farm/plans/grazing':
+      return '<p>' . t('Select an existing plan or create a new plan.') .
+        '</p><p>' . t('The planning factors are an important part of building your plan. You can edit these by clicking the "Edit" tab at any time. Read the description under the form field for "Planning factors".') . '</p>';
+    case 'farm/plan/%':
+    case 'farm/plan/%/default':
+      return '<p>'. t('To build your plan follow the tabs "Concerns", "Paddocks", "Herds" and "Implement" and follow the sub-menus from left to right. This will walk you through the Holistic Grazing process to generate a plan. As things change you can revisit any of these tabs to make changes to your plan.') . '</p>';
+    case 'farm/plan/%/paddocks':
+    case 'farm/plan/%/paddocks/default':
+      return '<p>' . t('Define your paddocks in the <a href="/farm/areas">Areas</a> tab above. Select which paddocks you want available for use in this plan here and then use tabs "Exclusions", "Productivity", "Recovery" and "Summary" to add additional information about your paddocks.') . '</p>';
+    case 'farm/plan/%/paddocks/exclusions':
+      return '<p>' . t('Set dates for paddocks where you want to exclude animal grazing. Check your Planning Factors.') . '</p>';
+    case 'farm/plan/%/paddocks/productivity':
+      return '<p>' . t('For Forage Quality, you should enter ADA/H for each paddock, or rate it 1-10.') . '</p><p>' . t('Est. Relative Quality is the estimated animals days for the paddock based on Forage Quality if you entered a value in ADA/H, but if you entered an rating, then the number will be a relative ranking of the amount of forage each paddock can give relative to the other paddocks.') . '</p>';
+    case 'farm/plan/%/paddocks/recovery':
+      return '<p>' . t('Enter your minimum and maximum recovery periods (in days) for each planned month. Unless you have a great many paddocks per herd and can safely choose a single recovery period, you will have to determine the expected plant recovery period under fast growth conditions and the expected plant recovery period under slow growth conditions.') . '</p>';
+    case 'farm/plan/%/paddocks/summary':
+      return '<p>' . t('TODO') . '</p>';
+    case 'farm/plan/%/herds':
+    case 'farm/plan/%/herds/default':
+      return '<p>' . t('TODO') . '</p>';
+    case 'farm/plan/%/herds/paddocks':
+      return '<p>' . t('TODO') . '</p>';
+    case 'farm/plan/%/herds/history':
+      return '<p>' . t('TODO') . '</p>';
+    case 'farm/plan/%/herds/rotations':
+      return '<p>' . t('TODO') . '</p>';
+    case 'farm/plan/%/implement':
+    case 'farm/plan/%/implement/default':
+      return '<p>' . t('TODO') . '</p>';
+    case 'farm/plan/%/implement/status':
+      return '<p>' . t('TODO') . '</p>';
+  }
+}
+
