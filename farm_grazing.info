@@ -10,6 +10,7 @@ dependencies[] = farm_fields
 dependencies[] = farm_plan
 dependencies[] = features
 dependencies[] = field_group
+dependencies[] = help
 dependencies[] = list
 dependencies[] = number
 dependencies[] = options
