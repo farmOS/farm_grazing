@@ -61,8 +61,9 @@ function farm_grazing_menu() {
   $items['farm/plan/%farm_plan/paddocks'] = array(
     'title' => 'Paddocks',
     'description' => 'Identify paddocks that should be available for this plan.',
-    'page callback' => 'farm_grazing_plan_paddocks_select_page',
     'page arguments' => array(2),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('farm_grazing_select_paddocks_form'),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(2),
     'file' => 'farm_grazing.pages.inc',

@@ -34,13 +34,11 @@ function farm_grazing_plan_concerns_page($plan) {
       <ul>
           <li>Livestock events like birthing, breeding, weaning, etc and when these are planned.
           <li>Management events such as vacations, family or community events that need to be planned around.
-          <li>Other specific events like hunting seasons that might influence the sequence of paddock moves.
+          <li>Other specific events like hunting seasons, parasites, or flooding that might influence the sequence of paddock moves.
       </ul>
-      <p>Enter these events into the Calendar on the "Calendar" tab. You will come back to this later when you are planning your moves and it will be helpful to be able to see these events while planning moves.</p>
-      <ul>
-        <li>Go to the Calendar tab and enter these events.
-        <li>Go to the Identify Planning Factors tab and add more factors that you want to remember.
-      </ul>'),
+      <p>Enter management events into the Calendar on the "Calendar" tab. Enter other events into your Planning Factors for the plan for now.</p>
+      <p>You will come back to this later when you need to enter paddock exclusions and are planning your moves as it will be helpful to be able to see these events while planning moves.</p>
+    '),
   );
 }
 
@@ -59,6 +57,68 @@ function farm_grazing_plan_paddocks_select_page($plan) {
       <p><b>TODO:</b> Make a list of paddocks with checkboxes to select.</p>
     '),
   );
+}
+
+function farm_grazing_select_paddocks_form($form, &$form_state) {
+  drupal_set_title(t('Select Paddocks'));
+  $form['text'] = array(
+    '#markup' => t('...'),
+  );
+
+  $table = array(
+    'header' => array(
+      t('Select'),
+      t('Name'),
+      t('Area'),
+    ),
+    'rows' => array(),
+    'empty' => t('No paddocks were found.'),
+  );
+
+  $paddocks = farm_area_load_areas('paddock');
+  foreach ($paddocks as $paddock) {
+    if (empty($paddock->tid)) {
+      continue;
+    }
+
+    $term = taxonomy_term_load($paddock->tid);
+
+    $table['rows'][] = array(
+      get_checkbox_for_id($paddock->tid),
+      $paddock->name,
+      farm_area_calculate_area($paddock->tid),
+    );
+  }
+  $form['table'] = array(
+    '#markup' => theme('table', $table),
+  );
+  $form['add']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save Selections'),
+    '#submit' => array('farm_grazing_select_paddocks_form_submit'),
+  );
+  return $form;
+}
+
+function get_checkbox_for_id($id) {
+  // allow multiple ids to be accumulated into an array
+  return '<input type="checkbox" name="paddocks" value="' . $id . '">';
+}
+
+function farm_grazing_select_paddocks_form_submit($form, &$form_state) {
+
+  $fp = fopen("php://stderr", "a");
+  $str = print_r($form_state['values'], true);
+  fputs($fp, "$str\n");
+  $str = print_r($_REQUEST, true);
+  fputs($fp, "$str\n");
+
+  // this should be an array
+  $paddocks = $form_state['values']['paddocks[]'];
+
+  foreach ($paddocks as $id) {
+    // save the paddocks to a table
+  }
 }
 
 /**
