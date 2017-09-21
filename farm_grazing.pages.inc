@@ -65,17 +65,9 @@ function farm_grazing_select_paddocks_form($form, &$form_state) {
     '#markup' => t('...'),
   );
 
-  $table = array(
-    'header' => array(
-      t('Select'),
-      t('Name'),
-      t('Area'),
-    ),
-    'rows' => array(),
-    'empty' => t('No paddocks were found.'),
-  );
-
   $paddocks = farm_area_load_areas('paddock');
+
+  $data = array();
   foreach ($paddocks as $paddock) {
     if (empty($paddock->tid)) {
       continue;
@@ -83,40 +75,49 @@ function farm_grazing_select_paddocks_form($form, &$form_state) {
 
     $term = taxonomy_term_load($paddock->tid);
 
-    $table['rows'][] = array(
-      get_checkbox_for_id($paddock->tid),
+    $data[$paddock->tid] = array(
       $paddock->name,
       farm_area_calculate_area($paddock->tid),
     );
   }
-  $form['table'] = array(
-    '#markup' => theme('table', $table),
+
+  // TODO query table of paddocks and build an array of those
+  //      that are currently selected
+  $selected = array( '5' => 1, '10' => 1 );
+
+  $header = array(
+      t('Name'),
+      t('Area'),
   );
+
+  $form['checkboxes'] = array(
+    '#type' => 'tableselect',
+    '#header' => $header,
+    '#options' => $data,
+    '#default_value' => $selected,
+    '#empty' => t('No paddocks were found.'),
+  );
+
   $form['add']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save Selections'),
     '#submit' => array('farm_grazing_select_paddocks_form_submit'),
   );
-  return $form;
-}
 
-function get_checkbox_for_id($id) {
-  // allow multiple ids to be accumulated into an array
-  return '<input type="checkbox" name="paddocks" value="' . $id . '">';
+  return $form;
 }
 
 function farm_grazing_select_paddocks_form_submit($form, &$form_state) {
 
-  $fp = fopen("php://stderr", "a");
-  $str = print_r($form_state['values'], true);
-  fputs($fp, "$str\n");
-  $str = print_r($_REQUEST, true);
-  fputs($fp, "$str\n");
+  // $fp = fopen("php://stderr", "a");
+  // $str = print_r($form_state['values'], true);
+  // fputs($fp, "$str\n");
 
   // this should be an array
-  $paddocks = $form_state['values']['paddocks[]'];
+  $paddocks = array_filter($form_state['values']['checkboxes']);
 
-  foreach ($paddocks as $id) {
+  // $key will be the same as $id
+  foreach ($paddocks as $key => $id) {
     // save the paddocks to a table
   }
 }
