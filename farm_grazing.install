@@ -59,8 +59,10 @@ function farm_grazing_schema() {
     'primary key' => array('id'),
   );
 
+  // TODO: change start_date and end_date to support exclusions that are recurring
+
   $schema['farm_grazing_paddock_exclusions'] = array(
-    'description' => '',
+    'description' => 'Define general paddock exclusions',
     'fields' => array(
       'id' => array(
         'description' => 'Exclusion ID',
@@ -94,6 +96,63 @@ function farm_grazing_schema() {
       ),
     ),
     'primary key' => array('id'),
+  );
+
+  $schema['farm_grazing_plan_paddock'] = array(
+    'description' => 'Relate paddocks to a plan and productivity quality',
+    'fields' => array(
+      'paddock_id' => array(
+        'description' => 'FK reference to a paddock',
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'plan_id' => array(
+        'description' => 'FK reference to a plan',
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'quality' => array(
+        'description' => 'Relative paddock productivity quality (0-10)',
+        'type' => 'float',
+        'default' => '0.0',
+      ),
+    ),
+    'primary key' => array('paddock_id', 'plan_id'),
+  );
+
+  $schema['farm_grazing_plan_recovery'] = array(
+    'description' => 'Store min/max paddock recovery in days for a plan',
+    'fields' => array(
+      'plan_id' => array(
+        'description' => 'FK reference to a plan',
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'month' => array(
+        'description' => 'month (1-12)',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => '0',
+      ),
+      'min_recovery' => array(
+        'description' => 'Minimum paddock recovery in days for this month',
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'default' => '0',
+      ),
+      'max_recovery' => array(
+        'description' => 'Minimum paddock recovery in days for this month',
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'default' => '0',
+      ),
+    ),
+    'primary key' => array('plan_id', 'month'),
   );
 
   return $schema;

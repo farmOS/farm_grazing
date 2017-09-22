@@ -6,8 +6,8 @@
  */
 
   //'page callback' => 'farm_grazing_plan_concerns_page',
-  //'page callback' => 'farm_grazing_plan_paddocks_select_page',
-  //'page callback' => 'drupal_get_form',
+  //'page callback' => 'drupal_get_form(farm_grazing_select_paddocks_form)',
+  //'page callback' => 'drupal_get_form(farm_grazing_exclusions_form)',
   //'page callback' => 'farm_grazing_plan_productivity_page',
   //'page callback' => 'farm_grazing_plan_recovery_page',
   //'page callback' => 'farm_grazing_plan_summary_page',
@@ -43,26 +43,12 @@ function farm_grazing_plan_concerns_page($plan) {
 }
 
 /**
- * Paddocks selection page callback
+ * Generate form with table of paddocks callback
  */
-function farm_grazing_plan_paddocks_select_page($plan) {
-  
-  // Set the page title
-  drupal_set_title(t('Select paddocks to consider for plan'));
-
-  // Return markup
-  return array(
-    '#markup' => t('
-      <p>In this section select the paddocks that you want to be considered in this plan. You can ignore paddocks that for whatever reason you don\'t want considered at all, but you can include paddocks that might have partial exclusions.<p>
-      <p><b>TODO:</b> Make a list of paddocks with checkboxes to select.</p>
-    '),
-  );
-}
-
-function farm_grazing_select_paddocks_form($form, &$form_state) {
+function farm_grazing_select_paddocks_form($form, &$form_state, $plan) {
   drupal_set_title(t('Select Paddocks'));
   $form['text'] = array(
-    '#markup' => t('...'),
+    '#markup' => t('Select which paddocks you want available for use in this plan.'),
   );
 
   $paddocks = farm_area_load_areas('paddock');
@@ -81,9 +67,8 @@ function farm_grazing_select_paddocks_form($form, &$form_state) {
     );
   }
 
-  // TODO query table of paddocks and build an array of those
-  //      that are currently selected
-  $selected = array( '5' => 1, '10' => 1 );
+  // get a list of selected paddocks
+  $selected = get_selected_paddock_for_plan($plan);
 
   $header = array(
       t('Name'),
@@ -98,6 +83,11 @@ function farm_grazing_select_paddocks_form($form, &$form_state) {
     '#empty' => t('No paddocks were found.'),
   );
 
+  $form['plan'] = array(
+    '#type' => 'value',
+    '#value' => $plan,
+  );
+
   $form['add']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save Selections'),
@@ -107,18 +97,59 @@ function farm_grazing_select_paddocks_form($form, &$form_state) {
   return $form;
 }
 
+/**
+ * Get a list of all paddock_ids from farm_grazing_plan_paddock
+ */
+function get_selected_paddock_for_plan($plan) {
+  // query table of paddocks for this plan 
+  // and build an array of those that are currently selected
+  $selected = array();
+  $results = db_query('select paddock_id from {farm_grazing_plan_paddock} where plan_id=:plan', array(':plan' => $plan));
+  foreach($results as $record) {
+    $selected[$record->paddock_id] = 1;
+  }
+  return $selected;
+}
+
+/**
+ * Process the select paddocks form on submit
+ */
 function farm_grazing_select_paddocks_form_submit($form, &$form_state) {
 
-  // $fp = fopen("php://stderr", "a");
-  // $str = print_r($form_state['values'], true);
-  // fputs($fp, "$str\n");
+  $plan = $form_state['values']['plan'];
 
-  // this should be an array
+  // get the old list of selected paddocks for comparison
+  $old_selected = get_selected_paddock_for_plan($plan);
+
+  // this will be an array where $key will be the same as $id
   $paddocks = array_filter($form_state['values']['checkboxes']);
 
-  // $key will be the same as $id
+  // first add records that have been selected and don't already exist
   foreach ($paddocks as $key => $id) {
-    // save the paddocks to a table
+    // if the incoming selection exists in the db we have nothing to do
+    if (isset($old_selected[$key]) || array_key_exists($key, $old_selected)) {
+      continue;
+    }
+    db_insert('farm_grazing_plan_paddock')
+    ->fields(array(
+      'paddock_id' => $key,
+      'plan_id' => $plan,
+    ))
+    ->execute();
+  }
+
+  // next delete records that exist but are no longer selected
+  foreach($old_selected as $key => $val) {
+    // if an existing db record is in the incoming selections
+    // we have nothing to do
+    // otherwise we should delete it
+    if (isset($paddocks[$key]) || array_key_exists($key, $paddocks)) {
+      continue;
+    }
+    db_delete('farm_grazing_plan_paddock')
+      ->condition('paddock_id', $key)
+      ->condition('plan_id', $plan)
+      ->execute();
   }
 }
 
