@@ -45,11 +45,14 @@ function farm_grazing_plan_concerns_page($plan) {
 /**
  * Generate form with table of paddocks callback
  */
-function farm_grazing_select_paddocks_form($form, &$form_state, $plan) {
+function farm_grazing_select_paddocks_form($form, &$form_state, $plan_obj) {
   drupal_set_title(t('Select Paddocks'));
   $form['text'] = array(
     '#markup' => t('Select which paddocks you want available for use in this plan.'),
   );
+
+  // get the plan id from the plan object
+  $plan = $plan_obj->id;
 
   $paddocks = farm_area_load_areas('paddock');
 
