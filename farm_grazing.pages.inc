@@ -62,7 +62,7 @@ function farm_grazing_select_paddocks_form($form, &$form_state, $plan_obj) {
       continue;
     }
 
-    $term = taxonomy_term_load($paddock->tid);
+    //$term = taxonomy_term_load($paddock->tid);
 
     $data[$paddock->tid] = array(
       $paddock->name,
@@ -110,6 +110,20 @@ function get_selected_paddock_for_plan($plan) {
   $results = db_query('select paddock_id from {farm_grazing_plan_paddock} where plan_id=:plan', array(':plan' => $plan));
   foreach($results as $record) {
     $selected[$record->paddock_id] = 1;
+  }
+  return $selected;
+}
+
+/**
+ * Get a list of all paddock_ids and quality from farm_grazing_plan_paddock
+ */
+function get_selected_paddock_quality_for_plan($plan) {
+  // query table of paddocks for this plan 
+  // and build an array of those that are currently selected
+  $selected = array();
+  $results = db_query('select paddock_id, quality from {farm_grazing_plan_paddock} where plan_id=:plan', array(':plan' => $plan));
+  foreach($results as $record) {
+    $selected[$record->paddock_id] = $record->quality;
   }
   return $selected;
 }
@@ -287,20 +301,76 @@ function farm_grazing_exclusions_form_submit($form, &$form_state) {
 }
 
 /**
- * Set paddock productivity page callback
+ * Set paddock productivity form callback
  */
-function farm_grazing_plan_productivity_page($plan) {
+function farm_grazing_plan_productivity_form($form, &$form_state, $plan_obj) {
   
   // Set the page title
   drupal_set_title(t('Rate Paddock Productivity'));
 
+  // get the plan id from the plan object
+  $plan = $plan_obj->id;
+
   // Return markup
-  return array(
-    '#markup' => t('
-      <p>Enter a value for each paddock in the Forage Quality field, then click the [Save] button. See the Help button for more information.</p>
-      <p>For Forage Quality, you should enter ADA/H for each paddock, or rate it 1-10.</p>
-      <p>Est. Relative Quality is the estimated animals days for the paddock based on Forage Quality if you entered a value in ADA/H, but if you entered an rating, then the number will be a relative ranking of the amount of forage each paddock can give relative to the other paddocks.</p>'),
+  $form['text'] = array(
+    '#markup' => t('<p>Enter a value for each paddock in the Forage Quality field, then click the [Save] button. See the Help button for more information.</p>'),
   );
+
+  $form['plan'] = array(
+    '#type' => 'value',
+    '#value' => $plan,
+  );
+
+  $header = array(
+    t('Name'),
+    t('Forage Quality'),
+    t('Est. Relative Quality'),
+  );
+
+  // get a list of selected paddocks
+  $selected = get_selected_paddock_quality_for_plan($plan);
+
+  $form['paddocks'] = array(
+    '#theme' => 'farm_grazing_paddocks_productivity',
+    '#header' => $header,
+  );
+
+  foreach ($selected as $paddock_id => $quality) {
+    $term = taxonomy_term_load($paddock_id);
+    $form['paddocks'][$paddock_id]['name'] = array(
+      '#markup' => $term->name,
+    );
+    $form['paddocks'][$paddock_id]['quality'] = array(
+      '#type' => 'textfield',
+      '#default_value' => $quality,
+      '#name' => $paddock_id,
+    );
+    $form['paddocks'][$paddock_id]['total'] = array(
+      '#markup' => $quality * farm_area_calculate_area($paddock_id),
+    );
+  }
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+    '#submit' => array('farm_grazing_plan_productivity_form_submit'),
+  );
+
+  return $form;
+}
+
+/**
+ * Process the paddock productivity form on submit
+ */
+function farm_grazing_plan_productivity_form_submit($form, &$form_state) {
+
+  // debug output
+  $fp = fopen('php://stderr', 'a');
+  fputs($fp, print_r($form_state['values'], true));
+
+  $plan = $form_state['values']['plan'];
+
+  // TODO farm_grazing_plan_productivity_form_submit
 }
 
 /**
