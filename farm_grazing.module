@@ -303,7 +303,7 @@ function farm_grazing_theme() {
  */
 function theme_farm_grazing_paddocks_productivity(&$vars) {
 
-  kpr($vars);
+  //kpr($vars);
 
   $form = $vars['form'];
 

@@ -311,6 +311,8 @@ function farm_grazing_plan_productivity_form($form, &$form_state, $plan_obj) {
   // get the plan id from the plan object
   $plan = $plan_obj->id;
 
+  $form['#tree'] = true;
+
   // Return markup
   $form['text'] = array(
     '#markup' => t('<p>Enter a value for each paddock in the Forage Quality field, then click the [Save] button. See the Help button for more information.</p>'),
@@ -343,10 +345,13 @@ function farm_grazing_plan_productivity_form($form, &$form_state, $plan_obj) {
     $form['paddocks'][$paddock_id]['quality'] = array(
       '#type' => 'textfield',
       '#default_value' => $quality,
-      '#name' => $paddock_id,
+      '#size' => 30,
+      '#maxlength' => 30,
     );
     $form['paddocks'][$paddock_id]['total'] = array(
-      '#markup' => $quality * farm_area_calculate_area($paddock_id),
+      '#prefix' => '<p style="text-align:right">',
+      '#markup' => round($quality * farm_area_calculate_area($paddock_id), 1),
+      '#suffix' => '</p>',
     );
   }
 
@@ -354,10 +359,28 @@ function farm_grazing_plan_productivity_form($form, &$form_state, $plan_obj) {
     '#type' => 'submit',
     '#value' => t('Save'),
     '#submit' => array('farm_grazing_plan_productivity_form_submit'),
+    '#validate' => array('farm_grazing_plan_productivity_form_validate'),
   );
 
   return $form;
 }
+
+/**
+ * Validate handler for farm_grazing_paddocks_productivity_form
+ */
+function farm_grazing_plan_productivity_form_validate($form, &$form_state) {
+
+  // debug output
+  //$fp = fopen('php://stderr', 'a');
+  //fputs($fp, print_r($form_state['input'], true));
+
+  foreach ($form_state['input']['paddocks'] as $id => $val) {
+    if (! is_numeric($val['quality']) or $val['quality'] < 0.0) {
+      form_set_error('quality', t('Forage Quality must be numeric >= 0.0'));
+    }
+  }
+}
+
 
 /**
  * Process the paddock productivity form on submit
@@ -365,12 +388,20 @@ function farm_grazing_plan_productivity_form($form, &$form_state, $plan_obj) {
 function farm_grazing_plan_productivity_form_submit($form, &$form_state) {
 
   // debug output
-  $fp = fopen('php://stderr', 'a');
-  fputs($fp, print_r($form_state['values'], true));
+  //$fp = fopen('php://stderr', 'a');
+  //fputs($fp, print_r($form_state['values'], true));
 
   $plan = $form_state['values']['plan'];
 
-  // TODO farm_grazing_plan_productivity_form_submit
+  foreach ($form_state['values']['paddocks'] as $key => $val) {
+    db_update('farm_grazing_plan_paddock')
+      ->fields(array(
+        'quality' => $val['quality'],
+      ))
+      ->condition('plan_id', $plan)
+      ->condition('paddock_id', $key)
+      ->execute();
+  }
 }
 
 /**
