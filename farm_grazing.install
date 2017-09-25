@@ -132,7 +132,7 @@ function farm_grazing_schema() {
         'unsigned' => TRUE,
       ),
       'month' => array(
-        'description' => 'month (1-12)',
+        'description' => 'Year month as int like: YYYYMM',
         'type' => 'int',
         'not null' => TRUE,
         'default' => '0',

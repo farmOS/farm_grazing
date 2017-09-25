@@ -135,8 +135,8 @@ function farm_grazing_menu() {
   $items['farm/plan/%farm_plan/paddocks/recovery'] = array(
     'title' => 'Recovery',
     'description' => 'Set min and max recovery periods for paddocks.',
-    'page callback' => 'farm_grazing_plan_recovery_page',
-    'page arguments' => array(2),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('farm_grazing_plan_recovery_form', 2),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(2),
     'file' => 'farm_grazing.pages.inc',
@@ -295,11 +295,14 @@ function farm_grazing_theme() {
       // The renderable element is the form.
       'render element' => 'form',
     ),
+    'farm_grazing_paddocks_recovery' => array(
+        'render element' => 'form',
+    ),
   );
 }
 
 /**
- * Implements hook_theme
+ * Implements hook_theme for farm_grazing_paddocks_productivity
  */
 function theme_farm_grazing_paddocks_productivity(&$vars) {
 
@@ -313,6 +316,34 @@ function theme_farm_grazing_paddocks_productivity(&$vars) {
       render($form[$key]['name']),
       render($form[$key]['quality']),
       render($form[$key]['total']),
+    );
+  }
+
+  $header = $form['#header'];
+
+  return theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+    'submit' => render($form['submit']),
+    )
+  );
+}
+
+/**
+ * Implements hook_theme for farmgrazing_paddocks_recovery
+ */
+function theme_farm_grazing_paddocks_recovery(&$vars) {
+
+  //kpr($vars);
+
+  $form = $vars['form'];
+
+  $rows = array();
+  foreach (element_children($form) as $key) {
+    $rows[] = array(
+      render($form[$key]['month']),
+      render($form[$key]['min']),
+      render($form[$key]['max']),
     );
   }
 
