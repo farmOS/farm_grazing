@@ -381,9 +381,9 @@ function farm_grazing_help($path, $arg) {
     case 'farm/plan/%/paddocks/exclusions':
       return '<p>' . t('Set dates for paddocks where you want to exclude animal grazing. Check your Planning Factors.') . '</p>';
     case 'farm/plan/%/paddocks/productivity':
-      return '<p>' . t('For Forage Quality, you should enter ADA/H for each paddock, or rate it 1-10.') . '</p><p>' . t('Est. Relative Quality is the estimated animals days for the paddock based on Forage Quality if you entered a value in ADA/H, but if you entered an rating, then the number will be a relative ranking of the amount of forage each paddock can give relative to the other paddocks.') . '</p>';
+      return '<p>' . t('For Forage Quality, you should enter ADA/H for each paddock, or rate it 1-10.') . '</p><p>' . t('Est. Relative Quality is the estimated animals days for the paddock based on Forage Quality if you entered a value in ADA/H, but if you entered a rating, then the number will be a relative ranking of the amount of forage each paddock can give relative to the other paddocks.') . '</p>';
     case 'farm/plan/%/paddocks/recovery':
-      return '<p>' . t('Enter your minimum and maximum recovery periods (in days) for each planned month. Unless you have a great many paddocks per herd and can safely choose a single recovery period, you will have to determine the expected plant recovery period under fast growth conditions and the expected plant recovery period under slow growth conditions.') . '</p>';
+      return '<p>' . t('Enter your minimum and maximum recovery periods (in days) for each planned month. Unless you have a great many paddocks per herd and can safely choose a single recovery period, you will have to determine the expected plant recovery period under fast growth conditions and the expected plant recovery period under slow growth conditions.') . '</p><p>'. t('If you have not defined any herds yet, we assume one herd. This page will automatically adjust for multiple herds once you define them, so check back once you have defined herds.') . '</p>';
     case 'farm/plan/%/paddocks/summary':
       return '<p>' . t('TODO') . '</p>';
     case 'farm/plan/%/herds':
