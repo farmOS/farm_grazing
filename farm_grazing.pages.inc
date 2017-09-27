@@ -20,6 +20,24 @@
 
 
 /**
+ * Utility function to fetch things from farmOS
+ *
+ * getHerdCountForPlan(plan_id)
+ *
+ */
+function getHerdCountForPlan($plan_id) {
+  // return the equiv. to SELECT count(herd_id) FROM {farm_grazing_herds}
+  // WHERE planid=$plan
+  $query = db_select('farm_grazing_herds', 'h')
+    ->fields('h', array('herd_id'))
+    ->condition('h.plan_id', $plan_id);
+
+  return $query->countQuery()->execute()->fetchField();
+}
+
+//-------------- Start of page/form callbacks --------------------
+
+/**
  * Management concerns page callback.
  */
 function farm_grazing_plan_concerns_page($plan) {
@@ -478,16 +496,26 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
   // generate array of months between start and end
   $num_months = $diff->y * 12 + $diff->m;
   $date = $start_date;
+  $minmin =  999999999;
+  $maxmax = -999999999;
+  $num_paddocks = 0;
   $rows = array();
   for( $i = 0; $i <= $num_months; $i++ ) {
     $key = $date->format('Ym');
     if (isset($minmax[$key])) {
       $min = $minmax[$key][0];
       $max = $minmax[$key][1];
+      $num_paddocks++;
     }
     else {
       $min = 0;
       $max = 0;
+    }
+    if ($min > 0 and $min < $minmin) {
+      $minmin = $min;
+    }
+    if ($max > 0 and $maxmax < $max) {
+      $maxmax = $max;
     }
     $form['months'][$key]['month'] = array(
       '#markup' => $date->format('F Y'),
@@ -508,6 +536,35 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
     // increment the month
     $date->modify('+1 month');
   }
+
+  // get herd count from database or 1.0
+  $herd_cnt = getHerdCountForPlan($plan);
+  if ($herd_cnt == 0) {
+    $herd_cnt = 1;
+  }
+
+  $form['summary']['herd_cnt'] = array(
+    '#prefix' => '<p>' . t('Number of herds: '),
+    '#suffix' => t(' (Defaults to one herd if none are defined)') . '</p>',
+    '#markup' => $herd_cnt,
+  );
+
+  $form['summary']['pad_cnt'] = array(
+    '#prefix' => '<p>' . t('Number of paddocks: '),
+    '#markup' => $num_paddocks,
+    '#suffix' => '</p>',
+  );
+  $form['summary']['min_grazing'] = array(
+    '#prefix' => '<p>' . t('Est. Min. Grazing Period: '),
+    '#markup' => round($minmin/($num_paddocks-$herd_cnt)),
+    '#suffix' => '</p>',
+  );
+  $form['summary']['max_grazing'] = array(
+    '#prefix' => '<p>' . t('Est. Max. Grazing Period: '),
+    '#markup' => round($maxmax/($num_paddocks-$herd_cnt)),
+    '#suffix' => '</p>',
+  );
+
 
   // Return markup.
   $form['submit'] = array(
