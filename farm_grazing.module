@@ -385,7 +385,7 @@ function farm_grazing_help($path, $arg) {
     case 'farm/plan/%/paddocks/recovery':
       return '<p>' . t('Enter your minimum and maximum recovery periods (in days) for each planned month. Unless you have a great many paddocks per herd and can safely choose a single recovery period, you will have to determine the expected plant recovery period under fast growth conditions and the expected plant recovery period under slow growth conditions.') . '</p><p>'. t('If you have not defined any herds yet, we assume one herd. This page will automatically adjust for multiple herds once you define them, so check back once you have defined herds.') . '</p>';
     case 'farm/plan/%/paddocks/summary':
-      return '<p>' . t('TODO') . '</p>';
+      return '<p>' . t('Use the Check Min/Max Recovery Period below and if any recovery period is much too short, you must add days to the minimum grazing periods in other paddocks that can absorb them. Follow the same procedure for maximum grazing periods, though the problems will probably be less critical if you can\'t make complete adjustments.') . '</p>';
     case 'farm/plan/%/herds':
     case 'farm/plan/%/herds/default':
       return '<p>' . t('TODO') . '</p>';

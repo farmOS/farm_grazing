@@ -35,6 +35,17 @@ function getHerdCountForPlan($plan_id) {
   return $query->countQuery()->execute()->fetchField();
 }
 
+/**
+ * getPaddockCountForPlan($plan)
+ */
+function getPaddockCountForPlan($plan_id) {
+  $query = db_select('farm_grazing_plan_paddock', 'a')
+    ->fields('a', array('paddock_id'))
+    ->condition('a.plan_id', $plan_id);
+
+  return $query->countQuery()->execute()->fetchField();
+}
+
 //-------------- Start of page/form callbacks --------------------
 
 /**
@@ -642,19 +653,141 @@ function farm_grazing_plan_recovery_form_submit($form, &$form_state) {
 /**
  * Paddock summary page callback
  */
-function farm_grazing_plan_summary_page($plan) {
+function farm_grazing_plan_summary_page($plan_obj) {
   
+  // get the plan id from the plan object
+  $plan = $plan_obj->id;
+
   // Set the page title
   drupal_set_title(t('Paddock Summary and Grazing Periods'));
 
+  $table = array(
+    'header' => array(
+      t('Paddock'),
+      t('Area'),
+      t('Quality'),
+      t('Act. Min. Grazing Days'),
+      t('Act. Max. Grazing Days'),
+    ),
+    'rows' => array(),
+    'empty' => t('No paddocks found.'),
+  );
+
+  // get the herd count
+  $herd_cnt = getHerdCountForPlan($plan);
+  if ($herd_cnt == 0) {
+    $herd_cnt = 1;
+  }
+
+  // get the paddock count
+  $paddock_cnt = getPaddockCountForPlan($plan);
+
+  $results = db_query('SELECT min(min_recovery) as minmin, max(max_recovery) as maxmax FROM {farm_grazing_plan_recovery} WHERE plan_id=:plan', array(':plan' => $plan));
+  foreach($results as $record) {
+    $minmin = $record->minmin;
+    $maxmax = $record->maxmax;
+  }
+
+  // avoid divide by zero
+  $divisor = round($paddock_cnt - $herd_cnt);
+  if ($divisor == 0) {
+    $divisor = 1;
+  }
+
+  $avg_min_graz = $minmin/$divisor;
+  $avg_max_graz = $maxmax/$divisor;
+
+  // get a list of selected paddocks (paddock_id, quality)
+  $paddocks = array();
+  $sum_tot_quality = 0;
+  $results = db_query('select paddock_id, quality from {farm_grazing_plan_paddock} where plan_id=:plan', array(':plan' => $plan));
+  foreach($results as $record) {
+    $term = taxonomy_term_load($record->paddock_id);
+    $area = farm_area_calculate_area($record->paddock_id);
+    $quality = $record->quality;
+    $paddocks[] = array(
+      $term->name,
+      round($area, 1),
+      round($area*$quality, 1),
+      $area*$quality*$avg_min_graz,
+      $area*$quality*$avg_max_graz,
+    );
+    $sum_tot_quality = $sum_tot_quality + $area*$quality;
+  }
+
+  // get average
+  if ($paddock_cnt > 0) {
+    $avg_days = $sum_tot_quality / $paddock_cnt;
+  }
+  else {
+    $avg_days = 0;
+  }
+
+  // adjust the act min/max grazing days by avg days
+  // and avoid divide by zero
+  $sum_min = 0;
+  $sum_max = 0;
+  $sum_area = 0;
+  $sum_quality = 0;
+  $max_min = 0;
+  $max_max = 0;
+  for ($i=0; $i<count($paddocks); $i++) {
+    if ($avg_days > 0) {
+      $paddocks[$i][3] = round($paddocks[$i][3]/$avg_days, 1);
+      $paddocks[$i][4] = round($paddocks[$i][4]/$avg_days, 1);
+    }
+    else {
+      $paddocks[$i][3] = 0;
+      $paddocks[$i][4] = 0;
+    }
+    $sum_area = $sum_area + $paddocks[$i][1];
+    $sum_quality = $sum_quality + $paddocks[$i][2];
+    $sum_min = $sum_min + $paddocks[$i][3];
+    $sum_max = $sum_max + $paddocks[$i][4];
+    if ($paddocks[$i][3] > $max_min) {
+      $max_min = $paddocks[$i][3];
+    }
+    if ($paddocks[$i][4] > $max_max) {
+      $max_max = $paddocks[$i][4];
+    }
+  }
+
+  // append a footer row to the data
+  $paddocks[] = array(
+    t('Sum of Paddocks'),
+    round($sum_area, 1),
+    round($sum_quality, 1),
+    $sum_min,
+    $sum_max,
+  );
+
+  $table['rows'] = $paddocks;
+
   // Return markup
-  return array(
+  $form['text'] = array(
     '#markup' => t('
-      <p>Check to see that recovery periods are adequate in paddocks with longer grazing periods. Use the Check Min/Max Recovery Period below and if any recovery period is much too short, you must add days to the minimum grazing periods in other paddocks that can absorb them. Follow the same procedure for maximum grazing periods, though the problems will probably be less critical if you can\'t make complete adjustments.</p>
+      <p>Check to see that recovery periods are adequate in paddocks with longer grazing periods.</p>
       <h1>Actual Min/Max Grazing Periods</h1>
-      <p><b>TODO</b></p>
     '),
   );
+
+  $form['table'] = array(
+    '#markup' => theme('table', $table),
+  );
+
+  $form['summary']['check_min'] = array(
+    '#prefix' => '<p>',
+    '#markup' => t('Check Min. Recovery Period: ') . round($sum_min - $max_min),
+    '#suffix' => '</p>',
+  );
+
+  $form['summary']['check_max'] = array(
+    '#prefix' => '<p>',
+    '#markup' => t('Check Max. Recovery Period: ') . round($sum_max - $max_max),
+    '#suffix' => '</p>',
+  );
+
+  return $form;
 }
 
 /**
