@@ -202,18 +202,19 @@ function farm_grazing_select_paddocks_form_submit($form, &$form_state) {
 }
 
 /**
- * Paddock exclusions list, add, edit form.
+ * Paddock exclusions list, add, edit, delete form.
  */
-function farm_grazing_exclusions_form($form, &$form_state) {
+function farm_grazing_exclusions_form($form, &$form_state, $plan_obj) {
+
+  $plan = $plan_obj->id;
 
   // Set the page title.
   drupal_set_title(t('Paddock exclusions'));
 
   // Add page instructional information
   $form['text'] = array(
-    '#markup' => t('<h2>Paddock Livestock Exclusions and Special Attention</h2>
-    <p>Enter dates when a paddock can not under any circomstanceces have a herd on it and select type "Livestock". Also enter dates for paddocks that need special attention and select type "Special". Such paddocks could include a sacrificial paddock where you plan to run some animals on continuous graze, bare, eroding ground that needs healing, areas you want to rest for brush cover for wildlife, areas where you need to remove forage for fire protection, paddocks you plan to strip graze. Review the list of planning factors.</p>
-    '),
+    '#markup' => '<h2>' . t('Paddock Livestock Exclusions and Special Attention') . '</h2>' .
+    '<p>' . t('Set dates for paddocks where you want to exclude animal grazing. Check your Planning Factors.') . '</p>',
   );
 
   // Load a list of exclusions from the database.
@@ -248,7 +249,7 @@ function farm_grazing_exclusions_form($form, &$form_state) {
 
     // Assemble the row.
     $table['rows'][] = array(
-      $term->name,
+      '<a href="/farm/grazing/exclusions/' . $record->id . '/edit?destination=/farm/plan/' . $plan . '/paddocks/exclusions">' . $term->name . '</a>',
       $start_date,
       $end_date,
       $record->reason,
@@ -307,6 +308,7 @@ function farm_grazing_exclusions_form($form, &$form_state) {
   );
   $form['add']['submit'] = array(
     '#type' => 'submit',
+    '#id' => 'add-submit',
     '#value' => t('Save exclusion'),
     '#submit' => array('farm_grazing_exclusions_form_submit'),
   );
@@ -320,15 +322,136 @@ function farm_grazing_exclusions_form($form, &$form_state) {
  */
 function farm_grazing_exclusions_form_submit($form, &$form_state) {
 
-  // Build a record and save it to the database.
+  // debug output
+  //$fp = fopen('php://stderr', 'a');
+  //fputs($fp, print_r($form_state, true));
+
+  // if user clicked Cancel, get out of here
+  if ($form_state['clicked_button']['#id'] == 'edit-cancel') {
+    return;
+  }
+
+  // check if we are doing a create, update or delete
+  $id = NULL;
+  if (isset($form_state['values']['exclusion_id'])) {
+    $id = $form_state['values']['exclusion_id'];
+  }
+
+  // Build a record
   $record = array(
-    'id' => NULL,
+    'id' => $id,
     'paddock_id' => $form_state['values']['paddock_id'],
     'start_date' => strtotime($form_state['values']['start_date']),
     'end_date' => strtotime($form_state['values']['end_date']),
     'reason' => $form_state['values']['reason'],
   );
-  drupal_write_record('farm_grazing_paddock_exclusions', $record);
+
+  switch ($form_state['clicked_button']['#id']) {
+    case 'add-submit':
+      // Add a new record
+      drupal_write_record('farm_grazing_paddock_exclusions', $record);
+      break;
+    case 'edit-submit':
+      // Update existing record
+      drupal_write_record('farm_grazing_paddock_exclusions', $record, 'id');
+      break;
+    case 'edit-delete':
+      // Delete an existing record
+      db_delete('farm_grazing_paddock_exclusions')
+        ->condition('id', $id)
+        ->execute();
+      break;
+  }
+
+}
+
+/**
+ * Edit/Delete exclusion form callback
+ */
+function farm_grazing_exclusions_edit_form($form, &$form_state, $exclusion_id) {
+  
+  // Set page Title
+  drupal_set_title(t('Edit or Delete Exclusion'));
+
+  // Load the exclusions from the database.
+  $query = db_query('SELECT * FROM {farm_grazing_paddock_exclusions} WHERE id=:id', array(':id' => $exclusion_id));
+
+  // fetch it
+  $exclusion = $query->fetchObject();
+
+  // Form for editing an exclusion.
+  $form['edit']['exclusion_id'] = array(
+    '#type' => 'value',
+    '#value' => $exclusion_id,
+  );
+
+  $form['edit']['paddock_id'] = array(
+    '#type' => 'value',
+    '#value' => $exclusion->paddock_id,
+  );
+
+  $term = taxonomy_term_load($exclusion->paddock_id);
+
+  // Format the start and end dates.
+  $format = 'Y-m-d';
+  $format = 'd-m-Y';
+  $format = 'M j Y';
+  $start_date = date('Y-m-d H:i:s', $exclusion->start_date);
+  $end_date = date('Y-m-d H:i:s', $exclusion->end_date);
+
+  $form['edit']['name'] = array(
+    '#prefix' => '<h1>',
+    '#markup' => $term->name,
+    '#suffix' => '</h1>',
+  );
+  $form['edit']['start_date'] = array(
+    '#type' => 'date_popup',
+    '#title' => t('Start date'),
+    '#description' => t('When does the exclusion begin?'),
+    '#date_label_position' => 'within',
+    '#date_format' => $format,
+    '#date_type' => DATE_FORMAT_UNIX,
+    '#date_year_range' => '-10:+3',
+    '#default_value' => $start_date,
+    '#required' => TRUE,
+  );
+  $form['edit']['end_date'] = array(
+    '#type' => 'date_popup',
+    '#title' => t('End date'),
+    '#description' => t('When does the exclusion end?'),
+    '#date_label_position' => 'within',
+    '#date_format' => $format,
+    '#date_type' => DATE_FORMAT_UNIX,
+    '#date_year_range' => '-10:+3',
+    '#default_value' => $end_date,
+    '#required' => TRUE,
+  );
+  $form['edit']['reason'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Reason'),
+    '#description' => t('Describe the reason for this exclusion.'),
+    '#default_value' => $exclusion->reason,
+    '#required' => TRUE,
+  );
+  $form['edit']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save exclusion'),
+    '#submit' => array('farm_grazing_exclusions_form_submit'),
+  );
+  $form['edit']['cancel'] = array(
+    '#type' => 'submit',
+    '#value' => t('Cancel'),
+    '#submit' => array('farm_grazing_exclusions_form_submit'),
+  );
+  $form['edit']['delete'] = array(
+    '#type' => 'submit',
+    '#value' => t('Delete exclusion'),
+    '#submit' => array('farm_grazing_exclusions_form_submit'),
+  );
+
+  // Return the form.
+  return $form;
+
 }
 
 /**

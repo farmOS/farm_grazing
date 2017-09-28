@@ -110,12 +110,22 @@ function farm_grazing_menu() {
     'title' => 'Exclusions',
     'description' => 'Define exclusion periods for paddocks.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('farm_grazing_exclusions_form'),
+    'page arguments' => array('farm_grazing_exclusions_form', 2),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(2),
     'file' => 'farm_grazing.pages.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 20,
+  );
+
+  $items['farm/grazing/exclusions/%/edit'] = array(
+    'title' => 'Edit/Delete Exclusion',
+    'description' => 'Allow paddock exclusions to be edited or deleted.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('farm_grazing_exclusions_edit_form', 3),
+    'access arguments' => array('edit any grazing plans'),
+    'file' => 'farm_grazing.pages.inc',
+    'type' => MENU_CALLBACK,
   );
 
   // Paddocks - productivity.
@@ -379,7 +389,8 @@ function farm_grazing_help($path, $arg) {
     case 'farm/plan/%/paddocks/default':
       return '<p>' . t('Define your paddocks in the <a href="/farm/areas">Areas</a> tab above. Select which paddocks you want available for use in this plan here and then use tabs "Exclusions", "Productivity", "Recovery" and "Summary" to add additional information about your paddocks.') . '</p>';
     case 'farm/plan/%/paddocks/exclusions':
-      return '<p>' . t('Set dates for paddocks where you want to exclude animal grazing. Check your Planning Factors.') . '</p>';
+      return '<p>' . t('Enter dates when a paddock can not under any circumstanceces have a herd on it and select type "Livestock". Also enter dates for paddocks that need special attention and select type "Special". Such paddocks could include a sacrificial paddock where you plan to run some animals on continuous graze, bare, eroding ground that needs healing, areas you want to rest for brush cover for wildlife, areas where you need to remove forage for fire protection, paddocks you plan to strip graze. Review the list of planning factors.') . '</p>' .
+      '<p>' . t('Click on the paddock name to edit or delete it.') . '</p>';
     case 'farm/plan/%/paddocks/productivity':
       return '<p>' . t('For Forage Quality, you should enter ADA/H for each paddock, or rate it 1-10.') . '</p><p>' . t('Est. Relative Quality is the estimated animals days for the paddock based on Forage Quality if you entered a value in ADA/H, but if you entered a rating, then the number will be a relative ranking of the amount of forage each paddock can give relative to the other paddocks.') . '</p>';
     case 'farm/plan/%/paddocks/recovery':
