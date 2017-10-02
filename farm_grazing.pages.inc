@@ -85,7 +85,7 @@ function farm_grazing_select_paddocks_form($form, &$form_state, $plan_obj) {
   // get the plan id from the plan object
   $plan = $plan_obj->id;
 
-  $paddocks = farm_area_load_areas('paddock');
+  $paddocks = farm_area_load_areas('paddock', 'name');
 
   $data = array();
   foreach ($paddocks as $paddock) {
@@ -218,7 +218,7 @@ function farm_grazing_exclusions_form($form, &$form_state, $plan_obj) {
   );
 
   // Load a list of exclusions from the database.
-  $query = db_query('SELECT * FROM {farm_grazing_paddock_exclusions}');
+  $query = db_query('SELECT e.*, t.name FROM {farm_grazing_paddock_exclusions} e LEFT JOIN taxonomy_term_data t ON e.paddock_id=t.tid ORDER BY t.name, e.start_date');
 
   // Build a themed table of exclusions.
   $table = array(
@@ -239,9 +239,6 @@ function farm_grazing_exclusions_form($form, &$form_state, $plan_obj) {
       continue;
     }
 
-    // Load the paddock.
-    $term = taxonomy_term_load($record->paddock_id);
-
     // Format the start and end dates.
     $format = 'Y-m-d';
     $start_date = date($format, $record->start_date);
@@ -249,7 +246,7 @@ function farm_grazing_exclusions_form($form, &$form_state, $plan_obj) {
 
     // Assemble the row.
     $table['rows'][] = array(
-      '<a href="/farm/grazing/exclusions/' . $record->id . '/edit?destination=/farm/plan/' . $plan . '/paddocks/exclusions">' . $term->name . '</a>',
+      '<a href="/farm/grazing/exclusions/' . $record->id . '/edit?destination=/farm/plan/' . $plan . '/paddocks/exclusions">' . $record->name . '</a>',
       $start_date,
       $end_date,
       $record->reason,
@@ -260,7 +257,7 @@ function farm_grazing_exclusions_form($form, &$form_state, $plan_obj) {
   );
 
   // Load all paddocks and generate an options list.
-  $paddocks = farm_area_load_areas('paddock');
+  $paddocks = farm_area_load_areas('paddock', 'name');
   $paddock_options = array();
   foreach ($paddocks as $paddock) {
     $paddock_options[$paddock->tid] = $paddock->name;
