@@ -233,6 +233,18 @@ function farm_grazing_menu() {
     'weight' => 20,
   );
 
+  // -------------- config forms --------------------------
+
+  $items['farm/grazing/config/animal_types'] = array(
+    'title' => 'Mange Animal Types',
+    'description' => 'Add/Edit/Remove/Import/Export Animal Types.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('farm_grazing_config_animal_types_form'),
+    'access arguments' => array('edit any grazing plans'),
+    'file' => 'farm_grazing.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
 }
 

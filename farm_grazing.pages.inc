@@ -1018,3 +1018,11 @@ function farm_grazing_plan_implement_status_page($plan) {
   );
 }
 
+// -------------- config forms ---------------------
+
+/**
+ * function farm_grazing_config_animal_types_form
+ */
+function farm_grazing_config_animal_types_form($form, $form_state) {
+  
+}

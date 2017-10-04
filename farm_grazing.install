@@ -171,8 +171,34 @@ function farm_grazing_schema() {
         'unsigned' => TRUE,
       ),
     ),
-    'primaray key' => array('plan_id', 'herd_id'),
+    'primary key' => array('plan_id', 'herd_id'),
+  );
+
+  $schema['farm_grazing_animal_types'] = array(
+    'description' => 'List of animal types and their respective daily dry matter intake as % of weight factor.',
+    'fields' => array(
+      'type_id' => array(
+        'description' => 'Type ID',
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'description' => 'Descriptive name for animal type',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+      ),
+      'dmi_factor' = array(
+        'description' => 'Daily Dry Matter Intake as percentage of body weight.',
+        'type' => 'float',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('type_id'),
+    'unique keys' => array('name'),
   );
 
   return $schema;
 }
+
+
