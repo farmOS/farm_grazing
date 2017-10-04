@@ -175,7 +175,7 @@ function farm_grazing_schema() {
   );
 
   $schema['farm_grazing_animal_types'] = array(
-    'description' => 'List of animal types and their respective daily dry matter intake as % of weight factor.',
+    'description' => 'List of animal types and their respective daily dry matter intake as percentage of weight.',
     'fields' => array(
       'type_id' => array(
         'description' => 'Type ID',
