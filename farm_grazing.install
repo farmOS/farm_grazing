@@ -188,7 +188,7 @@ function farm_grazing_schema() {
         'length' => '255',
         'not null' => TRUE,
       ),
-      'dmi_factor' = array(
+      'dmi_factor' => array(
         'description' => 'Daily Dry Matter Intake as percentage of body weight.',
         'type' => 'float',
         'not null' => TRUE,
