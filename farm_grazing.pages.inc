@@ -1024,5 +1024,59 @@ function farm_grazing_plan_implement_status_page($plan) {
  * function farm_grazing_config_animal_types_form
  */
 function farm_grazing_config_animal_types_form($form, $form_state) {
-  
+  /*
+    ["Beef cattle, lactating",                              2.25],
+    ["Beef cattle, growing and finishing, slaughter stock", 2.3],
+    ["Dairy steers",                                        2.3],
+    ["Dairy heifers",                                       2.5],
+    ["Dairy cows, dry (small or large breed)",              1.8],
+    ["Goats, weaned, slaughter or replacement stock",       2.25],
+    ["Goats, brood or lactating",                           4.0],
+    ["Sheep, weaned, slaughter or replacement stock",       3.3],
+    ["Sheep, brood or lactating",                           3.65]
+  */
+  $data = array(
+    array(
+      'name' => 'Beef cattle, lactating',
+      'dmi_factor' => 2.25,
+    ),
+    array(
+      'name' => 'Beef cattle, growing and finishing, slaughter stock',
+      'dmi_factor' => 2.3,
+    ),
+    array(
+      'name' => 'Dairy steers',
+      'dmi_factor' => 2.3,
+    ),
+    array(
+      'name' => 'Dairy heifers',
+      'dmi_factor' => 2.5,
+    ),
+    array(
+      'name' => 'Dairy cows, dry (small or large breed)',
+      'dmi_factor' => 1.8,
+    ),
+    array(
+      'name' => 'Goats, weaned, slaughter or replacement stock',
+      'dmi_factor' => 2.25,
+    ),
+    array(
+      'name' => 'Goats, brood or lactating',
+      'dmi_factor' => 4.0,
+    ),
+    array(
+      'name' => 'Sheep, weaned, slaughter or replacement stock',
+      'dmi_factor' => 3.3,
+    ),
+    array(
+      'name' => 'Sheep, brood or lactating',
+      'dmi_factor' => 3.65,
+    ),
+  );
+
+  foreach ($data as $row) {
+    db_insert('farm_grazing_animal_types')
+      ->fields($row)
+      -> execute();
+  }
 }
