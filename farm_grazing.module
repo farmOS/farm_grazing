@@ -426,3 +426,54 @@ function farm_grazing_help($path, $arg) {
   }
 }
 
+/**
+ * Implements hook_entity_update().
+ */
+function farm_grazing_entity_update($entity, $type) {
+
+  // Only act on farm asset entities.
+  if ($type != 'farm_asset') {
+    return;
+  }
+
+  // Delegate out to our audit function.
+  farm_grazing_plan_asset_update($entity);
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function farm_grazing_entity_delete($entity, $type) {
+
+  // Only act on group or animal assets.
+  if ($type != 'farm_asset') {
+    return;
+  }
+
+  // Delegate out to our audit function.
+  farm_grazing_plan_asset_update($entity);
+}
+
+/**
+ * Perform checks to see if a group/animal asset is part of a plan, and if
+ * updating/deleting it will affect that plan.
+ *
+ * @param $asset
+ *   The asset that was updated/deleted.
+ */
+function farm_grazing_plan_asset_update($asset) {
+
+  // We only care about group and animal assets.
+  if (!($asset->type == 'group' || $asset->type == 'animal')) {
+    return;
+  }
+
+  /**
+   * @todo
+   * Perform logic to see if this asset is part of a plan, and whether or not
+   * editing/deleting this asset will affect the plan.
+   *
+   * But for now... just show a message.
+   */
+  drupal_set_message(t('If this asset is part of a grazing plan, you should check to see if your change affects that plan.'), 'warning');
+}
