@@ -937,6 +937,8 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   // Set the page title.
   drupal_set_title(t('Manage Herds for Plan'));
 
+  $form['#tree'] = true;
+
   $form['plan'] = array(
     '#type' => 'value',
     '#value' => $plan,
@@ -1031,13 +1033,37 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     );
   }
 
-  $form['table'] = array(
+  $form['section_1'] = array(
+    '#markup' => '<h4>' . t('Summary of Herds in Plan') . '</h4>',
+  );
+  // TODO this does not display the table for some reason
+  //$form['section_1']['table'] = array(
+  $form['section_1_table'] = array(
     '#markup' => theme('table', $table),
   );
 
   // TODO Add table of herd details for each herd
+  $form['section_2'] = array(
+    '#markup' => '<h4>' . t('Herd Details') . '</h4>',
+  );
+  $form['section_2_table'] = array(
+    '#markup' => 'TODO',
+  );
 
   // TODO Add table SAU by Plan Month for each herd
+  $form['section_3'] = array(
+    '#markup' => '<h4>' . t('SAU by Month') . '</h4>',
+  );
+  $form['section_3_table'] = array(
+    '#markup' => 'TODO',
+  );
+  // TODO Add table SAU by Plan Month for each herd
+  $form['section_4'] = array(
+    '#markup' => '<h4>' . t('Summary') . '</h4>',
+  );
+  $form['section_4_table'] = array(
+    '#markup' => 'TODO',
+  );
 
   // Return the form.
   return $form;
