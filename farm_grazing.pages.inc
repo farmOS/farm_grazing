@@ -11,7 +11,7 @@
   //'page callback' => 'drupal_get_form(farm_grazing_plan_productivity_form'),
   //'page callback' => 'drupal_get_form(farm_grazing_plan_recovery_form)',
   //'page callback' => 'farm_grazing_plan_summary_page',
-  //'page callback' => 'farm_grazing_plan_herds_page',
+  //'page callback' => 'drupal_get_form(farm_grazing_plan_herds_form)',
   //'page callback' => 'farm_grazing_plan_herds_paddocks_page',
   //'page callback' => 'farm_grazing_plan_history_page',
   //'page callback' => 'farm_grazing_plan_rotations_page',
@@ -915,20 +915,230 @@ function farm_grazing_plan_summary_page($plan_obj) {
 /**
  * Herd page callback.
  */
-function farm_grazing_plan_herds_page($plan) {
+function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
+
+  // Page layout
+  //   button to add a herd to plan
+  //     validate that herd has weigh, planned arrival, planned departure
+  //     check is herd is part of another plan
+  //   list summary table for each herd
+  //   foreach herds in plan
+  //       list herd details in a table
+  //   SAU by Month table
+  //   Summary information
+  //     Total cell size
+  //     peak month SAU
+  //     Stocking rate
+  //   click on herd summary to edit/delete it
+
+  // get the plan id from the plan object
+  $plan = $plan_obj->id;
 
   // Set the page title.
-  drupal_set_title(t('Manage Herds (Add/Combine/Split/Ship)'));
+  drupal_set_title(t('Manage Herds for Plan'));
+
+  $form['plan'] = array(
+    '#type' => 'value',
+    '#value' => $plan,
+  );
 
   // Return markup.
-  return array(
-    '#markup' => t('
-      <p>A herd is defined as a group of animals that will be rotated between paddocks to together regardless of the make up of animals in the herd.</p>
-      <p>Herds are defined in farmOS as groups under the "Assets -> Animals" menu, then they can be selected here. You can also add to a herd, combine herds, split some animals out of a herd, or ship animals out of the plan.</p>
-      <p><b>TODO:</b> List herds</p>
-      <p><b>TODO:</b> Add tools to add/combine/split/ship animals or herd</p>
-    '),
+  $form['text'] = array(
+    '#markup' => t('<p>' .
+      t('A herd is defined as a group of animals that will be rotated between paddocks to together regardless of the make up of animals in the herd.') .
+      '</p><p>' .
+      t('Herds are defined in farmOS as groups under the "Assets -> Groups" menu, then they can be selected here. You can also add to a herd, combine herds, split some animals out of a herd, or ship animals out of the plan.') .
+      '</p></p>' .
+      t('Click on the herd name to remove it from the plan.') .
+      '</p>' .
+      ''),
   );
+
+  // get a list of herds for select
+  $query = db_query("SELECT id, name FROM {farm_asset} WHERE type='group' AND active=1 ORDER BY name");
+
+  $herd_options = array();
+
+  $records = $query->fetchAll();
+
+  foreach($records as $record) {
+    $herd_options[$record->id] = $record->name;
+  }
+
+  // Form for adding a new exclusion.
+  $form['add'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Add a herd'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['add']['herd_id'] = array(
+    '#type' => 'select',
+    '#title' => t('Herd'),
+    '#description' => t('Select the herd you want to add.'),
+    '#options' => $herd_options,
+    '#required' => TRUE,
+  );
+  $form['add']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Add Herd to Plan'),
+    '#submit' => array('farm_grazing_plan_herds_form_submit'),
+  );
+
+  $table = array(
+    'header' => array(
+      t('Herd Name'),
+      t('SAU'),
+      t('Daily Intake'),
+      t('Earliest Arrival'),
+      t('Latest Departure'),
+    ),
+    'rows' => array(),
+    'empty' => t('No herds found in plan'),
+  );
+
+  $query = db_query('SELECT * FROM {farm_grazing_herds} WHERE plan_id=:plan_id', array(':plan_id' => $plan));
+
+  $records = $query->fetchAll();
+  foreach ($records as $record) {
+
+    if (empty($record->herd_id)) {
+      continue;
+    }
+
+    // TODO get group attributes for herd_id
+    //  herd name as $herd_name
+    //  Total SAU as $herd_sau
+    //  Total DMI as $herd_dmi
+    //  min(arrival) as $arrival
+    //  max(departure) as $departure
+    $herd = farm_grazing_herd_summary_info($record->herd_id);
+
+    //$format = 'Y-m-d';
+    //$arrival_date = date($format, $herd['arrival']);
+    //$departure_date = date($format, $herd['departure']);
+    $arrival_date = $herd['arrival'];
+    $departure_date = $herd['departure'];
+
+    $table['rows'][] = array(
+      '<a href="/farm/grazing/plan/' . $plan . '/herd/' . $record->herd_id .
+        '/edit?destination=/farm/plan/' . $plan . '/herds">' .
+        $herd['name'] . '</a>',
+      $herd['herd_sau'],
+      $herd['herd_dmi'],
+      $arrival_date,
+      $departure_date,
+    );
+  }
+
+  $form['table'] = array(
+    '#markup' => theme('table', $table),
+  );
+
+  // TODO Add table of herd details for each herd
+
+  // TODO Add table SAU by Plan Month for each herd
+
+  // Return the form.
+  return $form;
+}
+
+/**
+ * farm_grazing_plan_herds_form_submit()
+ *
+ * Add a herd to a plan
+ */
+function farm_grazing_plan_herds_form_submit($form, &$form_state) {
+
+  // debug output
+  //$fp = fopen('php://stderr', 'a');
+  //fputs($fp, print_r($form_state['values'], true));
+
+  $plan_id = $form_state['values']['plan'];
+  $herd_id = $form_state['values']['herd_id'];
+
+  db_merge('farm_grazing_herds')
+    ->key(array(
+      'plan_id' => $plan_id,
+      'herd_id' => $herd_id,
+    ))
+    ->fields(array(
+      'plan_id' => $plan_id,
+      'herd_id' => $herd_id,
+    ))
+    ->execute();
+}
+
+/**
+ * farm_grazing_plan_herd_edit_form()
+ *
+ * Remove the requested herd from the plan
+ */
+function farm_grazing_plan_herd_edit_form($form, &$form_state, $plan_obj, $herd_id) {
+
+  // get plan name
+  $plan_name = $plan_obj->name;
+
+  // get herd name
+  $herd = farm_asset_load($herd_id);
+  $herd_name = $herd->name;
+
+  $form['plan_id'] = array(
+    '#type' => 'value',
+    '#value' => $plan_obj->id,
+  );
+
+  $form['herd_id'] = array(
+    '#type' => 'value',
+    '#value' => $herd->id,
+  );
+
+  $form['edit']['text'] = array(
+    '#markup' => '<h2>' . t('Confirm that you want to remove ') .
+      '<b>' . $herd_name . '</b>' .
+      t(' from plan ') . '<b>' . $plan_name . '</b>.</h2>',
+  );
+  $form['edit']['cancel'] = array(
+    '#type' => 'submit',
+    '#value' => t('Cancel'),
+    '#submit' => array('farm_grazing_herd_edit_form_submit'),
+  );
+  $form['edit']['delete'] = array(
+    '#type' => 'submit',
+    '#value' => t('Remove Herd from Plan'),
+    '#submit' => array('farm_grazing_herd_edit_form_submit'),
+  );
+
+  // Return the form.
+  return $form;
+}
+
+/**
+ * farm_grazing_herd_form_submit
+ *
+ * Handle farm_grazing_plan_herd_edit_form() submit processing
+ */
+function farm_grazing_herd_edit_form_submit($form, &$form_state) {
+
+  // debug output
+  //$fp = fopen('php://stderr', 'a');
+  //fputs($fp, print_r($form_state, true));
+
+  $plan_id = $form_state['values']['plan_id'];
+  $herd_id = $form_state['values']['herd_id'];
+
+  // if user clicked Cancel, get out of here
+  if ($form_state['clicked_button']['#id'] == 'edit-cancel') {
+    return;
+  }
+
+  if ($form_state['clicked_button']['#id'] == 'edit-delete') {
+    db_delete('farm_grazing_herds')
+      ->condition('plan_id', $plan_id)
+      ->condition('herd_id', $herd_id)
+      ->execute();
+  }
+
 }
 
 /**
@@ -1022,7 +1232,80 @@ function farm_grazing_plan_implement_status_page($plan) {
 
 /**
  * function farm_grazing_config_animal_types_form
+ *
+ * TODO I think Mike is doing this elsewhere??
  */
 function farm_grazing_config_animal_types_form($form, $form_state) {
 
 }
+
+
+// -------------- utility functions ----------------
+
+/**
+ * farm_grazing_herd_summary_info($herd_id)
+ *
+ * recursively walks a farmos group structure and returns a summary
+ * as array(id=>..., name=>...,herd_sau=>...,herd_dmi=>...,
+ *          arrival=>...,departure=>...)
+ */
+function farm_grazing_herd_summary_info($herd_id) {
+
+  $herd = farm_asset_load($herd_id);
+
+  // a herd MUST be a farmos group asset
+  if ($herd->type != 'group') {
+    return;
+  }
+
+  // TODO this function needs to be converted to recursively walk
+  //      the subgroups of this herd and summarize all this information
+
+  // get the group quantity for head count
+  $head_count = 100; //TODO what function to get quantity of group
+
+  // get the dry matter intake factor as percent of weight
+  $animal_type = farm_asset_property_get($herd_id, 'farm_grazing_animal_type');
+  $dmi_factor = db_query('SELECT dmi_factor FROM farm_grazing_animal_types WHERE type_id=:tid', array(':tid' => $animal_type))->fetchField();
+
+  // get the average animal weight from the logs
+  $weight = 300; // TODO what function to get weight?
+
+  // get the planned arrival anf departure for the herd
+  $arrival = farm_asset_property_get($herd_id, 'farm_grazing_planned_arrival');
+  $departure = farm_asset_property_get($herd_id, 'farm_grazing_planned_departure');
+
+  return array(
+    'id' => $herd_id,
+    'name' => $herd->name,
+    'herd_sau' => $head_count * $weight / 1000.0,
+    'herd_dmi' => $head_count * $weight * $dmi_factor / 100.0,
+    'arrival' => $arrival,
+    'departure' => $departure,
+  );
+}
+
+/**
+ * farm_grazing_validate_herd($herd_id)
+ *
+ * when a herd is attached to a grazing plan or otherwise modified
+ * this function checks that all components of the herd have required
+ * properties and initial observations.
+ *
+ * it should return null if ok, otherwise a document enumerating the
+ * problems with links to where the user can fix them.
+ *
+ */
+function farm_grazing_validate_herd($herd_id) {
+  // TODO farm_grazing_validate_herd($herd_id)
+
+  // Things to validate
+  //  farm_grazing_animal_type property exists and is valid
+  //  farm_grazing_planned_arrival property exists and is valid
+  //  farm_grazing_planned_departure property exists and is valid
+  //  has weight
+  //  all animals/groups are in some paddock
+
+}
+
+
