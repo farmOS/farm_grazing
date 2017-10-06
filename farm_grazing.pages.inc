@@ -1358,7 +1358,7 @@ function farm_grazing_validate_herd($herd_id) {
   if (empty($type)) {
     drupal_set_message(t('Herd') . '(<a href="/farm.asset/' . $herd_id . '/edit">' .
     $herd->name .
-    '</a>)' .t(' needs its Animal Type property set.'));
+    '</a>)' .t(' needs its Animal Type property set.'), 'error');
     $errors++;
   }
 
@@ -1367,7 +1367,7 @@ function farm_grazing_validate_herd($herd_id) {
   if (empty($arrival)) {
     drupal_set_message(t('Herd') . '(<a href="/farm.asset/' . $herd_id . '/edit">' .
     $herd->name .
-    '</a>)' .t(' needs its Planned Arrival date set.'));
+    '</a>)' .t(' needs its Planned Arrival date set.'), 'error');
     $errors++;
   }
 
@@ -1376,7 +1376,7 @@ function farm_grazing_validate_herd($herd_id) {
   if (empty($departure)) {
     drupal_set_message(t('Herd') . '(<a href="/farm.asset/' . $herd_id . '/edit">' .
     $herd->name .
-    '</a>)' .t(' needs its Planned Departure date set.'));
+    '</a>)' .t(' needs its Planned Departure date set.'), 'error');
     $errors++;
   }
 
@@ -1385,7 +1385,7 @@ function farm_grazing_validate_herd($herd_id) {
   if (empty($data) || empty($data['value'])) {
     drupal_set_message(t('Herd') . '(<a href="/farm.asset/' . $herd_id . '">' .
       $herd->name .
-      '</a>)' .t(' needs an Observation -> Quantity -> weight set.'));
+      '</a>)' .t(' needs an Observation -> Quantity -> weight set.'), 'error');
     $errors++;
   }
 
