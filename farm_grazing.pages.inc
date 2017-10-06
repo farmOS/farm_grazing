@@ -985,6 +985,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     '#type' => 'submit',
     '#value' => t('Add Herd to Plan'),
     '#submit' => array('farm_grazing_plan_herds_form_submit'),
+    '#validate' => array('farm_grazing_plan_herds_form_validate'),
   );
 
   $table = array(
@@ -1081,7 +1082,7 @@ function farm_grazing_plan_herds_form_submit($form, &$form_state) {
   //fputs($fp, print_r($form_state['values'], true));
 
   $plan_id = $form_state['values']['plan'];
-  $herd_id = $form_state['values']['herd_id'];
+  $herd_id = $form_state['values']['add']['herd_id'];
 
   db_merge('farm_grazing_herds')
     ->key(array(
@@ -1093,6 +1094,25 @@ function farm_grazing_plan_herds_form_submit($form, &$form_state) {
       'herd_id' => $herd_id,
     ))
     ->execute();
+}
+
+/**
+ *
+ */
+function farm_grazing_plan_herds_form_validate($form, &$form_state) {
+
+  // debug output
+  //$fp = fopen('php://stderr', 'a');
+  //fputs($fp, print_r($form_state['values'], true));
+  //fputs($fp, print_r($form_state['input'], true));
+
+  $plan_id = $form_state['values']['plan'];
+  $herd_id = $form_state['input']['add']['herd_id'];
+
+  if (farm_grazing_validate_herd($herd_id)) {
+    form_set_error('herd_id', t('Please fix the issues listed before adding this herd to the plan.'));
+  }
+
 }
 
 /**
@@ -1288,14 +1308,16 @@ function farm_grazing_herd_summary_info($herd_id) {
   //      the subgroups of this herd and summarize all this information
 
   // get the group quantity for head count
-  $head_count = 100; //TODO what function to get quantity of group
+  $head_count = farm_inventory($herd);
 
   // get the dry matter intake factor as percent of weight
   $animal_type = farm_asset_property_get($herd_id, 'farm_grazing_animal_type');
   $dmi_factor = db_query('SELECT dmi_factor FROM farm_grazing_animal_types WHERE type_id=:tid', array(':tid' => $animal_type))->fetchField();
 
   // get the average animal weight from the logs
-  $weight = 300; // TODO what function to get weight?
+  $data = farm_grazing_asset_weight($herd);
+  $units = $data['units'];  // TODO make adjustments for units
+  $weight = $data['value'];
 
   // get the planned arrival anf departure for the herd
   $arrival = farm_asset_property_get($herd_id, 'farm_grazing_planned_arrival');
@@ -1323,15 +1345,55 @@ function farm_grazing_herd_summary_info($herd_id) {
  *
  */
 function farm_grazing_validate_herd($herd_id) {
-  // TODO farm_grazing_validate_herd($herd_id)
+  // TODO farm_grazing_validate_herd($herd_id) needs to support membership
+
+  $errors = 0;
+
+  // load the asset
+  $herd = farm_asset_load($herd_id);
 
   // Things to validate
   //  farm_grazing_animal_type property exists and is valid
-  //  farm_grazing_planned_arrival property exists and is valid
-  //  farm_grazing_planned_departure property exists and is valid
-  //  has weight
-  //  all animals/groups are in some paddock
+  $type = farm_asset_property_get($herd_id, 'farm_grazing_animal_type');
+  if (empty($type)) {
+    drupal_set_message(t('Herd') . '(<a href="/farm.asset/' . $herd_id . '/edit">' .
+    $herd->name .
+    '</a>)' .t(' needs its Animal Type property set.'));
+    $errors++;
+  }
 
+  //  farm_grazing_planned_arrival property exists and is valid
+  $arrival = farm_asset_property_get($herd_id, 'farm_grazing_planned_arrival');
+  if (empty($arrival)) {
+    drupal_set_message(t('Herd') . '(<a href="/farm.asset/' . $herd_id . '/edit">' .
+    $herd->name .
+    '</a>)' .t(' needs its Planned Arrival date set.'));
+    $errors++;
+  }
+
+  //  farm_grazing_planned_departure property exists and is valid
+  $departure = farm_asset_property_get($herd_id, 'farm_grazing_planned_departure');
+  if (empty($departure)) {
+    drupal_set_message(t('Herd') . '(<a href="/farm.asset/' . $herd_id . '/edit">' .
+    $herd->name .
+    '</a>)' .t(' needs its Planned Departure date set.'));
+    $errors++;
+  }
+
+  //  has weight
+  $data = farm_grazing_asset_weight($herd);
+  if (empty($data) || empty($data['value'])) {
+    drupal_set_message(t('Herd') . '(<a href="/farm.asset/' . $herd_id . '">' .
+      $herd->name .
+      '</a>)' .t(' needs an Observation -> Quantity -> weight set.'));
+    $errors++;
+  }
+
+  //  TODO all animals/groups are in some paddock
+
+  //  TODO is asset attached to another active plan?
+
+  return $errors;
 }
 
 
