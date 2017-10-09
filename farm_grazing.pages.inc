@@ -991,6 +991,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   $table = array(
     'header' => array(
       t('Herd Name'),
+      t('Head Count'),
       t('SAU'),
       t('Daily Intake'),
       t('Earliest Arrival'),
@@ -1002,6 +1003,9 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
 
   $query = db_query('SELECT * FROM {farm_grazing_herds} WHERE plan_id=:plan_id', array(':plan_id' => $plan));
 
+  // collect information about herds here
+  $herd_details = array();
+
   $records = $query->fetchAll();
   foreach ($records as $record) {
 
@@ -1009,47 +1013,89 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
       continue;
     }
 
-    // TODO get group attributes for herd_id
-    //  herd name as $herd_name
-    //  Total SAU as $herd_sau
-    //  Total DMI as $herd_dmi
-    //  min(arrival) as $arrival
-    //  max(departure) as $departure
-    $herd = farm_grazing_herd_summary_info($record->herd_id);
+    // load the asset so we have its name
+    $group = farm_asset_load($record->herd_id);
+
+    $data = array();
+    get_grazing_group_detailed_info($record->herd_id, $data);
+
+    // get the group object so we havr the group name
+    $summary = summarize_grazing_group_detailed_info($data);
+
+    // save all the herd info here, we'll use it later
+    // to generate the tables we display
+    $herd_details[] = array(
+      'herd_name' => $group->name,
+      'herd_data' => $data,
+      'summary' => $summary,
+    );
 
     //$format = 'Y-m-d';
     //$arrival_date = date($format, $herd['arrival']);
     //$departure_date = date($format, $herd['departure']);
-    $arrival_date = $herd['arrival'];
-    $departure_date = $herd['departure'];
+    $arrival_date = $summary['arrival'];
+    $departure_date = $summary['departure'];
 
+    // build the section 1 summary table
     $table['rows'][] = array(
       '<a href="/farm/grazing/plan/' . $plan . '/herd/' . $record->herd_id .
         '/edit?destination=/farm/plan/' . $plan . '/herds">' .
-        $herd['name'] . '</a>',
-      $herd['herd_sau'],
-      $herd['herd_dmi'],
+        $group->name . '</a>',
+      $summary['head_count'],
+      $summary['herd_sau'],
+      $summary['herd_dmi'],
       $arrival_date,
       $departure_date,
     );
   }
 
+  // table for herd summary
   $form['section_1'] = array(
     '#markup' => '<h4>' . t('Summary of Herds in Plan') . '</h4>',
   );
-  // TODO this does not display the table for some reason
-  //$form['section_1']['table'] = array(
   $form['section_1_table'] = array(
     '#markup' => theme('table', $table),
   );
 
-  // TODO Add table of herd details for each herd
-  $form['section_2'] = array(
-    '#markup' => '<h4>' . t('Herd Details') . '</h4>',
-  );
-  $form['section_2_table'] = array(
-    '#markup' => 'TODO',
-  );
+  // Add table of herd details for each herd
+  $cnt = 0;
+  foreach ($herd_details as $this_herd) {
+    // define the table
+    $table = array(
+      'header' => array(
+        t('Herd Name'),
+        t('Type'),
+        t('Head Count'),
+        t('SAU'),
+        t('Daily Intake'),
+        t('Planned Arrival'),
+        t('Planned Departure'),
+      ),
+      'rows' => array(),
+      'empty' => t('No animals found in herd'),
+    );
+
+    foreach ($this_herd['herd_data'] as $rec) {
+      $table['rows'][] = array(
+        $rec['name'],
+        getAnimalTypeName($rec['type']),
+        $rec['head_count'],
+        $rec['weight']/1000.0,
+        $rec['weight']*$rec['dmi_factor']/100.0,
+        $rec['arrival'],
+        $rec['departure'],
+      );
+    }   
+
+    $cnt++;
+    $form['section_2.' . $cnt] = array(
+      '#markup' => '<h4>' . t('Herd Details for ') . $this_herd['herd_name'] . '</h4>',
+    );
+
+    $form['section_2.'.$cnt.'_table'] = array(
+      '#markup' => theme('table', $table),
+    );
+  }
 
   // TODO Add table SAU by Plan Month for each herd
   $form['section_3'] = array(
@@ -1289,48 +1335,143 @@ function farm_grazing_config_animal_types_form($form, $form_state) {
 // -------------- utility functions ----------------
 
 /**
- * farm_grazing_herd_summary_info($herd_id)
+ * getAnimalTypeName($type)
  *
- * recursively walks a farmos group structure and returns a summary
- * as array(id=>..., name=>...,herd_sau=>...,herd_dmi=>...,
- *          arrival=>...,departure=>...)
+ * Return name field from {farm_grazing_animal_types} table
  */
-function farm_grazing_herd_summary_info($herd_id) {
+function getAnimalTypeName($type) {
+  return db_query('SELECT name FROM {farm_grazing_animal_types} WHERE type_id=:tid', array(':tid' => $type))->fetchField();
+}
 
-  $herd = farm_asset_load($herd_id);
+/**
+ * getAnimalTypeDmiFactor($type)
+ *
+ * Return dmi_factor field from {farm_grazing_animal_types} table
+ */
+function getAnimalTypeDmiFactor($type) {
+  return db_query('SELECT dmi_factor FROM {farm_grazing_animal_types} WHERE type_id=:tid', array(':tid' => $type))->fetchField();
+}
 
-  // a herd MUST be a farmos group asset
-  if ($herd->type != 'group') {
+
+/**
+ * get_grazing_group_detailed_info($asset_id, &$data)
+ *
+ * Recursively walk a nested group structure extracting records
+ * for each leaf node.
+ *
+ * Usage:
+ *  $data = array();
+ *  get_grazing_group_detailed_info($asset_id, $data);
+ *
+ * Results:
+ *  $data = array(
+ *    array(
+ *      'id' => $asset_id,
+ *      'name' => $asset->name,
+ *      'type' => $type,
+ *      'arrival' => $arrival,
+ *      'departure' => $departure,
+ *      'head_count' => $head_count,
+ *      'weight' => $weight['value'],
+ *      'weight_units' => $weight['units'],
+ *      'dmi_factor' => $dmi_factor,
+ *    ),
+ *    ...
+ *  );
+ */
+function get_grazing_group_detailed_info($asset_id, &$data) {
+  // get the asset
+  $asset = farm_asset_load($asset_id);
+
+  // ignore inactive ones
+  if (!$asset->active) {
     return;
   }
 
-  // TODO this function needs to be converted to recursively walk
-  //      the subgroups of this herd and summarize all this information
+  // get the asset children and process them
+  $children  = farm_group_get_members($asset);
+  if ($asset->type == 'group' and ! empty($children)) {
+    foreach ($children as $child) {
+      get_grazing_group_detailed_info($child->id, $data);
+    }
+  }
+  else {
+    // collect the attributes for a leaf node
+    $type = farm_asset_property_get($asset_id, 'farm_grazing_animal_type');
+    $arrival = farm_asset_property_get($asset_id, 'farm_grazing_planned_arrival');
+    $departure = farm_asset_property_get($asset_id, 'farm_grazing_planned_departure');
 
-  // get the group quantity for head count
-  $head_count = farm_inventory($herd);
+    // get the group quantity for asset count
+    $head_count = farm_inventory($asset);
 
-  // get the dry matter intake factor as percent of weight
-  $animal_type = farm_asset_property_get($herd_id, 'farm_grazing_animal_type');
-  $dmi_factor = db_query('SELECT dmi_factor FROM farm_grazing_animal_types WHERE type_id=:tid', array(':tid' => $animal_type))->fetchField();
+    $weight = farm_grazing_asset_weight($asset);
+    $dmi_factor = getAnimalTypeDmiFactor($type);
 
-  // get the average animal weight from the logs
-  $data = farm_grazing_asset_weight($herd);
-  $units = $data['units'];  // TODO make adjustments for units
-  $weight = $data['value'];
+    // add the record to the results
+    $data[] = array(
+      'id' => $asset_id,
+      'name' => $asset->name,
+      'type' => $type,
+      'arrival' => $arrival,
+      'departure' => $departure,
+      'head_count' => $head_count,
+      'weight' => $weight['value'],
+      'weight_units' => $weight['units'],
+      'dmi_factor' => $dmi_factor,
+    );
+  }
+}
 
-  // get the planned arrival anf departure for the herd
-  $arrival = farm_asset_property_get($herd_id, 'farm_grazing_planned_arrival');
-  $departure = farm_asset_property_get($herd_id, 'farm_grazing_planned_departure');
+/**
+ * summarize_grazing_group_detailed_info(&$data)
+ *
+ * Take the results of get_grazing_group_detailed_info()
+ * and create a one record summary used by Herds/Manage
+ *
+ * Returns:
+ *   array(
+ *     'head_count' => $head_count,
+ *     'herd_sau' => $sum_sau,
+ *     'herd_dmi' => $sum_dmi,
+ *     'arrival' => $min_arrival,
+ *     'departure' => $max_departure)
+ *
+ * Usage:
+ *  $data = array();
+ *  get_grazing_group_detailed_info($asset_id, $data);
+ *  $summary = summarize_grazing_group_detailed_info($data);
+ */
+function summarize_grazing_group_detailed_info(&$data) {
+  $summary = array();
+  $sum_sau = 0;
+  $sum_dmi = 0;
+  $head_count = 0;
+  $min_arrival = false;
+  $max_departure = false;
 
+  // summarize the data
+  foreach ($data as $rec) {
+    $sum_sau = $sum_sau + $rec['head_count'] * $rec['weight'] / 1000.0;
+    $sum_dmi = $sum_dmi + $rec['head_count'] * $rec['weight'] * $rec['dmi_factor'] / 100.0;
+    $head_count = $head_count + $rec['head_count'];
+
+    // TODO verify this will work as strings or need to be date objects
+    if ($min_arrival === false or $rec['arrival'] < $min_arrival) {
+      $min_arrival = $rec['arrival'];
+    }
+    if ($max_departure === false or $rec['departure'] > $max_departure) {
+      $max_departure = $rec['departure'];
+    }
+  }
+
+  // return result
   return array(
-    'id' => $herd_id,
-    'name' => $herd->name,
-    'herd_sau' => $head_count * $weight / 1000.0,
-    'herd_dmi' => $head_count * $weight * $dmi_factor / 100.0,
-    'arrival' => $arrival,
-    'departure' => $departure,
-  );
+    'head_count' => $head_count,
+    'herd_sau' => $sum_sau,
+    'herd_dmi' => $sum_dmi,
+    'arrival' => $min_arrival,
+    'departure' => $max_departure,
+    );
 }
 
 /**
@@ -1396,4 +1537,9 @@ function farm_grazing_validate_herd($herd_id) {
   return $errors;
 }
 
-
+/**
+ * TODO Remove dummay function farm_group_get_members
+ */
+function farm_group_get_members($obj) {
+  return array();
+}
