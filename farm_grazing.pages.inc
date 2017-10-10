@@ -1097,19 +1097,122 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     );
   }
 
-  // TODO Add table SAU by Plan Month for each herd
+  // get the start date month and year
+  $start_date = new DateTime();
+  $start_date->setTimestamp($plan_obj->field_farm_date_range['und'][0]['value']);
+
+  // get the end date month and year
+  $end_date = new DateTime();
+  $end_date->setTimestamp($plan_obj->field_farm_date_range['und'][0]['value2']);
+
+  // get the DateInterval between them
+  $diff = $start_date->diff($end_date);
+
+    // define the table
+    $table = array(
+      'header' => array(t('Herd')),
+      'rows' => array(),
+      'empty' => t('No data found for herds'),
+    );
+
+  // generate array of months between start and end
+  $num_months = $diff->y * 12 + $diff->m;
+  $date = $start_date;
+
+  // generate the header text
+  $helper = array();
+  for( $i = 0; $i <= $num_months; $i++ ) {
+    $key = $date->format('Ym');
+    $helper[$key] = $i;
+
+    $table['header'][] = $date->format('M Y');
+
+    // increment the month
+    $date->modify('+1 month');
+  }
+
+  // for each herd, cycle through months in plan
+  // and sum up total SAUs by month
+  $rows = array();
+  $num_plan_months = $num_months;
+  foreach ($herd_details as $this_herd) {
+    // initial row for this herd
+    $row = array();
+    for( $i = 0; $i <= $num_plan_months; $i++ ) {
+      $row[] = 0;
+    }
+    foreach ($this_herd['herd_data'] as $rec) {
+      $sau = $rec['head_count']*$rec['weight']/1000.0;
+      $start_date = date_create_from_format('Y-m-d', $rec['arrival']);
+      $end_date = date_create_from_format('Y-m-d', $rec['departure']);
+
+      // get the DateInterval between them
+      $diff = $start_date->diff($end_date);
+
+      // generate array of months between start and end
+      $num_months = $diff->y * 12 + $diff->m;
+      $date = $start_date;
+
+      // sum up the sau by month
+      for( $i = 0; $i <= $num_months; $i++ ) {
+        $key = $date->format('Ym');
+        if (isset($helper[$key])) {
+          $row[$helper[$key]] = $row[$helper[$key]] + $sau;
+        }
+
+        // increment the month
+        $date->modify('+1 month');
+      }
+    }
+    array_unshift($row, $this_herd['herd_name']);
+    $rows[] = $row;
+  }
+
+  // sum the columns in each row to get totals
+  $peak_sau = 0;
+  $totals = array(t('Total SAU'));
+  for( $i = 0; $i <= $num_plan_months; $i++ ) {
+    $sum = 0;
+    foreach ($rows as $row) {
+      if (isset($row[$i+1])) {
+        $sum = $sum + $row[$i+1];
+      }
+    }
+    $totals[] = $sum;
+    if ($sum > $peak_sau) {
+      $peak_sau = $sum;
+    }
+  }
+
+  $rows[] = $totals;
+  $table['rows'] = $rows;
+
+  // Add table SAU by Plan Month for each herd
   $form['section_3'] = array(
     '#markup' => '<h4>' . t('SAU by Month') . '</h4>',
   );
   $form['section_3_table'] = array(
-    '#markup' => 'TODO',
+    '#markup' => theme('table', $table),
   );
-  // TODO Add table SAU by Plan Month for each herd
+
+  $paddocks_in_plan = get_selected_paddock_quality_for_plan($plan);
+  $cell_size = 0;
+  foreach($paddocks_in_plan as $paddock_id => $quality) {
+    $cell_size = $cell_size + farm_area_calculate_area($paddock_id);
+  }
+
+  // Add Stocking Rates
   $form['section_4'] = array(
-    '#markup' => '<h4>' . t('Summary') . '</h4>',
+    '#markup' => '<h4>' . t('Stocking Rates') . '</h4>',
   );
-  $form['section_4_table'] = array(
-    '#markup' => 'TODO',
+  $form['section_4_cell_size'] = array(
+    '#markup' => '<p>' . t('Total Cell Size: ') . round($cell_size, 1) . '</p>',
+  );
+  $form['section_4_peak_sau'] = array(
+    '#markup' => '<p>' . t('Peak Monthly SAU: ') . $peak_sau . '</p>',
+  );
+  $form['section_4_stocking_rate'] = array(
+    '#markup' => '<p>' . t('Stocking Rate: ') . round($cell_size/$peak_sau, 1) . '</p>',
   );
 
   // Return the form.
