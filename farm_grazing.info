@@ -34,4 +34,3 @@ features[field_instance][] = farm_plan-grazing-field_farm_date_range
 features[field_instance][] = farm_plan-grazing-field_farm_grazing_factors
 features[field_instance][] = farm_plan-grazing-field_grazing_growing_season
 features[views_view][] = farm_grazing_plan
-scripts[] = help-toggle.js

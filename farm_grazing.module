@@ -7,9 +7,6 @@
 
 include_once 'farm_grazing.features.inc';
 
-// this breaks things, but it seems to work without it ??
-//drupal_add_js(drupal_get_path('module', 'farm_grazing') . 'help-toggle.js');
-
 /**
  * Implements hook_farm_ui_entities().
  */
