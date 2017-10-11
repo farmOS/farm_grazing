@@ -185,13 +185,36 @@ function farm_grazing_menu() {
   $items['farm/plan/%farm_plan/herds/paddocks'] = array(
     'title' => 'Paddocks',
     'description' => 'Select paddocks for herd rotations.',
-    'page callback' => 'farm_grazing_plan_herds_paddocks_page',
-    'page arguments' => array(2),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('farm_grazing_plan_herds_paddocks_form', 2),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(2),
     'file' => 'farm_grazing.pages.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 20,
+  );
+
+  // Herds - Paddocks. (same as above except includes herd_id parameter)
+  $items['farm/plan/%farm_plan/herds/paddocks/%'] = array(
+    'title' => 'Paddocks',
+    'description' => 'Select paddocks for herd rotations.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('farm_grazing_plan_herds_paddocks_form', 2, 5),
+    'access callback' => 'farm_grazing_plan_access',
+    'access arguments' => array(2),
+    'file' => 'farm_grazing.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+
+  // Herds - Paddocks. (same as above except includes herd_id parameter)
+  $items['farm/plan/%/herds/%/paddocks/%/delete/%'] = array(
+    'title' => 'Paddocks',
+    'description' => 'Remove paddock from herd rotations.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('farm_grazing_plan_herds_paddocks_delete', 2, 4, 6, 8),
+    'access arguments' => array('edit any grazing plans'),
+    'file' => 'farm_grazing.pages.inc',
+    'type' => MENU_CALLBACK,
   );
 
   // Herds - Historical grazing patterns.

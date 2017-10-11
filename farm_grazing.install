@@ -200,6 +200,39 @@ function farm_grazing_schema() {
     ),
   );
 
+  $schema['farm_grazing_herd_paddocks'] = array(
+    'description' => 'List of padocks assigned to a herd in a plan.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'PK for farm_grazing_herd_paddocks table',
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'plan_id' => array(
+        'description' => 'FK reference to plan_id',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'herd_id' => array(
+        'description' => 'FK reference to herd id',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'paddock_id' => array(
+        'description' => 'FK reference to a paddock id',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('id'),
+    'indexes' => array(
+      'plan_id_herd_id' => array('plan_id', 'herd_id'),
+    ),
+  );
+
   return $schema;
 }
 

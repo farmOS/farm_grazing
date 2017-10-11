@@ -12,7 +12,7 @@
   //'page callback' => 'drupal_get_form(farm_grazing_plan_recovery_form)',
   //'page callback' => 'farm_grazing_plan_summary_page',
   //'page callback' => 'drupal_get_form(farm_grazing_plan_herds_form)',
-  //'page callback' => 'farm_grazing_plan_herds_paddocks_page',
+  //'page callback' => 'drupal_get_form(farm_grazing_plan_herds_paddocks_form)',
   //'page callback' => 'farm_grazing_plan_history_page',
   //'page callback' => 'farm_grazing_plan_rotations_page',
   //'page callback' => 'farm_grazing_plan_implement_page',
@@ -246,7 +246,7 @@ function farm_grazing_exclusions_form($form, &$form_state, $plan_obj) {
 
     // Assemble the row.
     $table['rows'][] = array(
-      '<a href="/farm/grazing/exclusions/' . $record->id . '/edit?destination=/farm/plan/' . $plan . '/paddocks/exclusions">' . $record->name . '</a>',
+      '<a href="/farm/grazing/exclusions/' . $record->id . '/edit?destination=farm/plan/' . $plan . '/paddocks/exclusions">' . $record->name . '</a>',
       $start_date,
       $end_date,
       $record->reason,
@@ -947,7 +947,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   // Return markup.
   $form['text'] = array(
     '#markup' => t('<p>' .
-      t('A herd is defined as a group of animals that will be rotated between paddocks to together regardless of the make up of animals in the herd.') .
+      t('A herd is defined as a group of animals that will be rotated between paddocks together regardless of the make up of animals in the herd.') .
       '</p><p>' .
       t('Herds are defined in farmOS as groups under the "Assets -> Groups" menu, then they can be selected here. You can also add to a herd, combine herds, split some animals out of a herd, or ship animals out of the plan.') .
       '</p></p>' .
@@ -1039,7 +1039,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     // build the section 1 summary table
     $table['rows'][] = array(
       '<a href="/farm/grazing/plan/' . $plan . '/herd/' . $record->herd_id .
-        '/edit?destination=/farm/plan/' . $plan . '/herds">' .
+        '/edit?destination=farm/plan/' . $plan . '/herds">' .
         $group->name . '</a>',
       $summary['head_count'],
       $summary['herd_sau'],
@@ -1339,17 +1339,186 @@ function farm_grazing_herd_edit_form_submit($form, &$form_state) {
 /**
  * Paddocks page callback.
  */
-function farm_grazing_plan_herds_paddocks_page($plan) {
+function farm_grazing_plan_herds_paddocks_form($form, &$form_state, $plan_obj, $herd_id = false) {
+
+  $plan = $plan_obj->id;
 
   // Set the page title.
   drupal_set_title(t('Select paddocks for a herd'));
 
-  // Return markup.
-  return array(
+  $form['plan'] = array(
+    '#type' => 'value',
+    '#value' => $plan,
+  );
+  $form['text'] = array(
     '#markup' => t('
       <p>Select a herd if you have defined more than one</p>
       <p>Then select or unselect the paddocks you want to use for this herd. Paddocks may be selected more than once for a given herd or between multiple herds. Once a paddock has be selected for grazing it will show the recovery peroid for that paddock and it is not recommended that it be grazed again until after the recovery period.</p>'),
   );
+
+  // build a table of herds associated with this plan
+  $query = db_query('SELECT * FROM {farm_grazing_herds} WHERE plan_id=:plan_id',
+    array(':plan_id' => $plan));
+  $records = $query->fetchAll();
+
+  $rows = array();
+  foreach ($records as $rec) {
+    // if herd_id is not set, then set it to the first herd
+    if ($herd_id === false) {
+      $herd_id = $rec->herd_id;
+    }
+    $group = farm_asset_load($rec->herd_id);
+    $rows[] = array('<a href="/farm/plan/' . $plan . '/herds/paddocks/' . $rec->herd_id .
+      '">' . $group->name . '</a>');
+  }
+
+  $form['herd_id'] = array(
+    '#type' => 'value',
+    '#value' => $herd_id,
+  );
+  $table = array(
+    'header' => array(t('Select a herd')),
+    'rows' => $rows,
+    'empty' => t('No herds defined for this plan'),
+  );
+
+  $form['select_herd'] = array(
+    '#markup' => theme('table', $table),
+  );
+
+  $group = farm_asset_load($herd_id);
+
+  // create a section for the selected herd and list the paddocks assigned to it
+  $form['section_1_title'] = array(
+    '#markup' => '<h4>' . t('Paddocks for ') . $group->name . '</h4><p>' .
+      t('Click on the paddock name to remove it.') . '</p>',
+  );
+
+  // build a table of paddocks assigned to this herd
+  $query = db_query('SELECT * FROM {farm_grazing_herd_paddocks} WHERE plan_id=:plan_id AND herd_id=:herd_id',
+    array(':plan_id' => $plan, ':herd_id' => $herd_id));
+  $records = $query->fetchAll();
+
+  $rows = array();
+  foreach ($records as $rec) {
+    $term = taxonomy_term_load($rec->paddock_id);
+    $area = farm_area_calculate_area($rec->paddock_id);
+    $rows[] = array(
+      '<a href="/farm/plan/' . $plan . '/herds/' . $herd_id .
+        '/paddocks/' . $rec->paddock_id . '/delete/' . $rec->id .
+        '?destination=farm/plan/' . $plan .  '/herds/paddocks/' .
+        $herd_id . '">' .  $term->name . '</a>', $area);
+  }
+
+  $table = array(
+    'header' => array(
+      t('Paddock'),
+      t('Area'),
+    ),
+    'rows' => $rows,
+    'empty' => t('No paddocks have been added to this herd.'),
+  );
+
+  $form['section_1_table'] = array(
+    '#markup' => theme('table', $table),
+  );
+
+  // Add paddocks to herd
+  $query = db_query('SELECT p.*, t.name FROM {farm_grazing_plan_paddock} p LEFT JOIN taxonomy_term_data t ON p.paddock_id=t.tid ORDER BY t.name');
+  $records = $query->fetchAll();
+
+  // build the select options array
+  $paddock_options = array();
+  foreach ($records as $rec) {
+    $paddock_options[$rec->paddock_id] = $rec->name;
+  }
+
+  $form['add'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Add a paddock to herd'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['add']['paddock_id'] = array(
+    '#type' => 'select',
+    '#title' => t('Paddock'),
+    '#description' => t('Select a paddock you want to add to this herd.'),
+    '#options' => $paddock_options,
+    '#required' => TRUE,
+  );
+  $form['add']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Add paddock to herd'),
+    '#submit' => array('farm_grazing_plan_herds_paddocks_form_submit'),
+  );
+
+  return $form;
+}
+
+/**
+ *
+ */
+function farm_grazing_plan_herds_paddocks_form_submit($form, &$form_state) {
+
+  // debug output
+  //$fp = fopen('php://stderr', 'a');
+  //fputs($fp, print_r($form_state, true));
+
+  $plan_id = $form_state['values']['plan'];
+  $herd_id = $form_state['values']['herd_id'];
+  $paddock_id = $form_state['values']['paddock_id'];
+
+  db_insert('farm_grazing_herd_paddocks')
+    ->fields(array(
+      'paddock_id' => $paddock_id,
+      'plan_id' => $plan_id,
+      'herd_id' => $herd_id,
+      ))
+      ->execute();
+
+}
+
+/**
+ *
+ */
+function farm_grazing_plan_herds_paddocks_delete($form, &$form_state, $plan, $herd_id, $paddock_id, $rid) {
+
+  // debug output
+  //$fp = fopen('php://stderr', 'a');
+  //fputs($fp, print_r($form_state, true));
+  //fputs($fp, print_r(array('plan_id'=>$plan, 'rid'=>$rid)));
+
+  $form['plan_id'] = array(
+    '#type' => 'value',
+    '#value' => $plan,
+  );
+  $form['rid'] = array(
+    '#type' => 'value',
+    '#value' => $rid,
+  );
+
+  $group = farm_asset_load($herd_id);
+  $term = taxonomy_term_load($paddock_id);
+
+  return confirm_form($form,
+    t('Are you sure you want to remove paddock ' . $term->name . ' from ') . $group->name . t('?'),
+    drupal_get_destination(),
+    t('You can add it back later if you change your mind.'),
+    t('Remove it!'),
+    t('Cancel')
+    );
+}
+
+function farm_grazing_plan_herds_paddocks_delete_submit($form, &$form_state) {
+
+  // debug output
+  //$fp = fopen('php://stderr', 'a');
+  //fputs($fp, print_r($form_state, true));
+
+  db_delete('farm_grazing_herd_paddocks')
+    ->condition('id', $form_state['values']['rid'])
+    ->execute();
+
 }
 
 /**
