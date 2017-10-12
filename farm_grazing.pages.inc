@@ -1211,8 +1211,14 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   $form['section_4_peak_sau'] = array(
     '#markup' => '<p>' . t('Peak Monthly SAU: ') . $peak_sau . '</p>',
   );
+  if ($peak_sau == 0) {
+    $rate = '-';
+  }
+  else {
+    $rate = round($cell_size/$peak_sau, 1);
+  }
   $form['section_4_stocking_rate'] = array(
-    '#markup' => '<p>' . t('Stocking Rate: ') . round($cell_size/$peak_sau, 1) . '</p>',
+    '#markup' => '<p>' . t('Stocking Rate: ') . $rate . '</p>',
   );
 
   // Return the form.
@@ -1386,41 +1392,10 @@ function farm_grazing_plan_herds_paddocks_form($form, &$form_state, $plan_obj, $
     '#markup' => theme('table', $table),
   );
 
-  $group = farm_asset_load($herd_id);
-
   // create a section for the selected herd and list the paddocks assigned to it
   $form['section_1_title'] = array(
     '#markup' => '<h4>' . t('Paddocks for ') . $group->name . '</h4><p>' .
       t('Click on the paddock name to remove it.') . '</p>',
-  );
-
-  // build a table of paddocks assigned to this herd
-  $query = db_query('SELECT * FROM {farm_grazing_herd_paddocks} WHERE plan_id=:plan_id AND herd_id=:herd_id',
-    array(':plan_id' => $plan, ':herd_id' => $herd_id));
-  $records = $query->fetchAll();
-
-  $rows = array();
-  foreach ($records as $rec) {
-    $term = taxonomy_term_load($rec->paddock_id);
-    $area = farm_area_calculate_area($rec->paddock_id);
-    $rows[] = array(
-      '<a href="/farm/plan/' . $plan . '/herds/' . $herd_id .
-        '/paddocks/' . $rec->paddock_id . '/delete/' . $rec->id .
-        '?destination=farm/plan/' . $plan .  '/herds/paddocks/' .
-        $herd_id . '">' .  $term->name . '</a>', $area);
-  }
-
-  $table = array(
-    'header' => array(
-      t('Paddock'),
-      t('Area'),
-    ),
-    'rows' => $rows,
-    'empty' => t('No paddocks have been added to this herd.'),
-  );
-
-  $form['section_1_table'] = array(
-    '#markup' => theme('table', $table),
   );
 
   // Add paddocks to herd
@@ -1450,6 +1425,37 @@ function farm_grazing_plan_herds_paddocks_form($form, &$form_state, $plan_obj, $
     '#type' => 'submit',
     '#value' => t('Add paddock to herd'),
     '#submit' => array('farm_grazing_plan_herds_paddocks_form_submit'),
+  );
+
+  $group = farm_asset_load($herd_id);
+
+  // build a table of paddocks assigned to this herd
+  $query = db_query('SELECT * FROM {farm_grazing_herd_paddocks} WHERE plan_id=:plan_id AND herd_id=:herd_id',
+    array(':plan_id' => $plan, ':herd_id' => $herd_id));
+  $records = $query->fetchAll();
+
+  $rows = array();
+  foreach ($records as $rec) {
+    $term = taxonomy_term_load($rec->paddock_id);
+    $area = farm_area_calculate_area($rec->paddock_id);
+    $rows[] = array(
+      '<a href="/farm/plan/' . $plan . '/herds/' . $herd_id .
+        '/paddocks/' . $rec->paddock_id . '/delete/' . $rec->id .
+        '?destination=farm/plan/' . $plan .  '/herds/paddocks/' .
+        $herd_id . '">' .  $term->name . '</a>', $area);
+  }
+
+  $table = array(
+    'header' => array(
+      t('Paddock'),
+      t('Area'),
+    ),
+    'rows' => $rows,
+    'empty' => t('No paddocks have been added to this herd.'),
+  );
+
+  $form['section_1_table'] = array(
+    '#markup' => theme('table', $table),
   );
 
   return $form;
