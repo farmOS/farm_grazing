@@ -1358,7 +1358,7 @@ function farm_grazing_plan_herds_paddocks_form($form, &$form_state, $plan_obj) {
   );
   $form['text'] = array(
     '#markup' => t('
-      <p>Then add or remove paddocks you want to use for this herd. Paddocks may be added more than once for a given herd or between multiple herds.</p>'),
+      <p>Add or remove paddocks you want to use for each herd. Paddocks may be added more than once for a given herd or between multiple herds.</p>'),
   );
 
   // Get a list of paddocks to build options array
