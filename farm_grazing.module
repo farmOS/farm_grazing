@@ -528,13 +528,13 @@ function farm_grazing_help($path, $arg) {
       return '<p>' . t('Use the Check Min/Max Recovery Period below and if any recovery period is much too short, you must add days to the minimum grazing periods in other paddocks that can absorb them. Follow the same procedure for maximum grazing periods, though the problems will probably be less critical if you can\'t make complete adjustments.') . '</p>';
     case 'farm/plan/%/herds':
     case 'farm/plan/%/herds/default':
-      return '<p>' . t('TODO') . '</p>';
+      return '<p>' . t('A herd is defined as a group of animals that will be rotated between paddock to together regardless of the make up of animals in the herd.') . '</p><p>' . t('Most smaller ranches will only have a single herd as you will need more paddocks to support multiple herds and allow for adequate recovery periods of the paddocks.') . '</p><p>' . t('If you are new to this planning method or you have a smaller ranch, try to keep your plan simple to start with and built it based on a single herd.') . '</p>';
     case 'farm/plan/%/herds/paddocks':
-      return '<p>' . t('TODO') . '</p>';
+      return '<p>' . t('Add or remove paddocks from each herd in your plan. In the next two steps you will review the historical grazing patterns and then order the paddock rotations for each herd.') . '</p>';
     case 'farm/plan/%/herds/history':
-      return '<p>' . t('TODO') . '</p>';
+      return '<p>' . t('Skip this step if this is your first grazing plan. Otherwise, check paddock by paddock over previous grazing charts for evidence of inappropriate heavy use of individual paddocks, repeated early or late season use of particular paddocks, or of paddocks that failed to receive adequate recovery time in the recent past. If paddocks were marked as heavily grazed, especially early or late in the season last year, exclude them in the early and late growing season this year to avoid repetition.') . '</p><p>' . t('This table counts the frequency of historical use in the given months. Ideally one would like to have these numbers consistent across the months in the plan over the long term. In the short term avoid reuse at start or end of the growing season. Also if a paddock has been used a lot in a given month then avoid using that month also.') . '</p>';
     case 'farm/plan/%/herds/rotations':
-      return '<p>' . t('TODO') . '</p>';
+      return '<p>' . t('You can reorder the paddocks by grabbing the row and dragging it up or down in the table or enter numerical values in the order column. The calendar has the various planning events shown on it. The green is where that paddock will get grazed.if the whole row is red you are trying to graze the paddock where you have an exclusion. Move it up/down to avoid the exclusion.') . '</p><p>' . t('You should also look back at the Herds/History tab to avoid bad patterns like repeatitive grazing of the the same paddock at the start or end of a season or is getting more heavily used than others.') . '</p>';
     case 'farm/plan/%/implement':
     case 'farm/plan/%/implement/default':
       return '<p>' . t('TODO') . '</p>';
