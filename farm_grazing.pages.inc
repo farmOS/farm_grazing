@@ -1527,17 +1527,170 @@ function farm_grazing_plan_herds_paddocks_delete_submit($form, &$form_state) {
 /**
  * History page callback.
  */
-function farm_grazing_plan_history_page($plan) {
+function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
+
+  // get list of paddocks in plan or all paddocks
+  // looking back 1, 3, 5, 7, 9, all years
+
+  // foreach paddock
+  //   get historical moves in an out of paddock
+  //   build row with count of use by month
+  //   mon-year when last used
+
+  // display as table
+
+  $plan = $plan_obj->id;
 
   // Set the page title.
   drupal_set_title(t('Check historical grazing patterns'));
 
   // Return markup.
-  return array(
-    '#markup' => t('
-      <p> Skip this step if this is your first grazing plan. Otherwise, check paddock by paddock over previous grazing charts for evidence of inappropriate heavy use of individual paddocks, repeated early or late season use of particular paddocks, or of paddocks that failed to receive adequate recovery time in the recent past. If paddocks were marked as heavily grazed, especially early or late in the season last year, exclude them in the early and late growing season this year to avoid repetition.</p>
-      <p>This table counts the frequency of historical use in the given months. Ideally one would like to have these numbers consistent across the months in the plan over the long term. In the short term avoid reuse at start or end of the growing season. Also if a paddock has been used a lot in a given month then avoid using that month also.</p>'),
+  $form['text'] = array(
+    '#markup' => '<p>' . t('Select which paddocks and what time range you want to review. Review the results and factor this into your planning for ordering the herd rotations through the assigned paddocks.') . '</p>',
   );
+
+  if (isset($plan)) {
+    $form['plan_id'] = array(
+      '#type' => 'value',
+      '#value' => $plan,
+    );
+  }
+  $form['select'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Select Options for Report'),
+    '#description' => t('Select which paddocks and how many years back to look.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  $form['select']['paddocks'] = array(
+    '#type' => 'select',
+    '#title' => t('Which paddocks?'),
+    '#description' => 'Select if you want to review all paddocks or only those in the plan.',
+    '#options' => array(
+      '1' => t('All paddocks'),
+      '2' => t('Only paddocks in plan'),
+    ),
+    '#required' => TRUE,
+  );
+  $form['select']['years'] = array(
+    '#type' => 'select',
+    '#title' => t('How many years?'),
+    '#description' => t('Select how many years back to include in report'),
+    '#options' => array(
+      '1' => t('1 year'),
+      '3' => t('3 years'),
+      '5' => t('5 years'),
+      '7' => t('7 years'),
+      '0' => t('all years'),
+    ),
+    '#required' => TRUE,
+  );
+  $form['select']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Update Page'),
+    //'#submit' => array('farm_grazing_plan_history_form'),
+    '#ajax' => array(
+      'wrapper' => 'farm-grazing-history',
+      'callback' => 'farm_grazing_plan_history_form_ajax',
+    ),
+  );
+
+  // display table
+  $table = array(
+    'header' => array(
+      t('Paddock'),
+      t('Jan'),
+      t('Feb'),
+      t('Mar'),
+      t('Apr'),
+      t('May'),
+      t('Jun'),
+      t('Jul'),
+      t('Aug'),
+      t('Sep'),
+      t('Oct'),
+      t('Nov'),
+      t('Dec'),
+      t('Total'),
+      t('Last Grazed'),
+    ),
+    'rows' => array(),
+    'empty' => t('No paddocks found!'),
+  );
+
+  if (!empty($form_state['values']['paddocks']) && !empty($form_state['values']['years'])) {
+    // TODO add data to table rows
+
+    // simple test to see if this gets executed
+    $table['empty'] = 'No paddocks found! -- Hello World!';
+  }
+
+  $form['section_title'] = array(
+    '#markup' => '<h4>' . t('Historical Grazing Patterns') . '</h4>',
+  );
+  $form['section_table'] = array(
+    '#prefix' => '<div id="farm-grazing-history">',
+    '#markup' => theme('table', $table),
+    '#suffix' => '</div>',
+  );
+
+  return $form;
+}
+
+/**
+ *
+ */
+function farm_grazing_plan_history_form_ajax($form, $form_state) {
+  // debug output
+  //$fp = fopen('php://stderr', 'a');
+  //fputs($fp, print_r($form_state['values'], true));
+
+/*
+  // this commented out block actually works but this code should
+  // only be in the main function not here
+
+  // display table
+  $table = array(
+    'header' => array(
+      t('Paddock'),
+      t('Jan'),
+      t('Feb'),
+      t('Mar'),
+      t('Apr'),
+      t('May'),
+      t('Jun'),
+      t('Jul'),
+      t('Aug'),
+      t('Sep'),
+      t('Oct'),
+      t('Nov'),
+      t('Dec'),
+      t('Total'),
+      t('Last Grazed'),
+    ),
+    'rows' => array(),
+    'empty' => t('Not paddocks found! -- Hello world!'),
+  );
+
+  $plan_id = $form_state['values']['plan_id'];
+
+  // paddock_opt
+  //  '1' => t('All paddocks'),
+  //  '2' => t('Only paddocks in plan'),
+  $paddock_opt = $form_state['values']['paddocks'];
+
+  // years_opt
+  //  0 => all years
+  //  n => number of years
+  $years_opt = $form_state['values']['years'];
+
+
+
+
+  $form['section_table']['#markup'] = '<div id="farm-grazing-history">' . theme('table', $table) . '</div>';
+*/
+
+  return $form['section_table'];
 }
 
 /**
