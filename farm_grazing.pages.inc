@@ -1572,6 +1572,10 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
     ),
     '#required' => TRUE,
   );
+  // this is needed for the non-JavaScript case to remember the last setting
+  if (!empty($form_state['values']['paddocks'])) {
+    $form['select']['paddocks']['#value'] = $form_state['values']['paddocks'];
+  }
   $form['select']['years'] = array(
     '#type' => 'select',
     '#title' => t('How many years?'),
@@ -1585,6 +1589,10 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
     ),
     '#required' => TRUE,
   );
+  // this is needed for the non-JavaScript case to remember the last setting
+  if (!empty($form_state['values']['years'])) {
+    $form['select']['years']['#value'] = $form_state['values']['years'];
+  }
   $form['select']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Update Page'),
@@ -1650,55 +1658,6 @@ function farm_grazing_plan_history_form_submit($form, &$form_state) {
  *
  */
 function farm_grazing_plan_history_form_ajax($form, $form_state) {
-  // debug output
-  //$fp = fopen('php://stderr', 'a');
-  //fputs($fp, print_r($form_state['values'], true));
-
-/*
-  // this commented out block actually works but this code should
-  // only be in the main function not here
-
-  // display table
-  $table = array(
-    'header' => array(
-      t('Paddock'),
-      t('Jan'),
-      t('Feb'),
-      t('Mar'),
-      t('Apr'),
-      t('May'),
-      t('Jun'),
-      t('Jul'),
-      t('Aug'),
-      t('Sep'),
-      t('Oct'),
-      t('Nov'),
-      t('Dec'),
-      t('Total'),
-      t('Last Grazed'),
-    ),
-    'rows' => array(),
-    'empty' => t('Not paddocks found! -- Hello world!'),
-  );
-
-  $plan_id = $form_state['values']['plan_id'];
-
-  // paddock_opt
-  //  '1' => t('All paddocks'),
-  //  '2' => t('Only paddocks in plan'),
-  $paddock_opt = $form_state['values']['paddocks'];
-
-  // years_opt
-  //  0 => all years
-  //  n => number of years
-  $years_opt = $form_state['values']['years'];
-
-
-
-
-  $form['section_table']['#markup'] = '<div id="farm-grazing-history">' . theme('table', $table) . '</div>';
-*/
-
   return $form['section_table'];
 }
 
