@@ -1638,6 +1638,15 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
 }
 
 /**
+ * Submit function for the grazing plan history form.
+ */
+function farm_grazing_plan_history_form_submit($form, &$form_state) {
+
+  // Rebuild the form so that the table is regenerated.
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
  *
  */
 function farm_grazing_plan_history_form_ajax($form, $form_state) {
