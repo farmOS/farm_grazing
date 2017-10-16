@@ -25,3 +25,13 @@ MAINTAINERS
 Current maintainers:
  * Stephen Woodbridge (woodbri) - https://github.com/woodbri
  * Michael Stenta (mstenta) - https://github.com/mstenta
+
+This project has been sponsored by:
+ * [Globetrotter Foundation](http://globetrotterfoundation.org)
+ * [iMaptools](http://imaptools.com)
+ * [Farmier](http://farmier.com)
+
+Special thanks to:
+ * Sallie Calhoun
+ * Frank Aragona
+ * Jody Borris
