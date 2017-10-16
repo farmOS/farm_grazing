@@ -323,6 +323,7 @@ function farm_grazing_form_farm_asset_form_alter(&$form, &$form_state, $form_id)
     '#description' => t('If this asset is used in a grazing plan, the following information is required for plan calculations.'),
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
+    '#weight' => 100,
   );
 
   // Load a list of animal type options.
