@@ -251,6 +251,21 @@ function farm_grazing_menu() {
     'weight' => 20,
   );
 
+  // Callback for generating a paddock rotation image.
+  // Arguments are:
+  //   3: farm plan
+  //   5: paddock ID
+  //   6: start timestamp
+  //   7: end timestamp
+  $items['farm/grazing/plan/%farm_plan/plot/%/%/%'] = array(
+    'page callback' => 'farm_grazing_plan_plot',
+    'page arguments' => array(3, 5, 6, 7),
+    'access callback' => 'farm_grazing_plan_access',
+    'access arguments' => array(3),
+    'file' => 'farm_grazing.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+
   // -------------- config forms --------------------------
 
   // TODO I think Mike is doing this elsewhere

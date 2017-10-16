@@ -1939,3 +1939,31 @@ function farm_grazing_validate_herd($herd_id) {
 function farm_group_get_members($obj) {
   return array();
 }
+
+/**
+ * Generate an image that plots a paddock rotation visualization.
+ */
+function farm_grazing_plan_plot($plan, $paddock_id, $start_time, $end_time) {
+
+  // If any of the arguments are empty, bail with a 404 not found.
+  if (empty($plan) || empty($paddock_id) || empty($start_time) || empty($end_time)) {
+    drupal_not_found();
+    drupal_exit();
+  }
+
+  // Set the header Content-type to 'image/png'.
+  drupal_add_http_header('Content-Type', 'image/png');
+
+  // Create a demo image.
+  $im = @imagecreate(250, 75)
+  or die("Cannot Initialize new GD image stream");
+  imagecolorallocate($im, 255, 255, 255);
+  $text_color = imagecolorallocate($im, 233, 14, 91);
+  imagestring($im, 16, 75, 25,  'Hello world!', $text_color);
+  $output = imagepng($im);
+  imagedestroy($im);
+
+  // Print the image and exit.
+  print $output;
+  drupal_exit();
+}
