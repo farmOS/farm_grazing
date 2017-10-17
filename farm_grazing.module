@@ -221,8 +221,8 @@ function farm_grazing_menu() {
   // Herds - Rotations.
   $items['farm/plan/%farm_plan/herds/rotations'] = array(
     'title' => 'Rotations',
-    'page callback' => 'farm_grazing_plan_rotations_page',
-    'page arguments' => array(2),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('farm_grazing_plan_rotations_form', 2),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(2),
     'file' => 'farm_grazing.pages.inc',

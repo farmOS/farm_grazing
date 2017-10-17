@@ -13,8 +13,8 @@
   //'page callback' => 'farm_grazing_plan_summary_page',
   //'page callback' => 'drupal_get_form(farm_grazing_plan_herds_form)',
   //'page callback' => 'drupal_get_form(farm_grazing_plan_herds_paddocks_form)',
-  //'page callback' => 'farm_grazing_plan_history_page',
-  //'page callback' => 'farm_grazing_plan_rotations_page',
+  //'page callback' => 'drupal_get_form(farm_grazing_plan_history_form)',
+  //'page callback' => 'drupal_get_form(farm_grazing_plan_rotations_form)',
   //'page callback' => 'farm_grazing_plan_implement_page',
   //'page callback' => 'farm_grazing_plan_implement_status_page',
 
@@ -1017,10 +1017,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     $group = farm_asset_load($record->herd_id);
 
     $data = array();
-    get_grazing_group_detailed_info($record->herd_id, $data);
-
-    // get the group object so we havr the group name
-    $summary = summarize_grazing_group_detailed_info($data);
+    $summary = getHerdDataAndSummary($record->herd_id, $data);
 
     // save all the herd info here, we'll use it later
     // to generate the tables we display
@@ -1416,9 +1413,6 @@ function farm_grazing_plan_herds_paddocks_form($form, &$form_state, $plan_obj) {
       '#markup' => '<h4>' . t('Paddocks for ') . $rec->name . '</h4>',
     );
 
-
-    $group = farm_asset_load($rec->herd_id);
-
     // build a table of paddocks assigned to this herd
     $query = db_query('SELECT * FROM {farm_grazing_herd_paddocks} WHERE plan_id=:plan_id AND herd_id=:herd_id',
       array(':plan_id' => $plan, ':herd_id' => $rec->herd_id));
@@ -1664,17 +1658,109 @@ function farm_grazing_plan_history_form_ajax($form, $form_state) {
 /**
  * Periods page callback.
  */
-function farm_grazing_plan_rotations_page($plan) {
+function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
+
+  $plan = $plan_obj->id;
 
   // Set the page title.
   drupal_set_title(t('Select paddock rotation order for each herd'));
 
-  // Return markup.
-  return array(
-    '#markup' => '
-      <p><b>TODO</b></p>
-    '
+  $form['plan'] = array(
+    '#type' => 'value',
+    '#value' => $plan,
   );
+  $form['text'] = array(
+    '#markup' => t('
+      <p>Drag and drop to reorder the paddocks for each herd. Avoid grazing during paddock exclusions or recovery periods.</p>'),
+  );
+
+  // build sections for each herds associated with this plan
+  $query = db_query('SELECT h.*, a.name FROM {farm_grazing_herds} h JOIN {farm_asset} a ON h.herd_id=a.id WHERE plan_id=:plan_id ORDER BY a.name',
+    array(':plan_id' => $plan));
+  $records = $query->fetchAll();
+
+  foreach ($records as $rec) {
+
+    // create a section for the herd and list the paddocks assigned to it
+    $form['section_title_' . $rec->herd_id] = array(
+      '#markup' => '<h4>' . t('Rotations for herd ') . $rec->name . '</h4>',
+    );
+
+    // build a table of paddocks assigned to this herd
+    // TODO add join to rotations table 
+    $query = db_query('SELECT p.*, t.name FROM {farm_grazing_herd_paddocks} p
+      LEFT JOIN taxonomy_term_data t ON p.paddock_id=t.tid
+      WHERE plan_id=:plan_id AND herd_id=:herd_id',
+      array(':plan_id' => $plan, ':herd_id' => $rec->herd_id));
+    $paddocks = $query->fetchAll();
+
+    $rows = array();
+    $arrival = getHerdEarliestArrival($rec->herd_id);
+    $start_date = date_create_from_format('Y-m-d', $arrival);
+    $minOrMax = 0; // TODO
+    $i = 1;
+    foreach ($paddocks as $pad) {
+      $grazing_days = getPaddockGrazingDays($pad->paddock_id, $plan, $rec->herd_id, $minOrMax);
+      $end_date = $start_date->modify('+' . $grazing_days . ' days');
+      $start_str = $start_date->format('Y-m-d');
+      $end_str = $end_date->format('Y-m-d');
+      $rows[] = array(
+        $i,
+        $pad->name,
+        $grazing_days,
+        $start_str,
+        $end_str,
+        '<img src="farm/grazing/plan/' .  $plan .
+          '/plot/' . $pad->paddock_id . '/' . $start_str . '/' . $end_str .
+          '">',
+      );
+      $start_date = $end_date;
+      $i++;
+    }
+
+    $table = array(
+      'header' => array(
+        t('Order'),
+        t('Paddock'),
+        t('Grazing Days'),
+        t('Start Date'),
+        t('End Date'),
+        // get header image
+        '<img src="farm/grazing/plan/'.$plan.'/plot/0/0/0">',
+      ),
+      'rows' => $rows,
+      'attributes' => array('id' => 'rotation_table_' . $rec->herd_id),
+      'empty' => t('No paddocks have been added to this herd.'),
+    );
+
+    $form['section_table_' . $rec->herd_id] = array(
+      '#markup' => theme('table', $table),
+    );
+
+    drupal_add_tabledrag('rotation_table_' . $rec->herd_id, 'order', 'sibling', 'weight');
+
+  } // end foreach herd
+
+  // Return markup.
+  kpr($form);
+  return $form;
+}
+
+/**
+ * TODO
+ */
+function getHerdEarliestArrival($herd_id) {
+  $data = array();
+  $summary = getHerdDataAndSummary($herd_id, $data);
+  return $summary['arrival'];
+}
+
+/**
+ * TODO
+ */
+function getPaddockGrazingDays($paddock_id, $plan_id, $herd_id, $minOrMax = 0) {
+  $grazing_days = 1;
+  return $grazing_days;
 }
 
 /**
@@ -1868,6 +1954,14 @@ function summarize_grazing_group_detailed_info(&$data) {
     'arrival' => $min_arrival,
     'departure' => $max_departure,
     );
+}
+
+/**
+ * getHerdDataAndSummary($herd_id, &$data)
+ */
+function getHerdDataAndSummary($herd_id, &$data) {
+  get_grazing_group_detailed_info($herd_id, $data);
+  return summarize_grazing_group_detailed_info($data);
 }
 
 /**
