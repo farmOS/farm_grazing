@@ -1755,8 +1755,14 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
 
   } // end foreach herd
 
+  // Now we add our submit button, for submitting the form results.
+  //
+  // The 'actions' wrapper used here isn't strictly necessary for tabledrag,
+  // but is included as a Form API recommended practice.
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save Changes'));
+
   // Return markup.
-  kpr($form);
   return $form;
 }
 
@@ -1813,7 +1819,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
   }
 
   // render any remaining elements
-  $output .= drupal_render_children($form);
+  $output .= drupal_render_children($form['actions']);
 
   return $output;
 }
