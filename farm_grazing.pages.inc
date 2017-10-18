@@ -1734,7 +1734,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
           '#markup' => $end_str,
         ),
         'image' => array(
-          '#markup' => '<img src="farm/grazing/plan/' .  $plan .
+          '#markup' => '<img src="/farm/grazing/plan/' .  $plan .
             '/plot/' . $pad->paddock_id . '/' . $start_str . '/' . $end_str .
             '">',
         ),
@@ -1773,6 +1773,8 @@ function theme_farm_grazing_plan_rotations_form($variables) {
 
   $form = $variables['form'];
 
+  $plan = $form['plan']['#value'];
+
   $output = drupal_render($form['plan']);
   $output .= drupal_render($form['text']);
 
@@ -1802,7 +1804,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
       t('Grazing Days'),
       t('Start Date'),
       t('End Date'),
-      '<img src="farm/grazing/plan/'.$plan.'/plot/0/0/0">',
+      '<img src="/farm/grazing/plan/'.$plan.'/plot/0/0/0">',
     );
 
     $table_id = 'herd_' . $herd_id . '_rotations';
