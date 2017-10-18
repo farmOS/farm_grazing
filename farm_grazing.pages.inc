@@ -1805,7 +1805,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
       '<img src="farm/grazing/plan/'.$plan.'/plot/0/0/0">',
     );
 
-    $table_id = 'herd_' . $rec->herd_id . '_rotations';
+    $table_id = 'herd_' . $herd_id . '_rotations';
 
     $output .= theme('table', array(
       'header' => $header,
