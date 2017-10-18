@@ -1694,8 +1694,6 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     );
 
     // build a table of paddocks assigned to this herd
-    // TODO add join to rotations table 
-    //$query = db_query('SELECT p.*, t.name FROM {farm_grazing_herd_paddocks} p
     $query = db_query('SELECT p.id, p.plan_id, p.herd_id, p.paddock_id,
         p.duration, p.start_date, coalesce(p.weight, 0) as weight, t.name
       FROM {farm_grazing_rotations} p
@@ -1768,8 +1766,8 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
 
 function theme_farm_grazing_plan_rotations_form($variables) {
   // debug output
-  $fp = fopen('php://stderr', 'a');
-  fputs($fp, print_r($variables, true));
+  //$fp = fopen('php://stderr', 'a');
+  //fputs($fp, print_r($variables, true));
 
   $form = $variables['form'];
 
@@ -1809,6 +1807,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
 
     $table_id = 'herd_' . $herd_id . '_rotations';
 
+    // render the table into the the output
     $output .= theme('table', array(
       'header' => $header,
       'rows' => $rows,
