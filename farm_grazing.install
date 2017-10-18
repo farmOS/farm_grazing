@@ -49,15 +49,52 @@ function farm_grazing_schema() {
         'description' => 'Planned start date for rotation into paddock',
         'type' => 'int',
       ),
-      'log_id' => array(
-        'description' => 'FK reference to the movement log',
+#      'log_id' => array(
+#        'description' => 'FK reference to the movement log',
+#        'type' => 'int',
+#        'not null' => TRUE,
+#        'unsigned' => TRUE,
+#      ),
+      'weight' => array(
+        'description' => 'Order of rotations',
         'type' => 'int',
-        'not null' => TRUE,
-        'unsigned' => TRUE,
       ),
     ),
     'primary key' => array('id'),
   );
+
+#  $schema['farm_grazing_herd_paddocks'] = array(
+#    'description' => 'List of padocks assigned to a herd in a plan.',
+#    'fields' => array(
+#      'id' => array(
+#        'description' => 'PK for farm_grazing_herd_paddocks table',
+#        'type' => 'serial',
+#        'not null' => TRUE,
+#      ),
+#      'plan_id' => array(
+#        'description' => 'FK reference to plan_id',
+#        'type' => 'int',
+#        'unsigned' => TRUE,
+#        'not null' => TRUE,
+#      ),
+#      'herd_id' => array(
+#        'description' => 'FK reference to herd id',
+#        'type' => 'int',
+#        'unsigned' => TRUE,
+#        'not null' => TRUE,
+#      ),
+#      'paddock_id' => array(
+#        'description' => 'FK reference to a paddock id',
+#        'type' => 'int',
+#        'unsigned' => TRUE,
+#        'not null' => TRUE,
+#      ),
+#    ),
+#    'primary key' => array('id'),
+#    'indexes' => array(
+#      'plan_id_herd_id' => array('plan_id', 'herd_id'),
+#    ),
+#  );
 
   // TODO: change start_date and end_date to support exclusions that are recurring
 
@@ -197,39 +234,6 @@ function farm_grazing_schema() {
     'primary key' => array('type_id'),
     'unique keys' => array(
       'name' => array('name'),
-    ),
-  );
-
-  $schema['farm_grazing_herd_paddocks'] = array(
-    'description' => 'List of padocks assigned to a herd in a plan.',
-    'fields' => array(
-      'id' => array(
-        'description' => 'PK for farm_grazing_herd_paddocks table',
-        'type' => 'serial',
-        'not null' => TRUE,
-      ),
-      'plan_id' => array(
-        'description' => 'FK reference to plan_id',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'herd_id' => array(
-        'description' => 'FK reference to herd id',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'paddock_id' => array(
-        'description' => 'FK reference to a paddock id',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-    ),
-    'primary key' => array('id'),
-    'indexes' => array(
-      'plan_id_herd_id' => array('plan_id', 'herd_id'),
     ),
   );
 

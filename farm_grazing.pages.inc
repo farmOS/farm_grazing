@@ -1414,7 +1414,8 @@ function farm_grazing_plan_herds_paddocks_form($form, &$form_state, $plan_obj) {
     );
 
     // build a table of paddocks assigned to this herd
-    $query = db_query('SELECT * FROM {farm_grazing_herd_paddocks} WHERE plan_id=:plan_id AND herd_id=:herd_id',
+    //$query = db_query('SELECT * FROM {farm_grazing_herd_paddocks} WHERE plan_id=:plan_id AND herd_id=:herd_id',
+    $query = db_query('SELECT * FROM {farm_grazing_rotations} WHERE plan_id=:plan_id AND herd_id=:herd_id',
       array(':plan_id' => $plan, ':herd_id' => $rec->herd_id));
     $records = $query->fetchAll();
 
@@ -1465,7 +1466,8 @@ function farm_grazing_plan_herds_paddocks_form_submit($form, &$form_state) {
   $herd_id = $form_state['values']['herd_id'];
   $paddock_id = $form_state['values']['paddock_id'];
 
-  db_insert('farm_grazing_herd_paddocks')
+  //db_insert('farm_grazing_herd_paddocks')
+  db_insert('farm_grazing_rotations')
     ->fields(array(
       'paddock_id' => $paddock_id,
       'plan_id' => $plan_id,
@@ -1512,7 +1514,8 @@ function farm_grazing_plan_herds_paddocks_delete_submit($form, &$form_state) {
   //$fp = fopen('php://stderr', 'a');
   //fputs($fp, print_r($form_state, true));
 
-  db_delete('farm_grazing_herd_paddocks')
+  //db_delete('farm_grazing_herd_paddocks')
+  db_delete('farm_grazing_rotations')
     ->condition('id', $form_state['values']['rid'])
     ->execute();
 
@@ -1665,6 +1668,8 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
   // Set the page title.
   drupal_set_title(t('Select paddock rotation order for each herd'));
 
+  $form['#tree'] = TRUE;
+
   $form['plan'] = array(
     '#type' => 'value',
     '#value' => $plan,
@@ -1679,18 +1684,24 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     array(':plan_id' => $plan));
   $records = $query->fetchAll();
 
+  $form['herds'] = array();
+
   foreach ($records as $rec) {
 
     // create a section for the herd and list the paddocks assigned to it
-    $form['section_title_' . $rec->herd_id] = array(
+    $form['herds'][$rec->herd_id]['title'] = array(
       '#markup' => '<h4>' . t('Rotations for herd ') . $rec->name . '</h4>',
     );
 
     // build a table of paddocks assigned to this herd
     // TODO add join to rotations table 
-    $query = db_query('SELECT p.*, t.name FROM {farm_grazing_herd_paddocks} p
+    //$query = db_query('SELECT p.*, t.name FROM {farm_grazing_herd_paddocks} p
+    $query = db_query('SELECT p.id, p.plan_id, p.herd_id, p.paddock_id,
+        p.duration, p.start_date, coalesce(p.weight, 0) as weight, t.name
+      FROM {farm_grazing_rotations} p
       LEFT JOIN taxonomy_term_data t ON p.paddock_id=t.tid
-      WHERE plan_id=:plan_id AND herd_id=:herd_id',
+      WHERE plan_id=:plan_id AND herd_id=:herd_id
+      ORDER BY 6 ASC',
       array(':plan_id' => $plan, ':herd_id' => $rec->herd_id));
     $paddocks = $query->fetchAll();
 
@@ -1700,44 +1711,47 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     $minOrMax = 0; // TODO
     $i = 1;
     foreach ($paddocks as $pad) {
-      $grazing_days = getPaddockGrazingDays($pad->paddock_id, $plan, $rec->herd_id, $minOrMax);
+      // weight might be null
+      $i = max($pad->weight, $i);
+      $grazing_days = getPaddockGrazingDays($pad->duration, $pad->paddock_id, $plan, $rec->herd_id, $minOrMax);
       $end_date = $start_date->modify('+' . $grazing_days . ' days');
       $start_str = $start_date->format('Y-m-d');
       $end_str = $end_date->format('Y-m-d');
-      $rows[] = array(
-        $i,
-        $pad->name,
-        $grazing_days,
-        $start_str,
-        $end_str,
-        '<img src="farm/grazing/plan/' .  $plan .
-          '/plot/' . $pad->paddock_id . '/' . $start_str . '/' . $end_str .
-          '">',
+      $form['herds'][$rec->herd_id]['rotations'][$pad->id] = array(
+        'name' => array(
+          '#markup' => $pad->name,
+        ),
+        'grazing_days' => array(
+          '#type' => 'textfield',
+          '#default_value' => $grazing_days,
+          '#size' => 10,
+          '#maxlength' => 10,
+        ),
+        'start_date' => array(
+          '#markup' => $start_str,
+        ),
+        'end_date' => array(
+          '#markup' => $end_str,
+        ),
+        'image' => array(
+          '#markup' => '<img src="farm/grazing/plan/' .  $plan .
+            '/plot/' . $pad->paddock_id . '/' . $start_str . '/' . $end_str .
+            '">',
+        ),
+        'weight' => array(
+          '#type' => 'weight',
+          '#title' => t('Order'),
+          '#default_value' => $i,
+          '#delta' => 10,
+          '#title_display' => 'invisible',
+          '#attributes' => array(
+            'class' => 'herd_' . $rec->herd_id . '_weight',
+          ),
+        ),
       );
       $start_date = $end_date;
       $i++;
     }
-
-    $table = array(
-      'header' => array(
-        t('Order'),
-        t('Paddock'),
-        t('Grazing Days'),
-        t('Start Date'),
-        t('End Date'),
-        // get header image
-        '<img src="farm/grazing/plan/'.$plan.'/plot/0/0/0">',
-      ),
-      'rows' => $rows,
-      'attributes' => array('id' => 'rotation_table_' . $rec->herd_id),
-      'empty' => t('No paddocks have been added to this herd.'),
-    );
-
-    $form['section_table_' . $rec->herd_id] = array(
-      '#markup' => theme('table', $table),
-    );
-
-    drupal_add_tabledrag('rotation_table_' . $rec->herd_id, 'order', 'sibling', 'weight');
 
   } // end foreach herd
 
@@ -1745,6 +1759,76 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
   kpr($form);
   return $form;
 }
+
+function theme_farm_grazing_plan_rotations_form($variables) {
+  // debug output
+  $fp = fopen('php://stderr', 'a');
+  fputs($fp, print_r($variables, true));
+
+  $form = $variables['form'];
+
+  $output = drupal_render($form['plan']);
+  $output .= drupal_render($form['text']);
+
+  foreach (element_children($form['herds']) as $herd_id) {
+    // render the tables title
+    $output .= drupal_render($form['herds'][$herd_id]['title']);
+
+    // assemble the table rows
+    $rows = array();
+    foreach (element_children($form['herds'][$herd_id]['rotations']) as $rid) {
+      $item = $form['herds'][$herd_id]['rotations'][$rid];
+      $rows[] = array(
+        'data' => array(
+          drupal_render($item['name']),
+          drupal_render($item['grazing_days']),
+          drupal_render($item['start_date']),
+          drupal_render($item['end_date']),
+          drupal_render($item['image']),
+          drupal_render($item['weight']),
+        ),
+        'class' => array('draggable'),
+      );
+    }
+
+    $header = array(
+      t('Paddock'),
+      t('Grazing Days'),
+      t('Start Date'),
+      t('End Date'),
+      '<img src="farm/grazing/plan/'.$plan.'/plot/0/0/0">',
+    );
+
+    $table_id = 'herd_' . $rec->herd_id . '_rotations';
+
+    $output .= theme('table', array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('id' => $table_id),
+    ));
+
+    // setup the table for drag and drop
+    $weight_class = 'herd_' . $herd_id . '_weight';
+    drupal_add_tabledrag($table_id, 'order', 'sibling', $weight_class);
+  }
+
+  // render any remaining elements
+  $output .= drupal_render_children($form);
+
+  return $output;
+}
+
+/**
+ *
+ */
+function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
+  // debug output
+  $fp = fopen('php://stderr', 'a');
+  fputs($fp, print_r($form_state['values'], true));
+
+  //TODO update database
+}
+
 
 /**
  * TODO
@@ -1757,9 +1841,22 @@ function getHerdEarliestArrival($herd_id) {
 
 /**
  * TODO
+ * duration - isset if user override
  */
-function getPaddockGrazingDays($paddock_id, $plan_id, $herd_id, $minOrMax = 0) {
-  $grazing_days = 1;
+function getPaddockGrazingDays($duration, $paddock_id, $plan_id, $herd_id, $minOrMax = 0) {
+  if (isset($duration)) {
+    $grazing_days = $duration;
+  }
+  else {
+    if ($minOrMax) {
+      // use max grazing days
+      $grazing_days = 10;
+    }
+    else {
+      // use min grazing days
+      $grazing_days = 1;
+    }
+  }
   return $grazing_days;
 }
 
