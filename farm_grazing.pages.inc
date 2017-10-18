@@ -1745,7 +1745,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
           '#delta' => 10,
           '#title_display' => 'invisible',
           '#attributes' => array(
-            'class' => 'herd_' . $rec->herd_id . '_weight',
+            'class' => array('herd_' . $rec->herd_id . '_weight'),
           ),
         ),
       );
