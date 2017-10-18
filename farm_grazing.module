@@ -450,7 +450,11 @@ function farm_grazing_theme() {
       'render element' => 'form',
     ),
     'farm_grazing_paddocks_recovery' => array(
-        'render element' => 'form',
+      'render element' => 'form',
+    ),
+    'farm_grazing_plan_rotations' => array(
+      'render element' => 'form',
+      'file' => 'farm_grazing.pages.inc',
     ),
   );
 }
