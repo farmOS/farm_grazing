@@ -1769,7 +1769,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
   //$fp = fopen('php://stderr', 'a');
   //fputs($fp, print_r($variables, true));
 
-  $form = $variables['form'];
+  $form =& $variables['form'];
 
   $plan = $form['plan']['#value'];
 
@@ -1783,7 +1783,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
     // assemble the table rows
     $rows = array();
     foreach (element_children($form['herds'][$herd_id]['rotations']) as $rid) {
-      $item = $form['herds'][$herd_id]['rotations'][$rid];
+      $item =& $form['herds'][$herd_id]['rotations'][$rid];
       $rows[] = array(
         'data' => array(
           drupal_render($item['name']),
@@ -1803,6 +1803,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
       t('Start Date'),
       t('End Date'),
       '<img src="/farm/grazing/plan/'.$plan.'/plot/0/0/0">',
+      t('Sort weight'),
     );
 
     $table_id = 'herd_' . $herd_id . '_rotations';
@@ -1820,7 +1821,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
   }
 
   // render any remaining elements
-  $output .= drupal_render_children($form['actions']);
+  $output .= drupal_render_children($form);
 
   return $output;
 }
