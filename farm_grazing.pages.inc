@@ -2200,10 +2200,18 @@ function farm_group_get_members($obj) {
 /**
  * Generate an image that plots a paddock rotation visualization.
  */
-function farm_grazing_plan_plot($plan, $paddock_id, $start_time, $end_time) {
+function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_time, $end_time) {
+
+  $plan = $plan_obj->id;
 
   // If any of the arguments are empty, bail with a 404 not found.
-  if (empty($plan) || empty($paddock_id) || empty($start_time) || empty($end_time)) {
+  if (isset($plan) &&
+      isset($paddock_id) && $paddock_id==0 &&
+      isset($start_time) && $start_time==0 &&
+      isset($end_time)   && $end_time==0) {
+    // generate header image
+  }
+  elseif (empty($plan) || empty($paddock_id) || empty($start_time) || empty($end_time)) {
     drupal_not_found();
     drupal_exit();
   }
@@ -2212,11 +2220,11 @@ function farm_grazing_plan_plot($plan, $paddock_id, $start_time, $end_time) {
   drupal_add_http_header('Content-Type', 'image/png');
 
   // Create a demo image.
-  $im = @imagecreate(250, 75)
+  $im = @imagecreate(550, 16)
   or die("Cannot Initialize new GD image stream");
   imagecolorallocate($im, 255, 255, 255);
   $text_color = imagecolorallocate($im, 233, 14, 91);
-  imagestring($im, 16, 75, 25,  'Hello world!', $text_color);
+  imagestring($im, 11, 75, 2,  'plot calendar here ...', $text_color);
   $output = imagepng($im);
   imagedestroy($im);
 
