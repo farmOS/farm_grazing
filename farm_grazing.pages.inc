@@ -102,7 +102,13 @@ function farm_grazing_select_paddocks_form($form, &$form_state, $plan_obj) {
   }
 
   // get a list of selected paddocks
-  $selected = get_selected_paddock_for_plan($plan);
+  $selected_paddocks = get_selected_paddock_for_plan($plan);
+
+  // build the default value selections.
+  $selected = array();
+  foreach ($selected_paddocks as $id) {
+    $selected[$id] = 1;
+  }
 
   $header = array(
       t('Name'),
@@ -133,16 +139,22 @@ function farm_grazing_select_paddocks_form($form, &$form_state, $plan_obj) {
 
 /**
  * Get a list of all paddock_ids from farm_grazing_plan_paddock
+ *
+ * @param $plan_id
+ *   The plan ID.
+ *
+ * @return array
+ *   An array of paddock IDs.
  */
-function get_selected_paddock_for_plan($plan) {
-  // query table of paddocks for this plan 
+function get_selected_paddock_for_plan($plan_id) {
+  // query table of paddocks for this plan
   // and build an array of those that are currently selected
-  $selected = array();
-  $results = db_query('select paddock_id from {farm_grazing_plan_paddock} where plan_id=:plan', array(':plan' => $plan));
+  $paddocks = array();
+  $results = db_query('select paddock_id from {farm_grazing_plan_paddock} where plan_id=:plan', array(':plan' => $plan_id));
   foreach($results as $record) {
-    $selected[$record->paddock_id] = 1;
+    $paddocks[] = $record->paddock_id;
   }
-  return $selected;
+  return $paddocks;
 }
 
 /**
@@ -175,7 +187,7 @@ function farm_grazing_select_paddocks_form_submit($form, &$form_state) {
   // first add records that have been selected and don't already exist
   foreach ($paddocks as $key => $id) {
     // if the incoming selection exists in the db we have nothing to do
-    if (isset($old_selected[$key]) || array_key_exists($key, $old_selected)) {
+    if (isset($old_selected[$key]) || in_array($key, $old_selected)) {
       continue;
     }
     db_insert('farm_grazing_plan_paddock')
@@ -187,7 +199,7 @@ function farm_grazing_select_paddocks_form_submit($form, &$form_state) {
   }
 
   // next delete records that exist but are no longer selected
-  foreach($old_selected as $key => $val) {
+  foreach($old_selected as $key) {
     // if an existing db record is in the incoming selections
     // we have nothing to do
     // otherwise we should delete it
