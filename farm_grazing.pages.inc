@@ -1581,10 +1581,7 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
     ),
     '#required' => TRUE,
   );
-  // this is needed for the non-JavaScript case to remember the last setting
-  if (!empty($form_state['values']['paddocks'])) {
-    $form['select']['paddocks']['#value'] = $form_state['values']['paddocks'];
-  }
+
   $form['select']['years'] = array(
     '#type' => 'select',
     '#title' => t('How many years?'),
@@ -1598,10 +1595,7 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
     ),
     '#required' => TRUE,
   );
-  // this is needed for the non-JavaScript case to remember the last setting
-  if (!empty($form_state['values']['years'])) {
-    $form['select']['years']['#value'] = $form_state['values']['years'];
-  }
+
   $form['select']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Update Page'),
