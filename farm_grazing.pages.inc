@@ -1576,8 +1576,8 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
     '#title' => t('Which paddocks?'),
     '#description' => 'Select if you want to review all paddocks or only those in the plan.',
     '#options' => array(
-      '1' => t('All paddocks'),
-      '2' => t('Only paddocks in plan'),
+      'all' => t('All paddocks'),
+      'plan' => t('Only paddocks in plan'),
     ),
     '#required' => TRUE,
   );
@@ -1588,13 +1588,13 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
   $form['select']['years'] = array(
     '#type' => 'select',
     '#title' => t('How many years?'),
-    '#description' => t('Select how many years back to include in report'),
+    '#description' => t('Select how many years back to include in report. This will look backwards from the current date (@date).', array('@date' => date('M d, Y'))),
     '#options' => array(
       '1' => t('1 year'),
       '3' => t('3 years'),
       '5' => t('5 years'),
       '7' => t('7 years'),
-      '0' => t('all years'),
+      'all' => t('all years'),
     ),
     '#required' => TRUE,
   );
@@ -1635,11 +1635,63 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
     'empty' => t('No paddocks found!'),
   );
 
+  // If the form has been submitted, and paddocks and years are available...
   if (!empty($form_state['values']['paddocks']) && !empty($form_state['values']['years'])) {
-    // TODO add data to table rows
 
-    // simple test to see if this gets executed
-    $table['empty'] = 'No paddocks found! -- Hello World!';
+    // Calculate the timestamp to look back to. If years is "all", set to NULL.
+    if ($form_state['values']['years'] == 'all') {
+      $start_time = NULL;
+    }
+    else {
+      $start_time = REQUEST_TIME - ($form_state['values']['years'] * 365 * 24 * 60 * 60);
+    }
+
+    // Build a list of paddocks.
+    $paddocks = array();
+    if ($form_state['values']['paddocks'] == 'all') {
+      $paddocks = farm_area_load_areas('paddock', 'name');
+    }
+    elseif ($form_state['values']['paddocks'] == 'plan') {
+      $paddock_ids = get_selected_paddock_for_plan($plan);
+      dpm($paddock_ids);
+      $paddocks = taxonomy_term_load_multiple($paddock_ids);
+    }
+
+    // Iterate through the paddocks.
+    foreach ($paddocks as $paddock) {
+
+      // Query for the paddock's history of Group assets, going back to the
+      // requested timestamp.
+      $history = farm_movement_area_history($paddock, 'group', $start_time);
+
+      // Iterate through the asset histories.
+      foreach ($history as $asset_id => $movements) {
+
+        // Check to make sure that the group has animal assets in it.
+        /**
+         * @todo
+         * This will need to be added when Group membership is done.
+         */
+
+        // Each asset may have moved through this paddock more than once, so
+        // iterate through each arrival/departure pair.
+        foreach ($movements as $movement) {
+
+          // Get the arrival time.
+          $arrival = $movement['arrive']->timestamp;
+
+          // Get the departure time, if available. If not available, assume the
+          // group is still there.
+          $departure = !empty($movement['depart']->timestamp) ? $movement['depart']->timestamp : REQUEST_TIME;
+
+          // Calculate the number of days that the asset was in the paddock
+          // for each month during the specified time span.
+          //...
+        }
+      }
+
+      // TODO add data to table rows
+    }
   }
 
   $form['section_title'] = array(
