@@ -1980,6 +1980,131 @@ function farm_grazing_config_animal_types_form($form, $form_state) {
 // -------------- utility functions ----------------
 
 /**
+ * daysAvailableByMonth($startDate1, $endDate1, $startDate2, $endDate2)
+ * Compute the days overlap per month between start and end dates
+ * for the given year
+ *
+ * @param $startDate1   string YYYY-MM-DD
+ * @param $endDate1     string YYYY-MM-DD
+ * @param $startDate2   string YYYY-MM-DD
+ * @param $endDate2     string YYYY-MM-DD
+ * @returns array of ints, number of days in each month of overlap
+ */
+function daysAvailableByMonth($startDate1, $endDate1, $startDate2, $endDate2) {
+  if ($startDate1 > $endDate1 or $startDate2 > $endDate2) {
+    return array();
+  }
+
+  $days = array();
+  list($year_start, $month_start, $dom_start) = explode('-', $startDate1);
+  list($year_end, $month_end, $dom_end) = explode('-', $endDate1);
+
+  $num_months = 0;
+  $delta = $year_end - $year_start;
+  if ($delta > 0) {
+    // add months to end of start year
+    // and add months into end year
+    $num_months += 12 - $month_start + 1 + $month_end;
+    // add months for intervening years if any
+    $num_months += 12 * ($delta - 1);
+  }
+  else {
+    // add the number of months between start and end in same year
+    $num_months += $month_end - $month_start + 1;
+  }
+
+  $year = $year_start;
+  $mon = $month_start;
+  for ($i=0; $i<$num_months+1; $i++) {
+    $month_start = $year . '-' . sprintf('%02d', $mon) . '-01';
+    if ($mon < 12) {
+      $month_end = $year . '-' . sprintf('%02d', $mon+1) . '-01';
+    }
+    else {
+      $month_end = ($year+1) . '-01-01';
+    }
+
+    // increment and adjust month, year
+    $mon++;
+    if ($mon > 12) {
+      $mon = 0;
+      $year++;
+    }
+
+    echo "overlapInDays($month_start, $month_end, $startDate2, $endDate2)\n";
+    $days[] = overlapInDays($month_start, $month_end, $startDate2, $endDate2);
+  }
+
+  return $days;
+}
+
+/**
+ * compute the overlapInDays($startDate1, $endDate1, $startDate2, $endDate2)
+ * What is the overlap, in whole days, of two time periods?
+ *
+ * @param $startDate1   string
+ * @param $endDate1     string
+ * @param $startDate2   string
+ * @param $endDate2     string
+ * @returns int     Overlap in days
+ */
+function overlapInDays($startDate1, $endDate1, $startDate2, $endDate2) {
+  $overlap = overlapInMinutes($startDate1, $endDate1, $startDate2, $endDate2);
+  $days = round($overlap / 60 / 24);
+  return $days;
+}
+
+/**
+ * What is the overlap, in minutes, of two time periods?
+ *
+ * @param $startDate1   string
+ * @param $endDate1     string
+ * @param $startDate2   string
+ * @param $endDate2     string
+ * @returns int     Overlap in minutes
+ */
+function overlapInMinutes($startDate1, $endDate1, $startDate2, $endDate2) {
+  // Figure out which is the later start time
+  $lastStart = $startDate1 >= $startDate2 ? $startDate1 : $startDate2;
+  // Convert that to an integer
+  $lastStart = strtotime($lastStart);
+
+  // Figure out which is the earlier end time
+  $firstEnd = $endDate1 <= $endDate2 ? $endDate1 : $endDate2;
+  // Convert that to an integer
+  $firstEnd = strtotime($firstEnd);
+
+  // Subtract the two, divide by 60 to convert seconds to minutes, and round down
+  $overlap = floor( ($firstEnd - $lastStart) / 60 );
+
+  // If the answer is greater than 0 use it.
+  // If not, there is no overlap.
+  return $overlap > 0 ? $overlap : 0;
+}
+
+/**
+ * compute days between date1 and date2
+ * date2 is before date1 return 0
+ * @param date1 - string, YYYY-MM-DD
+ * @param date2 - string, YYYY-MM-DD
+ * @returns in - number of days between dates or 0
+ */
+function get_days_between_dates($date1, $date2) {
+  if ($date1 > $date2) {
+    return 0;
+  }
+  // convert to an integer, seconds from epoch
+  $date1 = strtotime($date1);
+  $date2 = strtotime($date2);
+
+  $minutes = floor( ($date2 - $date1) / 60 );
+  $days = floor( $minutes / 60 / 24 );
+
+  return $days;
+}
+
+
+/**
  * getAnimalTypeName($type)
  *
  * Return name field from {farm_grazing_animal_types} table
@@ -2191,44 +2316,200 @@ function farm_grazing_validate_herd($herd_id) {
 }
 
 /**
- * TODO Remove dummay function farm_group_get_members
+ * TODO Remove dummy function farm_group_get_members
  */
 function farm_group_get_members($obj) {
   return array();
 }
 
 /**
- * Generate an image that plots a paddock rotation visualization.
+ * get_paddock_exclusions($plan_id, $paddock_id)
+ *
+ *   $exclusions = array(
+ *     array(
+ *       'sday' => (exc_start - plan_start) as days,
+ *       'eday' => (exc_end   - plan_start) as days,
+ *     ),
+ *     ...
+ *   );
  */
-function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_time, $end_time) {
+function get_paddock_exclusions($plan_id, $paddock_id) {
+  // TODO query and return results
+  return array();
+}
+
+/**
+ * get_paddock_recovery($plan_id, $paddock_id)
+ *
+ *   $recovery = array(
+ *     array(
+ *       'sday' => (rec_start - plan_start) as days,
+ *       'eday' => (rec_end   - plan_start) as days,
+ *     ),
+ *     ...
+ *   );
+ */
+function get_paddock_recovery($plan_id, $paddock_id) {
+  // TODO query and return results
+  return array();
+}
+
+/**
+ * get_social_events($plan_id)
+ *
+ *   $social = array(
+ *     array(
+ *       'sday' => (soc_start - plan_start) as days,
+ *       'eday' => (soc_end   - plan_start) as days,
+ *     ),
+ *     ...
+ *   );
+ */
+function get_social_events($plan_id) {
+  // TODO query and return results
+  return array();
+}
+
+/**
+ * Generate an image that plots a paddock rotation visualization.
+ *
+ * Parameters from URL
+ * @param plan_obj   - drupal plan object
+ * @param rotation_id - int, paddock rotation id for this plan
+ * @param start_date - string YYYY-MM-DD, start of paddock grazing
+ * @param end_date   - string YYYY-MM-DD, end of paddock grazing
+ * @returns an image showing rotation in calendar or calendar header image
+ */
+function farm_grazing_plan_plot($plan_obj, $rotation_id, $start_date, $end_date) {
+  // Set the header Content-type to 'image/png'.
+  drupal_add_http_header('Content-Type', 'image/png');
 
   $plan = $plan_obj->id;
+  $header = 0;
 
+  // if rotation_id, start_date and end_date == 0 then generate the header image
   // If any of the arguments are empty, bail with a 404 not found.
   if (isset($plan) &&
-      isset($paddock_id) && $paddock_id==0 &&
-      isset($start_time) && $start_time==0 &&
-      isset($end_time)   && $end_time==0) {
+      isset($rotation_id) && $rotation_id==0 &&
+      isset($start_date) && $start_date==0 &&
+      isset($end_date)   && $end_date==0) {
     // generate header image
+    $header = 1;
   }
-  elseif (empty($plan) || empty($paddock_id) || empty($start_time) || empty($end_time)) {
+  elseif (empty($plan) || empty($rotation_id) || empty($start_date) || empty($end_date)) {
     drupal_not_found();
     drupal_exit();
   }
 
-  // Set the header Content-type to 'image/png'.
-  drupal_add_http_header('Content-Type', 'image/png');
+  // set image width and height
+  $width =  550;
+  $height =  16;
+
+  // get the start date month and year
+  $plan_start = new DateTime();
+  $plan_start->setTimestamp($plan_obj->field_farm_date_range['und'][0]['value']);
+  $plan_start = $plan_start->format('Y-m-d');
+
+  // get the end date month and year
+  $plan_end = new DateTime();
+  $plan_end->setTimestamp($plan_obj->field_farm_date_range['und'][0]['value2']);
+  $plan_end = $plan_end->format('Y-m-d');
+
+  // get number of days in plan
+  $plan_days = get_days_between_dates($plan_start, $plan_end);
+
+  // get number of days from start of plan to start_date
+  $days_to_start = get_days_between_dates($plan_start, $start_date);
+
+  // get number of days from start of plan to end_date
+  $days_to_end = get_days_between_dates($plan_start, $end_date);
+
+  // get day width in pixels and adjust image width
+  $day_width = round($width / ($plan_days + 1));
+  $width = $plan_days * $day_width;
+
+  if (! $header) {
+    $exclusions = get_paddock_exclusions($plan, $rotation_id);
+    $recovery = get_paddock_recovery($plan, $rotation_id);
+    $social = get_social_events($plan);
+  }
 
   // Create a demo image.
-  $im = @imagecreate(550, 16)
+  $im = @imagecreate($width, $height)
   or die("Cannot Initialize new GD image stream");
-  imagecolorallocate($im, 255, 255, 255);
-  $text_color = imagecolorallocate($im, 233, 14, 91);
-  imagestring($im, 11, 75, 2,  'plot calendar here ...', $text_color);
-  $output = imagepng($im);
+
+  $white = imagecolorallocate($im, 255, 255, 255);
+  imagefill($im, 0, 0, $white);
+
+  if (! $header) {
+    // add social events
+    $purple = imagecolorallocate($im, 255, 0, 255);
+    foreach ($social as $event) {
+      $x1 = $event['sday'] * $day_width;
+      $y1 = 0;
+      $x2 = $event['eday'] * $day_width;
+      $y2 = $height;
+      imagefilledrectangle($im, $x1, $y1, $x2, $y2, $purple);
+    }
+
+    // add exclusion periods
+    $red = imagecolorallocate($im, 255, 0, 0);
+    foreach ($exclusions as $event) {
+      $x1 = $event['sday'] * $day_width;
+      $y1 = 3;
+      $x2 = $event['eday'] * $day_width;
+      $y2 = $height-3;
+      imagefilledrectangle($im, $x1, $y1, $x2, $y2, $red);
+    }
+
+    // add recovery periods
+    $orange = imagecolorallocate($im, 255, 128, 0);
+    foreach ($recovery as $event) {
+      $x1 = $event['sday'] * $day_width;
+      $y1 = 5;
+      $x2 = $event['eday'] * $day_width;
+      $y2 = $height-5;
+      imagefilledrectangle($im, $x1, $y1, $x2, $y2, $orange);
+    }
+
+    // add the paddock for grazing period
+    $green = imagecolorallocate($im, 0, 255, 0);
+    $x1 = $days_to_start * $day_width;
+    $y1 = 6;
+    $x2 = $days_to_end * $day_width;
+    $y2 = $height-6;
+    imagefilledrectangle($im, $x1, $y1, $x2, $y2, $green);
+  }
+
+  $black = imagecolorallocate($im, 0, 0, 0);
+
+  // draw the month boundaries
+  $months = array(t('Jan'), t('Feb'), t('Mar'), t('Apr'), t('May'), t('Jun'),
+    t('Jul'), t('Aug'), t('Sep'), t('Oct'), t('Nov'), t('Dec'));
+
+  $days = daysAvailableByMonth($plan_start, $plan_end, $plan_start, $plan_end);
+
+  list($y, $m, $d) = explode('-', $plan_start);
+  $sum = 0;
+  foreach ($days as $num) {
+    if ($num == 0) continue;
+    $sum += $num;
+    $x1 = $sum * $day_width;
+    $y1 = 0;
+    $x2 = $x1;
+    $y2 = $height;
+    imageline($im,  $x1, $y1, $x2, $y2, $black);
+    if ($header) {
+      imagestring($im, 2, $x1+10, $y1+3, $months[$m%12], $black);
+    }
+    $m++;
+  }
+
+  // output the image, 2nd param is filename, NULL sends to stdout
+  imagepng($im, '/var/www/html/junk.png', 0, NULL);
+  imagepng($im);
   imagedestroy($im);
 
-  // Print the image and exit.
-  print $output;
   drupal_exit();
 }
+
