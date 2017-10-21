@@ -1770,8 +1770,9 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
       // weight might be null
       $i = max($pad->weight, $i);
       $grazing_days = getPaddockGrazingDays($pad->duration, $pad->paddock_id, $plan, $rec->herd_id, $minOrMax);
-      $end_date = $start_date->modify('+' . $grazing_days . ' days');
       $start_str = $start_date->format('Y-m-d');
+      $end_date = $start_date;
+      $end_date->modify('+' . $grazing_days . ' days');
       $end_str = $end_date->format('Y-m-d');
       $form['herds'][$rec->herd_id]['rotations'][$pad->id] = array(
         'name' => array(
@@ -1817,6 +1818,8 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
   // but is included as a Form API recommended practice.
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save Changes'));
+
+  //kpr($form);
 
   // Return markup.
   return $form;
@@ -1920,7 +1923,7 @@ function getPaddockGrazingDays($duration, $paddock_id, $plan_id, $herd_id, $minO
     }
     else {
       // use min grazing days
-      $grazing_days = 1;
+      $grazing_days = 5;
     }
   }
   return $grazing_days;
@@ -2031,7 +2034,6 @@ function daysAvailableByMonth($startDate1, $endDate1, $startDate2, $endDate2) {
       $year++;
     }
 
-    echo "overlapInDays($month_start, $month_end, $startDate2, $endDate2)\n";
     $days[] = overlapInDays($month_start, $month_end, $startDate2, $endDate2);
   }
 
@@ -2506,7 +2508,7 @@ function farm_grazing_plan_plot($plan_obj, $rotation_id, $start_date, $end_date)
   }
 
   // output the image, 2nd param is filename, NULL sends to stdout
-  imagepng($im, '/var/www/html/junk.png', 0, NULL);
+  //imagepng($im, '/var/www/html/junk.png', 0, NULL);
   imagepng($im);
   imagedestroy($im);
 
