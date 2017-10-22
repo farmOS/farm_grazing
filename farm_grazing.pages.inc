@@ -1744,6 +1744,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
 
   $form['herds'] = array();
 
+  // foreach herd
   foreach ($records as $rec) {
 
     // create a section for the herd and list the paddocks assigned to it
@@ -1981,6 +1982,36 @@ function farm_grazing_config_animal_types_form($form, $form_state) {
 
 
 // -------------- utility functions ----------------
+
+/**
+ * Get Farm Plan Dates from plan id and optionally format them.
+ */
+function getFarmPlanDatesFromId($plan_id, $format=NULL) {
+  $plan_obj = farm_plan_load($plan_id);
+  return getFarmPlanDates($plan_obj, $format);
+}
+
+/**
+ * Get Farm Plan Dates from plan object and optionally format them.
+ */
+function getFarmPlanDates($plan_obj, $format=NULL) {
+
+  // get the start date
+  $start_date = new DateTime();
+  $start_date->setTimestamp($plan_obj->field_farm_date_range['und'][0]['value']);
+
+  // get the start date
+  $end_date = new DateTime();
+  $end_date->setTimestamp($plan_obj->field_farm_date_range['und'][0]['value2']);
+
+  if ($format == NULL) {
+    return array($start_date, $end_date);
+  }
+  else {
+    return array($start_date->format($format), $end_date->format($format));
+  }
+}
+
 
 /**
  * daysAvailableByMonth($startDate1, $endDate1, $startDate2, $endDate2)
@@ -2227,7 +2258,7 @@ function summarize_grazing_group_detailed_info(&$data) {
     $sum_dmi = $sum_dmi + $rec['head_count'] * $rec['weight'] * $rec['dmi_factor'] / 100.0;
     $head_count = $head_count + $rec['head_count'];
 
-    // TODO verify this will work as strings or need to be date objects
+    // date strings MUST be for as 'Y-m-d' ie: YYYY-MM-DD
     if ($min_arrival === false or $rec['arrival'] < $min_arrival) {
       $min_arrival = $rec['arrival'];
     }
@@ -2329,15 +2360,53 @@ function farm_group_get_members($obj) {
  *
  *   $exclusions = array(
  *     array(
+ *       'id' => paddock_id,
  *       'sday' => (exc_start - plan_start) as days,
  *       'eday' => (exc_end   - plan_start) as days,
+ *       'type' => exclusion_type,
  *     ),
  *     ...
  *   );
+ *
+ * @param plan_id int
+ * @param paddock_id int
+ * @return array where sday and eday are the number of days from start of plan
+ *   for the exclusion start date and end date or zero if before plan start
  */
 function get_paddock_exclusions($plan_id, $paddock_id) {
-  // TODO query and return results
-  return array();
+  // load the plan
+  list($p_start, $p_end) = getFarmPlanDatesFromId($plan_id, 'Y-m-d');
+
+  // get query paddock exclusions
+  $records = db_query('SELECT * FROM {farm_grazing_paddock_exclusions} WHERE paddock_id=:paddock_id', array(':paddock_id' => $paddock_id));
+
+  $results = array();
+  foreach ($records as $record) {
+    // get the exclusion start_date as YYYY-MM-DD
+    $e_start = new DateTime();
+    $e_start->setTimestamp($record->start_date);
+    $e_start = $e_start->format('Y-m-d');
+
+    // get the exclusion end_date as YYYY-MM-DD
+    $e_end = new DateTime();
+    $e_end->setTimestamp($record->end_date);
+    $e_end = $e_end->format('Y-m-d');
+
+    // exclusion start_date as days from start of plan
+    $sday = get_days_between_dates($p_start, $e_start);
+
+    // exclusion start_date as days from start of plan
+    $eday = get_days_between_dates($p_start, $e_end);
+
+    $results[] = array(
+      'id' => $record->paddock_id,
+      'sday' => $sday,
+      'eday' => $eday,
+      'type' => $record->exclusion_type,
+    );
+  }
+
+  return $results;
 }
 
 /**
@@ -2377,28 +2446,28 @@ function get_social_events($plan_id) {
  *
  * Parameters from URL
  * @param plan_obj   - drupal plan object
- * @param rotation_id - int, paddock rotation id for this plan
+ * @param paddock_id - int, paddock id for this plan
  * @param start_date - string YYYY-MM-DD, start of paddock grazing
  * @param end_date   - string YYYY-MM-DD, end of paddock grazing
  * @returns an image showing rotation in calendar or calendar header image
  */
-function farm_grazing_plan_plot($plan_obj, $rotation_id, $start_date, $end_date) {
+function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) {
   // Set the header Content-type to 'image/png'.
   drupal_add_http_header('Content-Type', 'image/png');
 
   $plan = $plan_obj->id;
   $header = 0;
 
-  // if rotation_id, start_date and end_date == 0 then generate the header image
+  // if paddock_id, start_date and end_date == 0 then generate the header image
   // If any of the arguments are empty, bail with a 404 not found.
   if (isset($plan) &&
-      isset($rotation_id) && $rotation_id==0 &&
+      isset($paddock_id) && $paddock_id==0 &&
       isset($start_date) && $start_date==0 &&
       isset($end_date)   && $end_date==0) {
     // generate header image
     $header = 1;
   }
-  elseif (empty($plan) || empty($rotation_id) || empty($start_date) || empty($end_date)) {
+  elseif (empty($plan) || empty($paddock_id) || empty($start_date) || empty($end_date)) {
     drupal_not_found();
     drupal_exit();
   }
@@ -2431,8 +2500,8 @@ function farm_grazing_plan_plot($plan_obj, $rotation_id, $start_date, $end_date)
   $width = $plan_days * $day_width;
 
   if (! $header) {
-    $exclusions = get_paddock_exclusions($plan, $rotation_id);
-    $recovery = get_paddock_recovery($plan, $rotation_id);
+    $exclusions = get_paddock_exclusions($plan, $paddock_id);
+    $recovery = get_paddock_recovery($plan, $paddock_id);
     $social = get_social_events($plan);
   }
 
