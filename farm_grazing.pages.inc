@@ -1562,7 +1562,6 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
     }
     elseif ($form_state['values']['paddocks'] == 'plan') {
       $paddock_ids = get_selected_paddock_for_plan($plan);
-      dpm($paddock_ids);
       $paddocks = taxonomy_term_load_multiple($paddock_ids);
     }
 
@@ -1576,10 +1575,11 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
       // Iterate through the asset histories.
       foreach ($history as $asset_id => $movements) {
 
-        // Check to make sure that the group has animal assets in it.
+        // Check to make sure that the group is a herd.
         /**
          * @todo
-         * This will need to be added when Group membership is done.
+         * Add an asset property to groups that identifies them as "herds",
+         * and only include groups that are "herds" here.
          */
 
         // Each asset may have moved through this paddock more than once, so
