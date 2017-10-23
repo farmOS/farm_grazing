@@ -807,93 +807,9 @@ function farm_grazing_plan_summary_page($plan_obj) {
     'empty' => t('No paddocks found.'),
   );
 
-  // get the herd count
-  $herd_cnt = getHerdCountForPlan($plan);
-  if ($herd_cnt == 0) {
-    $herd_cnt = 1;
-  }
-
-  // get the paddock count
-  $paddock_cnt = getPaddockCountForPlan($plan);
-
-  $results = db_query('SELECT min(min_recovery) as minmin, max(max_recovery) as maxmax FROM {farm_grazing_plan_recovery} WHERE plan_id=:plan', array(':plan' => $plan));
-  foreach($results as $record) {
-    $minmin = $record->minmin;
-    $maxmax = $record->maxmax;
-  }
-
-  // avoid divide by zero
-  $divisor = round($paddock_cnt - $herd_cnt);
-  if ($divisor == 0) {
-    $divisor = 1;
-  }
-
-  $avg_min_graz = $minmin/$divisor;
-  $avg_max_graz = $maxmax/$divisor;
-
-  // get a list of selected paddocks (paddock_id, quality)
-  $paddocks = array();
-  $sum_tot_quality = 0;
-  $results = db_query('select paddock_id, quality from {farm_grazing_plan_paddock} where plan_id=:plan', array(':plan' => $plan));
-  foreach($results as $record) {
-    $term = taxonomy_term_load($record->paddock_id);
-    $area = farm_area_calculate_area($record->paddock_id);
-    $quality = $record->quality;
-    $paddocks[] = array(
-      $term->name,
-      round($area, 1),
-      round($area*$quality, 1),
-      $area*$quality*$avg_min_graz,
-      $area*$quality*$avg_max_graz,
-    );
-    $sum_tot_quality = $sum_tot_quality + $area*$quality;
-  }
-
-  // get average
-  if ($paddock_cnt > 0) {
-    $avg_days = $sum_tot_quality / $paddock_cnt;
-  }
-  else {
-    $avg_days = 0;
-  }
-
-  // adjust the act min/max grazing days by avg days
-  // and avoid divide by zero
-  $sum_min = 0;
-  $sum_max = 0;
-  $sum_area = 0;
-  $sum_quality = 0;
-  $max_min = 0;
-  $max_max = 0;
-  for ($i=0; $i<count($paddocks); $i++) {
-    if ($avg_days > 0) {
-      $paddocks[$i][3] = round($paddocks[$i][3]/$avg_days, 1);
-      $paddocks[$i][4] = round($paddocks[$i][4]/$avg_days, 1);
-    }
-    else {
-      $paddocks[$i][3] = 0;
-      $paddocks[$i][4] = 0;
-    }
-    $sum_area = $sum_area + $paddocks[$i][1];
-    $sum_quality = $sum_quality + $paddocks[$i][2];
-    $sum_min = $sum_min + $paddocks[$i][3];
-    $sum_max = $sum_max + $paddocks[$i][4];
-    if ($paddocks[$i][3] > $max_min) {
-      $max_min = $paddocks[$i][3];
-    }
-    if ($paddocks[$i][4] > $max_max) {
-      $max_max = $paddocks[$i][4];
-    }
-  }
-
-  // append a footer row to the data
-  $paddocks[] = array(
-    t('Sum of Paddocks'),
-    round($sum_area, 1),
-    round($sum_quality, 1),
-    $sum_min,
-    $sum_max,
-  );
+  $chk_min_recovery = -1;
+  $chk_max_recovery = -1;
+  $paddocks = getGrazingDaysForPlanId($plan, $chk_min_recovery, $chk_max_recovery, false);
 
   $table['rows'] = $paddocks;
 
@@ -911,13 +827,13 @@ function farm_grazing_plan_summary_page($plan_obj) {
 
   $form['summary']['check_min'] = array(
     '#prefix' => '<p>',
-    '#markup' => t('Check Min. Recovery Period: ') . round($sum_min - $max_min),
+    '#markup' => t('Check Min. Recovery Period: ') . round($chk_min_recovery),
     '#suffix' => '</p>',
   );
 
   $form['summary']['check_max'] = array(
     '#prefix' => '<p>',
-    '#markup' => t('Check Max. Recovery Period: ') . round($sum_max - $max_max),
+    '#markup' => t('Check Max. Recovery Period: ') . round($chk_max_recovery),
     '#suffix' => '</p>',
   );
 
@@ -1737,12 +1653,40 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
       <p>Drag and drop to reorder the paddocks for each herd. Avoid grazing during paddock exclusions or recovery periods.</p>'),
   );
 
+  // build optional control to reset the number of grazing dats
+  $form['reset_grazing_days'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Reset Grazing Days'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['reset_grazing_days']['select'] = array(
+    '#type' => 'select',
+    '#title' => t('Which Grazing Days'),
+    '#description' => t('Select the option to reset all fields below.'),
+    '#options' => array(
+      '0' => '- ' . t('Select Grazing Days Option') . ' -',
+      '1' => 'Minimum grazing days',
+      '2' => 'Average grazing days',
+      '3' => 'Maximum grazing days',
+    ),
+    '#required' => FALSE,
+  );
+  $form['reset_grazing_days']['submit'] = array(
+    '#type' => 'submit',
+    '#id' => 'reset-submit',
+    '#value' => t('Update Grazing Days'),
+    '#submit' => array('farm_grazing_plan_rotations_form_submit'),
+  );
+
   // build sections for each herds associated with this plan
   $query = db_query('SELECT h.*, a.name FROM {farm_grazing_herds} h JOIN {farm_asset} a ON h.herd_id=a.id WHERE plan_id=:plan_id ORDER BY a.name',
     array(':plan_id' => $plan));
   $records = $query->fetchAll();
 
   $form['herds'] = array();
+
+  $cache = NULL;
 
   // foreach herd
   foreach ($records as $rec) {
@@ -1758,14 +1702,13 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
       FROM {farm_grazing_rotations} p
       LEFT JOIN taxonomy_term_data t ON p.paddock_id=t.tid
       WHERE plan_id=:plan_id AND herd_id=:herd_id
-      ORDER BY 6 ASC',
+      ORDER BY 7, 6 ASC',
       array(':plan_id' => $plan, ':herd_id' => $rec->herd_id));
     $paddocks = $query->fetchAll();
 
     $rows = array();
     $arrival = getHerdEarliestArrival($rec->herd_id);
     $start_date = date_create_from_format('Y-m-d', $arrival);
-    $minOrMax = 0; // TODO
     $i = 1;
     foreach ($paddocks as $pad) {
       // weight might be null
@@ -1773,7 +1716,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
       $grazing_days = getPaddockGrazingDays($pad->duration, $pad->paddock_id, $plan, $rec->herd_id, $minOrMax);
       $start_str = $start_date->format('Y-m-d');
       $end_date = $start_date;
-      $end_date->modify('+' . $grazing_days . ' days');
+      $end_date->modify('+' . round($grazing_days) . ' days');
       $end_str = $end_date->format('Y-m-d');
       $form['herds'][$rec->herd_id]['rotations'][$pad->id] = array(
         'name' => array(
@@ -1781,15 +1724,19 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
         ),
         'grazing_days' => array(
           '#type' => 'textfield',
-          '#default_value' => $grazing_days,
+          '#default_value' => round($grazing_days,1),
           '#size' => 10,
           '#maxlength' => 10,
         ),
         'start_date' => array(
-          '#markup' => $start_str,
+          '#type' => 'textfield',
+          '#default_value' => $start_str,
+          '#disabled' => TRUE,
         ),
         'end_date' => array(
-          '#markup' => $end_str,
+          '#type' => 'textfield',
+          '#default_value' => $end_str,
+          '#disabled' => TRUE,
         ),
         'image' => array(
           '#markup' => '<img src="/farm/grazing/plan/' .  $plan .
@@ -1837,6 +1784,8 @@ function theme_farm_grazing_plan_rotations_form($variables) {
 
   $output = drupal_render($form['plan']);
   $output .= drupal_render($form['text']);
+
+  $output .= drupal_render($form['reset_grazing_days']);
 
   foreach (element_children($form['herds']) as $herd_id) {
     // render the tables title
@@ -1893,15 +1842,63 @@ function theme_farm_grazing_plan_rotations_form($variables) {
  */
 function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
   // debug output
-  $fp = fopen('php://stderr', 'a');
-  fputs($fp, print_r($form_state['values'], true));
+  //$fp = fopen('php://stderr', 'a');
+  //fputs($fp, print_r($form_state['values'], true));
 
-  //TODO update database
+  $plan_id = $form_state['values']['plan'];
+
+  if ($form_state['values']['op'] == t('Save Changes')) {
+    foreach ($form_state['values']['herds'] as $herd_id => $rotations) {
+      foreach ($rotations['rotations'] as $rid => $data) {
+        db_update('farm_grazing_rotations')
+          ->fields(array(
+            'duration' => $data['grazing_days'],
+            'weight' => $data['weight'],
+            'start_date' => strtotime($data['start_date']),
+          ))
+          ->condition('id', $rid)
+          ->condition('herd_id', $herd_id)
+          ->condition('plan_id', $plan_id)
+          ->execute();
+      }
+    }
+  }
+  elseif ($form_state['values']['op'] == t('Update Grazing Days')) {
+    // if Update Grazing Days was click but select is 0
+    // we have nothing to update so return
+    $mode = $form_state['values']['reset_grazing_days']['select'];
+    if ($mode == 0) {
+      return;
+    }
+    // build data as we are going to need it
+    $paddocks = getGrazingDaysForPlanId($plan_id, $d1, $d2, true);
+    $data = array();
+    foreach ($paddocks as $p) {
+      $data[$p[5]] = $p;
+    }
+
+    // update all rotation records in plan
+    $records = db_query('SELECT id, paddock_id, herd_id FROM {farm_grazing_rotations} WHERE plan_id=:plan_id', array(':plan_id' => $plan_id));
+
+    $cache = array();
+    foreach ($records as $rec) {
+      $days = getPaddockGrazingDays(NULL, $rec->paddock_id, $plan_id, $rec->herd_id, $cache, $mode);
+      db_update('farm_grazing_rotations')
+        ->fields(array(
+          'duration' => $days,
+          'start_date' => NULL,
+          ))
+        ->condition('id', $rec->id)
+        ->execute();
+    }
+
+  }
+
 }
 
 
 /**
- * TODO
+ * TODO document this
  */
 function getHerdEarliestArrival($herd_id) {
   $data = array();
@@ -1910,24 +1907,58 @@ function getHerdEarliestArrival($herd_id) {
 }
 
 /**
- * TODO
- * duration - isset if user override
+ * getPaddockGrazingDays()
+ *
+ * @param duration - current saved value
+ * @param paddock_id int
+ * @param mode int
+ *  0 = use saved value or avg if saved is null
+ *  1 = force return to min grazing days
+ *  2 = force return to avg grazing days
+ *  3 = force return to max grazing days
+ *
  */
-function getPaddockGrazingDays($duration, $paddock_id, $plan_id, $herd_id, $minOrMax = 0) {
-  if (isset($duration)) {
-    $grazing_days = $duration;
-  }
-  else {
-    if ($minOrMax) {
-      // use max grazing days
-      $grazing_days = 10;
-    }
-    else {
-      // use min grazing days
-      $grazing_days = 5;
+function getPaddockGrazingDays($duration, $paddock_id, $plan_id, $herd_id, &$cache, $mode = 0) {
+  if ($cache == NULL) {
+    // build the cache as we are going to need it
+    $paddocks = getGrazingDaysForPlanId($plan_id, $d1, $d2, true);
+    $cache = array();
+    foreach ($paddocks as $p) {
+      $cache[$p[5]] = $p;
     }
   }
-  return $grazing_days;
+
+  $days = 0;
+  switch ($mode) {
+    case 0:
+      // use the duration if set
+      if (isset($duration)) {
+        $days = $duration;
+      }
+      else {  // otherwise set it to the average
+        if (isset($cache[$paddock_id])) {
+          $days = ($cache[$paddock_id][3] + $cache[$paddock_id][4]) / 2.0;
+        }
+      }
+      break;
+    case 1:  //set the grazing days to minimum
+      if (isset($cache[$paddock_id])) {
+        $days = $cache[$paddock_id][3];
+      }
+      break;
+    case 2:  // set the grazing days to average
+      if (isset($cache[$paddock_id])) {
+        $days = ($cache[$paddock_id][3] + $cache[$paddock_id][4]) / 2.0;
+      }
+      break;
+    case 3:  // set the grazing days to maximum
+      if (isset($cache[$paddock_id])) {
+        $days = $cache[$paddock_id][4];
+      }
+      break;
+  }
+
+  return $days;
 }
 
 /**
@@ -1982,6 +2013,116 @@ function farm_grazing_config_animal_types_form($form, $form_state) {
 
 
 // -------------- utility functions ----------------
+
+/**
+ *
+ */
+function getGrazingDaysForPlanId($plan_id, &$chk_min_recovery, &$chk_max_recovery, $include_ids = true) {
+
+  // get the plan id
+  $plan = $plan_id;
+
+  // get the herd count
+  $herd_cnt = getHerdCountForPlan($plan);
+  if ($herd_cnt == 0) {
+    $herd_cnt = 1;
+  }
+
+  // get the paddock count
+  $paddock_cnt = getPaddockCountForPlan($plan);
+
+  $results = db_query('SELECT min(min_recovery) as minmin, max(max_recovery) as maxmax FROM {farm_grazing_plan_recovery} WHERE plan_id=:plan', array(':plan' => $plan));
+  foreach($results as $record) {
+    $minmin = $record->minmin;
+    $maxmax = $record->maxmax;
+  }
+
+  // avoid divide by zero
+  $divisor = round($paddock_cnt - $herd_cnt);
+  if ($divisor == 0) {
+    $divisor = 1;
+  }
+
+  $avg_min_graz = $minmin/$divisor;
+  $avg_max_graz = $maxmax/$divisor;
+
+  // get a list of selected paddocks (paddock_id, quality)
+  $paddocks = array();
+  $sum_tot_quality = 0;
+  $results = db_query('select paddock_id, quality from {farm_grazing_plan_paddock} where plan_id=:plan', array(':plan' => $plan));
+  foreach($results as $record) {
+    $term = taxonomy_term_load($record->paddock_id);
+    $area = farm_area_calculate_area($record->paddock_id);
+    $quality = $record->quality;
+    $data = array(
+      $term->name,
+      round($area, 1),
+      round($area*$quality, 1),
+      $area*$quality*$avg_min_graz,
+      $area*$quality*$avg_max_graz,
+    );
+    if ($include_ids) {
+      $data[] = $record->paddock_id;
+    }
+    $paddocks[] = $data;
+    $sum_tot_quality = $sum_tot_quality + $area*$quality;
+  }
+
+  // get average
+  if ($paddock_cnt > 0) {
+    $avg_days = $sum_tot_quality / $paddock_cnt;
+  }
+  else {
+    $avg_days = 0;
+  }
+
+  // adjust the act min/max grazing days by avg days
+  // and avoid divide by zero
+  $sum_min = 0;
+  $sum_max = 0;
+  $sum_area = 0;
+  $sum_quality = 0;
+  $max_min = 0;
+  $max_max = 0;
+  for ($i=0; $i<count($paddocks); $i++) {
+    if ($avg_days > 0) {
+      $paddocks[$i][3] = round($paddocks[$i][3]/$avg_days, 1);
+      $paddocks[$i][4] = round($paddocks[$i][4]/$avg_days, 1);
+    }
+    else {
+      $paddocks[$i][3] = 0;
+      $paddocks[$i][4] = 0;
+    }
+    $sum_area = $sum_area + $paddocks[$i][1];
+    $sum_quality = $sum_quality + $paddocks[$i][2];
+    $sum_min = $sum_min + $paddocks[$i][3];
+    $sum_max = $sum_max + $paddocks[$i][4];
+    if ($paddocks[$i][3] > $max_min) {
+      $max_min = $paddocks[$i][3];
+    }
+    if ($paddocks[$i][4] > $max_max) {
+      $max_max = $paddocks[$i][4];
+    }
+  }
+
+  // append a footer row to the data
+  $data = array(
+    t('Sum of Paddocks'),
+    round($sum_area, 1),
+    round($sum_quality, 1),
+    $sum_min,
+    $sum_max,
+  );
+  if ($include_ids) {
+    $data[] = -1;
+  }
+  $paddocks[] = $data;
+
+  $chk_min_recovery = $sum_min - $max_min;
+  $chk_max_recovery = $sum_max - $max_max;
+
+  return $paddocks;
+}
 
 /**
  * Get Farm Plan Dates from plan id and optionally format them.
@@ -2341,7 +2482,7 @@ function farm_grazing_validate_herd($herd_id) {
     $errors++;
   }
 
-  //  TODO all animals/groups are in some paddock
+  //  TODO are all animals/groups are in some paddock
 
   //  TODO is asset attached to another active plan?
 

@@ -38,7 +38,7 @@ function farm_grazing_schema() {
       ),
       'duration' => array(
         'description' => 'Planned number of grazing days in paddock for this herd',
-        'type' => 'int',
+        'type' => 'float',
         'unsigned' => TRUE,
       ),
       #
