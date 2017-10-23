@@ -1342,7 +1342,6 @@ function farm_grazing_plan_herds_paddocks_form($form, &$form_state, $plan_obj) {
     );
 
     // build a table of paddocks assigned to this herd
-    //$query = db_query('SELECT * FROM {farm_grazing_herd_paddocks} WHERE plan_id=:plan_id AND herd_id=:herd_id',
     $query = db_query('SELECT * FROM {farm_grazing_rotations} WHERE plan_id=:plan_id AND herd_id=:herd_id',
       array(':plan_id' => $plan, ':herd_id' => $rec->herd_id));
     $records = $query->fetchAll();
@@ -2515,7 +2514,7 @@ function farm_group_get_members($obj) {
  *   for the exclusion start date and end date or zero if before plan start
  */
 function get_paddock_exclusions($plan_id, $paddock_id) {
-  // load the plan
+  // load the plan dates
   list($p_start, $p_end) = getFarmPlanDatesFromId($plan_id, 'Y-m-d');
 
   // get query paddock exclusions
@@ -2561,9 +2560,27 @@ function get_paddock_exclusions($plan_id, $paddock_id) {
  *     ...
  *   );
  */
-function get_paddock_recovery($plan_id, $paddock_id) {
-  // TODO query and return results
-  return array();
+function get_paddock_recovery($plan_id, $paddock_id, $end_date) {
+  // load the plan dates
+  list($p_start, $p_end) = getFarmPlanDatesFromId($plan_id, 'Y-m-d');
+
+  list($yr, $mon, $day) = explode('-', $end_date);
+  $recovery = db_query('SELECT (min_recovery+max_recovery)/2.0 AS avg_recovery FROM {farm_grazing_plan_recovery} WHERE plan_id=:plan_id AND month=:month', array(':plan_id' => $plan_id, ':month' => $yr.$mon))->fetchField();
+
+  // sday = end_date - plan start
+  $sday = get_days_between_dates($p_start, $end_date);
+
+  // eday = sday + recovery
+  $eday = $sday + $recovery;
+
+  $results = array(
+    array(
+      'sday' => $sday,
+      'eday' => $eday,
+    ),
+  );
+
+  return $results;
 }
 
 /**
@@ -2642,7 +2659,7 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
 
   if (! $header) {
     $exclusions = get_paddock_exclusions($plan, $paddock_id);
-    $recovery = get_paddock_recovery($plan, $paddock_id);
+    $recovery = get_paddock_recovery($plan, $paddock_id, $end_date);
     $social = get_social_events($plan);
   }
 
