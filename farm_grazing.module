@@ -238,19 +238,6 @@ function farm_grazing_menu() {
     'weight' => 10,
   );
 
-  // Implement - Status
-  $items['farm/plan/%farm_plan/implement/status'] = array(
-    'title' => 'Plan Status',
-    'description' => 'Get status of the current plan.',
-    'page callback' => 'farm_grazing_plan_implement_status_page',
-    'page arguments' => array(2),
-    'access callback' => 'farm_grazing_plan_access',
-    'access arguments' => array(2),
-    'file' => 'farm_grazing.pages.inc',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 20,
-  );
-
   // Callback for generating a paddock rotation image.
   // Arguments are:
   //   3: farm plan
