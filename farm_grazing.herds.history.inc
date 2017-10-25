@@ -119,8 +119,17 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
       $paddocks = taxonomy_term_load_multiple($paddock_ids);
     }
 
+    // debug output
+    //$fp = fopen('php://stderr', 'a');
+
     // Iterate through the paddocks.
     foreach ($paddocks as $paddock) {
+
+      // create array to hold our data
+      //    [name, 12 months, total, last grazed]
+      $row = array($paddock->name,0,0,0,0,0,0,0,0,0,0,0,0,0,'');
+
+      $date_last_grazed = 0;
 
       // Query for the paddock's history of Group assets, going back to the
       // requested timestamp.
@@ -149,11 +158,33 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
 
           // Calculate the number of days that the asset was in the paddock
           // for each month during the specified time span.
-          //...
+          countMonths($arrival, $departure, $row, $threshold);
+
+          // debug output
+          //fputs($fp, print_r(array(
+          //  'asset_id' => $asset_id,
+          //  'paddock' => $paddock->name,
+          //  'event_name' => $movement['arrive']->name,
+          //  'arrival' => $arrival,
+          //  'departure' => $departure,
+          //  'log_depart' => $movement['depart']->timestamp,
+          //  ), true)
+          //);
+
+          // get date last grazed
+          if ($departure > $date_last_grazed) {
+            $date_last_grazed = $departure;
+          }
         }
       }
 
-      // TODO add data to table rows
+      // add data to table rows
+      $date = new DateTime();
+      $date->setTimestamp($date_last_grazed);
+      $row[] = $date->format('Y-m-d');
+      if ($date_last_grazed > 0) {
+        $table['rows'][] = $row;
+      }
     }
   }
 

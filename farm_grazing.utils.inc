@@ -266,6 +266,38 @@ function getFarmPlanDates($plan_obj, $format=NULL) {
   }
 }
 
+/**
+ * getNumMonthsBetween($date1, $date2)
+ *
+ * @param $date1    string YYYY-MM-DD
+ * @param $date2    string YYYY-MM-DD
+ * @returns array($start_year, $start_month, $number_of_months)
+ */
+function getNumMonthsBetween($date1, $date2) {
+  if ($date1 > $date2) {
+    return array();
+  }
+
+  list($y1, $m1, $d1) = explode('-', $date1);
+  list($y2, $m2, $d2) = explode('-', $date2);
+
+  $num_months = 0;
+  $delta = $y2 - $y1;
+  if ($delta > 0) {
+    // add months to end of start year
+    // and add months into end year
+    $num_months += 12 - $m1 + 1 + $m2;
+    // add months for intervening years if any
+    $num_months += 12 * ($delta - 1);
+  }
+  else {
+    // add the number of months between start and end in same year
+    $num_months += $m2 - $m1 + 1;
+  }
+
+  return array($y1, $m1, $num_months);
+}
+
 
 /**
  * daysAvailableByMonth($startDate1, $endDate1, $startDate2, $endDate2)
@@ -279,30 +311,9 @@ function getFarmPlanDates($plan_obj, $format=NULL) {
  * @returns array of ints, number of days in each month of overlap
  */
 function daysAvailableByMonth($startDate1, $endDate1, $startDate2, $endDate2) {
-  if ($startDate1 > $endDate1 or $startDate2 > $endDate2) {
-    return array();
-  }
 
-  $days = array();
-  list($year_start, $month_start, $dom_start) = explode('-', $startDate1);
-  list($year_end, $month_end, $dom_end) = explode('-', $endDate1);
+  list($year, $mon, $num_months) = getNumMonthsBetween($startDate1, $endDate1);
 
-  $num_months = 0;
-  $delta = $year_end - $year_start;
-  if ($delta > 0) {
-    // add months to end of start year
-    // and add months into end year
-    $num_months += 12 - $month_start + 1 + $month_end;
-    // add months for intervening years if any
-    $num_months += 12 * ($delta - 1);
-  }
-  else {
-    // add the number of months between start and end in same year
-    $num_months += $month_end - $month_start + 1;
-  }
-
-  $year = $year_start;
-  $mon = $month_start;
   for ($i=0; $i<$num_months+1; $i++) {
     $month_start = $year . '-' . sprintf('%02d', $mon) . '-01';
     if ($mon < 12) {
@@ -315,7 +326,7 @@ function daysAvailableByMonth($startDate1, $endDate1, $startDate2, $endDate2) {
     // increment and adjust month, year
     $mon++;
     if ($mon > 12) {
-      $mon = 0;
+      $mon = 1;
       $year++;
     }
 
@@ -323,6 +334,52 @@ function daysAvailableByMonth($startDate1, $endDate1, $startDate2, $endDate2) {
   }
 
   return $days;
+}
+
+/**
+ * countMonths($start_date, $end_date, &$months, $threshold=15)
+ *
+ * Used by Hreds/History to count months grazed
+ *
+ * @param $start_date   int, Timestamp
+ * @param $end_date     int, Timestamp
+ * @param &$months      array of 12 ints
+ * @param $threshold    int, number of days in a month to count the month
+ */
+function countMonths($start_date, $end_date, &$months, $threshold=15) {
+  // convert timestamp ot YYYY-MM-DD
+  $start = new DateTime();
+  $start->setTimestamp($start_date);
+  $start = $start->format('Y-m-d');
+
+  $end = new DateTime();
+  $end->setTimestamp($end_date);
+  $end = $end->format('Y-m-d');
+
+  list($year, $mon, $num) = getNumMonthsBetween($start, $end);
+
+  for ($i=0; $i < $num; $i++) {
+    $month_start = $year . '-' . sprintf('%02d', $mon) . '-01';
+    if ($mon < 12) {
+      $month_end = $year . '-' . sprintf('%02d', $mon+1) . '-01';
+    }
+    else {
+      $month_end = ($year+1) . '-01-01';
+    }
+
+    // increment and adjust month, year
+    $mon++;
+    if ($mon > 12) {
+      $mon = 1;
+      $year++;
+    }
+
+    $days = overlapInDays($month_start, $month_end, $startDate2, $endDate2);
+    if ($days >= $threshold) {
+      $months[$mon]++;
+      $months[13]++;  // increment the total
+    }
+  }
 }
 
 /**
