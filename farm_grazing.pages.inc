@@ -59,5 +59,3 @@ include "farm_grazing.herds.rotations.plot.inc";
 //'page callback' => 'farm_grazing_plan_implement_page',
 include "farm_grazing.implement.monitor.inc";
 
-//'page callback' => 'farm_grazing_plan_implement_status_page',
-include "farm_grazing.implement.status.inc";
