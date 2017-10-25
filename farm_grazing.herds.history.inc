@@ -178,10 +178,12 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
         }
       }
 
-      // add data to table rows
+      // add last grazed to table
       $date = new DateTime();
       $date->setTimestamp($date_last_grazed);
-      $row[] = $date->format('Y-m-d');
+      $row[14] = $date->format('Y-m-d');
+
+      // add data to table rows
       if ($date_last_grazed > 0) {
         $table['rows'][] = $row;
       }
