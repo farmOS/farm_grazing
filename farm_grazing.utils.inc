@@ -64,7 +64,13 @@ function get_selected_paddock_quality_for_plan($plan) {
 }
 
 /**
- * TODO document this
+ * getHerdEarliestArrival($herd_id)
+ *
+ * Recursive walk through herd and find the earliest arrival date for any
+ * part of the herd.
+ *
+ * @param $herd_id  int
+ * @returns string YYYY-MM-DD
  */
 function getHerdEarliestArrival($herd_id) {
   $data = array();

@@ -544,8 +544,6 @@ function farm_grazing_help($path, $arg) {
     case 'farm/plan/%/implement':
     case 'farm/plan/%/implement/default':
       return '<p>' . t('TODO') . '</p>';
-    case 'farm/plan/%/implement/status':
-      return '<p>' . t('TODO') . '</p>';
   }
 }
 

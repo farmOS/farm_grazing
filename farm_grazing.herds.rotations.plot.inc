@@ -245,7 +245,7 @@ function get_paddock_recovery($plan_id, $paddock_id, $end_date) {
  *   );
  */
 function get_social_events($plan_id) {
-  // TODO query and return results
+  // TODO update get_social_events() to include social events. query and return results
   return array();
 }
 
