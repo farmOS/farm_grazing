@@ -109,7 +109,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
           '#disabled' => TRUE,
         ),
         'image' => array(
-          '#markup' => '<img src="/farm/grazing/plan/' .  $plan .
+          '#markup' => '<img src="' . base_path() . 'farm/grazing/plan/' .  $plan .
             '/plot/' . $pad->paddock_id . '/' . $start_str . '/' . $end_str .
             '">',
         ),
@@ -183,7 +183,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
       t('Grazing Days'),
       t('Start Date'),
       t('End Date'),
-      '<img src="/farm/grazing/plan/'.$plan.'/plot/0/0/0">',
+      '<img src="' . base_path() . 'farm/grazing/plan/'.$plan.'/plot/0/0/0">',
       t('Sort weight'),
     );
 

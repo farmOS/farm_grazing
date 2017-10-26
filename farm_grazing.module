@@ -522,7 +522,7 @@ function farm_grazing_help($path, $arg) {
       return '<p>'. t('To build your plan follow the tabs "Concerns", "Paddocks", "Herds" and "Implement" and follow the sub-menus from left to right. This will walk you through the Holistic Grazing process to generate a plan. As things change you can revisit any of these tabs to make changes to your plan.') . '</p>';
     case 'farm/plan/%/paddocks':
     case 'farm/plan/%/paddocks/default':
-      return '<p>' . t('Define your paddocks in the <a href="/farm/areas">Areas</a> tab above. Select which paddocks you want available for use in this plan here and then use tabs "Exclusions", "Productivity", "Recovery" and "Summary" to add additional information about your paddocks.') . '</p>';
+      return '<p>' . t('Define your paddocks in the') . ' <a href="' . base_path() . 'farm/areas">Areas</a> '. t('tab above. Select which paddocks you want available for use in this plan here and then use tabs "Exclusions", "Productivity", "Recovery" and "Summary" to add additional information about your paddocks.') . '</p>';
     case 'farm/plan/%/paddocks/exclusions':
       return '<p>' . t('Enter dates when a paddock can not under any circumstanceces have a herd on it and select type "Livestock". Also enter dates for paddocks that need special attention and select type "Special". Such paddocks could include a sacrificial paddock where you plan to run some animals on continuous graze, bare, eroding ground that needs healing, areas you want to rest for brush cover for wildlife, areas where you need to remove forage for fire protection, paddocks you plan to strip graze. Review the list of planning factors.') . '</p>' .
       '<p>' . t('Click on the paddock name to edit or delete it.') . '</p>';

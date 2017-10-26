@@ -47,7 +47,7 @@ function farm_grazing_exclusions_form($form, &$form_state, $plan_obj) {
 
     // Assemble the row.
     $table['rows'][] = array(
-      '<a href="/farm/grazing/exclusions/' . $record->id . '/edit?destination=farm/plan/' . $plan . '/paddocks/exclusions">' . $record->name . '</a>',
+      '<a href="' . base_path() . 'farm/grazing/exclusions/' . $record->id . '/edit?destination=farm/plan/' . $plan . '/paddocks/exclusions">' . $record->name . '</a>',
       $start_date,
       $end_date,
       $record->reason,

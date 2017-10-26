@@ -88,7 +88,7 @@ function farm_grazing_plan_herds_paddocks_form($form, &$form_state, $plan_obj) {
       $rows[] = array(
         $term->name,
         $area,
-        '<a href="/farm/plan/' . $plan . '/herds/' . $rec->herd_id .
+        '<a href="' . base_path() . 'farm/plan/' . $plan . '/herds/' . $rec->herd_id .
           '/paddocks/' . $rec->paddock_id . '/delete/' . $rec->id .
           '?destination=farm/plan/' . $plan .  '/herds/paddocks">' .
           t('Remove') . '</a>',
