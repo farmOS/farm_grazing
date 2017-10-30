@@ -23,8 +23,8 @@ function farm_grazing_field_group_info() {
     'label' => 'General information',
     'weight' => '0',
     'children' => array(
-      0 => 'field_farm_grazing_factors',
-      1 => 'field_grazing_growing_season',
+      0 => 'field_grazing_growing_season',
+      1 => 'field_farm_grazing_factors',
       2 => 'name',
     ),
     'format_type' => 'fieldset',
@@ -53,9 +53,10 @@ function farm_grazing_field_group_info() {
     'label' => 'Non-growing',
     'weight' => '6',
     'children' => array(
-      0 => 'field_expected_days_non_growth',
-      1 => 'field_days_bulk_feeding',
-      2 => 'field_days_of_drought_reserve',
+      0 => 'field_days_bulk_feeding',
+      1 => 'field_days_of_drought_reserve',
+      2 => 'field_expected_days_non_growth',
+      3 => 'field_expected_rotations',
     ),
     'format_type' => 'fieldset',
     'format_settings' => array(

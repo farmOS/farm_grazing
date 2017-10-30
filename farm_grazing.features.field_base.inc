@@ -55,6 +55,21 @@ function farm_grazing_field_default_field_bases() {
     'type' => 'number_integer',
   );
 
+  // Exported field_base: 'field_expected_rotations'.
+  $field_bases['field_expected_rotations'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_expected_rotations',
+    'indexes' => array(),
+    'locked' => 0,
+    'module' => 'number',
+    'settings' => array(),
+    'translatable' => 0,
+    'type' => 'number_integer',
+  );
+
   // Exported field_base: 'field_farm_grazing_factors'.
   $field_bases['field_farm_grazing_factors'] = array(
     'active' => 1,
