@@ -178,6 +178,32 @@ function farm_grazing_views_default_views() {
   $handler->display->display_options['menu']['name'] = 'farm';
   $handler->display->display_options['menu']['context'] = 0;
   $handler->display->display_options['menu']['context_only_inline'] = 0;
+  $translatables['farm_grazing_plan'] = array(
+    t('Master'),
+    t('Grazing Plans'),
+    t('more'),
+    t('Apply'),
+    t('Reset'),
+    t('Sort by'),
+    t('Asc'),
+    t('Desc'),
+    t('Items per page'),
+    t('- All -'),
+    t('Offset'),
+    t('« first'),
+    t('‹ previous'),
+    t('next ›'),
+    t('last »'),
+    t('No plans found.'),
+    t('Plan ID'),
+    t('.'),
+    t('Name'),
+    t('Date Range'),
+    t('Growing season'),
+    t('Active'),
+    t('Plan type'),
+    t('Page'),
+  );
   $export['farm_grazing_plan'] = $view;
 
   return $export;
