@@ -80,7 +80,7 @@ function farm_grazing_field_default_field_instances() {
     ),
     'entity_type' => 'farm_plan',
     'field_name' => 'field_days_of_drought_reserve',
-    'label' => 'Days of Drought Reserve',
+    'label' => 'Days of drought reserve',
     'required' => 0,
     'settings' => array(
       'max' => '',
@@ -262,7 +262,7 @@ function farm_grazing_field_default_field_instances() {
   // Included for use with string extractors like potx.
   t('Date range');
   t('Days bulk feeding');
-  t('Days of Drought Reserve');
+  t('Days of drought reserve');
   t('Define the date range for this grazing plan.');
   t('Does this plan take place during the growing season? This will affect some calculations and recommendations when you are planning your rotations.');
   t('Expected number of rotations');
