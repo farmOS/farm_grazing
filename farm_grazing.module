@@ -44,11 +44,11 @@ function farm_grazing_menu() {
   $items['farm/plan/%farm_plan/concerns'] = array(
     'title' => 'Concerns',
     'description' => 'Define management and ranch events that could impact planning.',
-    'page callback' => 'farm_grazing_plan_concerns_page',
-    'page arguments' => array(2),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('farm_grazing_plan_concerns_form', 2),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(2),
-    'file' => 'farm_grazing.pages.inc',
+    'file' => 'farm_grazing.concerns.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 10,
   );
@@ -58,12 +58,11 @@ function farm_grazing_menu() {
   $items['farm/plan/%farm_plan/paddocks'] = array(
     'title' => 'Paddocks',
     'description' => 'Identify paddocks that should be available for this plan.',
-    'page arguments' => array(2),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('farm_grazing_select_paddocks_form', 2),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(2),
-    'file' => 'farm_grazing.pages.inc',
+    'file' => 'farm_grazing.paddocks.select.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 20,
   );
@@ -76,7 +75,7 @@ function farm_grazing_menu() {
     'page arguments' => array('farm_grazing_plan_herds_form', 2),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(2),
-    'file' => 'farm_grazing.pages.inc',
+    'file' => 'farm_grazing.herds.manage.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 30,
   );
@@ -89,7 +88,7 @@ function farm_grazing_menu() {
     'page arguments' => array(2),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(2),
-    'file' => 'farm_grazing.pages.inc',
+    'file' => 'farm_grazing.implement.monitor.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 40,
   );
@@ -110,7 +109,7 @@ function farm_grazing_menu() {
     'page arguments' => array('farm_grazing_exclusions_form', 2),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(2),
-    'file' => 'farm_grazing.pages.inc',
+    'file' => 'farm_grazing.paddocks.exclusions.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 20,
   );
@@ -121,7 +120,7 @@ function farm_grazing_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('farm_grazing_exclusions_edit_form', 3),
     'access arguments' => array('edit any grazing plans'),
-    'file' => 'farm_grazing.pages.inc',
+    'file' => 'farm_grazing.paddocks.exclusions.inc',
     'type' => MENU_CALLBACK,
   );
 
@@ -133,7 +132,7 @@ function farm_grazing_menu() {
     'page arguments' => array('farm_grazing_plan_productivity_form', 2),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(2),
-    'file' => 'farm_grazing.pages.inc',
+    'file' => 'farm_grazing.paddocks.productivity.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 30,
   );
@@ -146,7 +145,7 @@ function farm_grazing_menu() {
     'page arguments' => array('farm_grazing_plan_recovery_form', 2),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(2),
-    'file' => 'farm_grazing.pages.inc',
+    'file' => 'farm_grazing.paddocks.recovery.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 40,
   );
@@ -159,7 +158,7 @@ function farm_grazing_menu() {
     'page arguments' => array(2),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(2),
-    'file' => 'farm_grazing.pages.inc',
+    'file' => 'farm_grazing.paddocks.summary.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 50,
   );
@@ -177,7 +176,7 @@ function farm_grazing_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('farm_grazing_plan_herd_edit_form', 3, 5),
     'access arguments' => array('edit any grazing plans'),
-    'file' => 'farm_grazing.pages.inc',
+    'file' => 'farm_grazing.herds.manage.inc',
     'type' => MENU_CALLBACK,
   );
 
@@ -189,7 +188,7 @@ function farm_grazing_menu() {
     'page arguments' => array('farm_grazing_plan_herds_paddocks_form', 2),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(2),
-    'file' => 'farm_grazing.pages.inc',
+    'file' => 'farm_grazing.herds.paddocks.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 20,
   );
@@ -201,7 +200,7 @@ function farm_grazing_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('farm_grazing_plan_herds_paddocks_delete', 2, 4, 6, 8),
     'access arguments' => array('edit any grazing plans'),
-    'file' => 'farm_grazing.pages.inc',
+    'file' => 'farm_grazing.herds.paddocks.inc',
     'type' => MENU_CALLBACK,
   );
 
@@ -213,7 +212,7 @@ function farm_grazing_menu() {
     'page arguments' => array('farm_grazing_plan_history_form', 2),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(2),
-    'file' => 'farm_grazing.pages.inc',
+    'file' => 'farm_grazing.herds.history.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 30,
   );
@@ -225,7 +224,7 @@ function farm_grazing_menu() {
     'page arguments' => array('farm_grazing_plan_rotations_form', 2),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(2),
-    'file' => 'farm_grazing.pages.inc',
+    'file' => 'farm_grazing.herds.rotations.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 40,
   );
@@ -249,7 +248,7 @@ function farm_grazing_menu() {
     'page arguments' => array(3, 5, 6, 7),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(3),
-    'file' => 'farm_grazing.pages.inc',
+    'file' => 'farm_grazing.herds.rotations.plot.inc',
     'type' => MENU_CALLBACK,
   );
 
@@ -441,7 +440,7 @@ function farm_grazing_theme() {
     ),
     'farm_grazing_plan_rotations_form' => array(
       'render element' => 'form',
-      'file' => 'farm_grazing.pages.inc',
+      'file' => 'farm_grazing.herds.rotations.inc',
     ),
   );
 }
