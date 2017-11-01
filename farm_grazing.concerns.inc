@@ -3,7 +3,7 @@
 include_once "farm_grazing.utils.inc";
 
 /**
- * Management concerns page callback.
+ * Management concerns form callback.
  */
 function farm_grazing_plan_concerns_form($form, &$form_state, $plan_obj) {
 
@@ -17,12 +17,13 @@ function farm_grazing_plan_concerns_form($form, &$form_state, $plan_obj) {
   $expected_days_non_growth = $wrapper->field_expected_days_non_growth->value();
   $expected_rotations = $wrapper->field_expected_rotations->value();
 
-  dpm('grazing_growing_season: ' . $grazing_growing_season);
-  kpr('farm_grazing_factors: ' . $farm_grazing_factors);
-  dpm('days_bulk_feeding: ' . $days_bulk_feeding);
-  dpm('days_of_drought_reserve: ' . $days_of_drought_reserve);
-  dpm('expected_days_non_growth: ' . $expected_days_non_growth);
-  dpm('expected_rotations: ' . $expected_rotations);
+  //dpm('grazing_growing_season: ' . $grazing_growing_season);
+  //kpr($farm_grazing_factors);
+  //dpm('farm_grazing_factors: ' . $farm_grazing_factors['value']);
+  //dpm('days_bulk_feeding: ' . $days_bulk_feeding);
+  //dpm('days_of_drought_reserve: ' . $days_of_drought_reserve);
+  //dpm('expected_days_non_growth: ' . $expected_days_non_growth);
+  //dpm('expected_rotations: ' . $expected_rotations);
 
   if ($grazing_growing_season) {
     $growing_season = t('A Growing Season Plan');
@@ -38,10 +39,10 @@ function farm_grazing_plan_concerns_form($form, &$form_state, $plan_obj) {
     '#type' => 'value',
     '#value' => $plan,
   );
-  $form['growing_season'] = array(
-    '#type' => 'value',
-    '#value' => $grazing_growing_season,
-  );
+  //$form['growing_season'] = array(
+  //  '#type' => 'value',
+  //  '#value' => $grazing_growing_season,
+  //);
 
   $form['section_1']['text'] =  array(
     '#markup' => '<h2>' . $growing_season . '</h2>' .
@@ -56,7 +57,12 @@ function farm_grazing_plan_concerns_form($form, &$form_state, $plan_obj) {
       '#title' => t('Planning factors'),
       '#type' => 'textarea',
       '#description' => t('Enter your planning factors here'),
-      '#default_value' => $farm_grazing_factors,
+      '#default_value' => $farm_grazing_factors['value'],
+  );
+
+  $form['factors_format'] = array(
+    '#type' => 'value',
+    '#value' => $farm_grazing_factors['format'],
   );
 
   if (! $grazing_growing_season) {
@@ -69,46 +75,53 @@ function farm_grazing_plan_concerns_form($form, &$form_state, $plan_obj) {
     );
     $form['non_growing']['days_bulk_feeding'] = array(
       '#type' => 'textfield',
-      '#title' => t(''),
+      '#title' => t('Days of bulk feeding'),
       '#default_value' => $days_bulk_feeding,
       '#required' => TRUE,
     );
     $form['non_growing']['days_of_drought_reserve'] = array(
       '#type' => 'textfield',
-      '#title' => t(''),
+      '#title' => t('Days of drought reserve required'),
       '#default_value' => $days_of_drought_reserve,
       '#required' => TRUE,
     );
     $form['non_growing']['expected_days_non_growth'] = array(
       '#type' => 'textfield',
-      '#title' => t(''),
+      '#title' => t('Expected days of non-growth'),
       '#default_value' => $expected_days_non_growth,
       '#required' => TRUE,
     );
     $form['non_growing']['expected_rotations'] = array(
       '#type' => 'textfield',
-      '#title' => t(''),
+      '#title' => t('Number of planned rotations through paddocks'),
       '#default_value' => $expected_rotations,
       '#required' => TRUE,
     );
   }
 
+  // TODO - Need to add management events and integrate with calendar
+
   $form['section_4']['text'] = array(
     '#markup' => '<h2>' . t('Management Events') . '</h2>' .
-      '<p>' . t('Enter management events into the Calendar on the "Calendar" tab. Enter other events into your ') . '<a href="' . base_path() . 'farm/plan/' . $plan . '/edit">' . t('Planning Factors') . '</a>' . t(' for the plan for now.') . '</p>' .
-      '<p>' . t('You will come back to this later when you need to enter paddock exclusions and are planning your moves as it will be helpful to be able to see these events while planning moves.') . '</p>'
+      '<p>' . t('Enter management events into the Calendar -- TODO') . '</p>',
   );
 
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save Changes'),
     '#submit' => array('farm_grazing_plan_concerns_form_submit'),
+    '#validate' => array('farm_grazing_plan_concerns_form_validate'),
   );
 
 
   return $form;
 }
 
+/**
+ * theme_farm_grazing_plan_concerns_form
+ *
+ * theme handler for farm_grazing_plan_concerns_form
+ */
 function theme_farm_grazing_plan_concerns_form($variables) {
   // debug output
   //$fp = fopen('php://stderr', 'a');
@@ -116,11 +129,12 @@ function theme_farm_grazing_plan_concerns_form($variables) {
 
   $form = &$variables['form'];
   $plan = $form['plan']['#value'];
-  $growing_season = $form['growing_season']['#value'];
+  //$growing_season = $form['growing_season']['#value'];
 
   $output = drupal_render($form['plan']);
   $output .= drupal_render($form['section_1']['text']);
   $output .= drupal_render($form['section_2']['factors']);
+  $output .= drupal_render($form['factors_format']);
 
   if (array_key_exists($form, 'non_growing')) {
     $output .= drupal_render($form['non_growing']);
@@ -131,6 +145,64 @@ function theme_farm_grazing_plan_concerns_form($variables) {
   return $output;
 }
 
-function farm_grazing_plan_concerns_form_submit($form, &$form_state) {
 
+/**
+ * farm_grazing_plan_concerns_form_validate
+ *
+ * validate handler for farm_grazing_plan_concerns_form
+ */
+function farm_grazing_plan_concerns_form_validate($form, &$form_state) {
+  // debug output
+  //$fp = fopen('php://stderr', 'a');
+  //fputs($fp, print_r($form_state['input'], true));
+
+  if (! is_numeric($form_state['input']['days_bulk_feeding']) or
+      $form_state['input']['days_bulk_feeding'] < 0) {
+    form_set_error('days_bulk_feeding', t('Days bulk feeding must be numeric >= 0'));
+  }
+  if (! is_numeric($form_state['input']['days_of_drought_reserve']) or
+      $form_state['input']['days_of_drought_reserve'] < 0) {
+    form_set_error('days_of_drought_reserve', t('Days of drought reserve required must be numeric >= 0'));
+  }
+  if (! is_numeric($form_state['input']['expected_days_non_growth']) or
+      $form_state['input']['expected_days_non_growth'] < 0) {
+    form_set_error('expected_days_non_growth', t('Expected days of non-growth must be numeric >= 0'));
+  }
+  if (! is_numeric($form_state['input']['expected_rotations']) or
+      $form_state['input']['expected_rotations'] < 0) {
+    form_set_error('expected_rotations', t('Number of planned rotations must be numeric >= 0'));
+  }
+}
+
+/**
+ * farm_grazing_plan_concerns_form_submit
+ *
+ * submit handler for farm_grazing_plan_concerns_form
+ */
+function farm_grazing_plan_concerns_form_submit($form, &$form_state) {
+  // debug output
+  //$fp = fopen('php://stderr', 'a');
+  //fputs($fp, print_r($form_state['values'], true));
+
+  $wrapper = entity_metadata_wrapper('farm_plan', $form_state['values']['plan']);
+
+  if (isset($form_state['values']['factors'])) {
+    $wrapper->field_farm_grazing_factors->set(array(
+      'value' => $form_state['values']['factors'],
+    ));
+  }
+  if (isset($form_state['values']['days_bulk_feeding'])) {
+    $wrapper->field_days_bulk_feeding->set($form_state['values']['days_bulk_feeding']);
+  }
+  if (isset($form_state['values']['days_of_drought_reserve'])) {
+    $wrapper->field_days_of_drought_reserve->set($form_state['values']['days_of_drought_reserve']);
+  }
+  if (isset($form_state['values']['expected_days_non_growth'])) {
+    $wrapper->field_expected_days_non_growth->set($form_state['values']['expected_days_non_growth']);
+  }
+  if (isset($form_state['values']['expected_rotations'])) {
+    $wrapper->field_expected_rotations->set($form_state['values']['expected_rotations']);
+  }
+
+  $wrapper->save();
 }
