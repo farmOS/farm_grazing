@@ -30,6 +30,8 @@ function farm_grazing_plan_herds_paddocks_form($form, &$form_state, $plan_obj) {
   foreach ($records as $rec) {
     $paddock_options[$rec->paddock_id] = $rec->name;
   }
+  $all = implode(',', array_keys($paddock_options));
+  $paddock_options[$all] = t('-- Add All Paddocks --');
 
   // build sections for each herds associated with this plan
   $query = db_query('SELECT h.*, a.name FROM {farm_grazing_herds} h JOIN {farm_asset} a ON h.herd_id=a.id WHERE plan_id=:plan_id ORDER BY a.name',
@@ -54,6 +56,11 @@ function farm_grazing_plan_herds_paddocks_form($form, &$form_state, $plan_obj) {
     '#options' => $herd_options,
     '#required' => TRUE,
   );
+  // select the herd if only one
+  $keys = array_keys($herd_options);
+  if (count($keys) == 1) {
+    $form['add']['herd_id']['#default_value'] = $keys[0];
+  }
   $form['add']['paddock_id'] = array(
     '#type' => 'select',
     '#title' => t('Paddock'),
@@ -128,15 +135,19 @@ function farm_grazing_plan_herds_paddocks_form_submit($form, &$form_state) {
   $herd_id = $form_state['values']['herd_id'];
   $paddock_id = $form_state['values']['paddock_id'];
 
-  //db_insert('farm_grazing_herd_paddocks')
-  db_insert('farm_grazing_rotations')
-    ->fields(array(
-      'paddock_id' => $paddock_id,
-      'plan_id' => $plan_id,
-      'herd_id' => $herd_id,
-      ))
-      ->execute();
+  // handle case for adding all paddocks
+  $ids = explode(',', $paddock_id);
+  foreach ($ids as $paddock_id) {
 
+    //db_insert('farm_grazing_herd_paddocks')
+    db_insert('farm_grazing_rotations')
+      ->fields(array(
+        'paddock_id' => $paddock_id,
+        'plan_id' => $plan_id,
+        'herd_id' => $herd_id,
+        ))
+        ->execute();
+  }
 }
 
 /**

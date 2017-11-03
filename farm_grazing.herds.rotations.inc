@@ -75,6 +75,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
       ORDER BY 7, 6 ASC',
       array(':plan_id' => $plan, ':herd_id' => $rec->herd_id));
     $paddocks = $query->fetchAll();
+    $rowcnt = $query->rowCount();
 
     $rows = array();
     $arrival = getHerdEarliestArrival($rec->herd_id);
@@ -117,7 +118,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
           '#type' => 'weight',
           '#title' => t('Order'),
           '#default_value' => $i,
-          '#delta' => 10,
+          '#delta' => $rowcnt,
           '#title_display' => 'invisible',
           '#attributes' => array(
             'class' => array('herd_' . $rec->herd_id . '_weight'),

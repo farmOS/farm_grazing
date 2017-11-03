@@ -93,6 +93,7 @@ function farm_grazing_plan_summary_page($plan_obj) {
 
     $table['rows'] = $paddocks;
 
+    $herd_size = getHerdSizeInSau($plan);
     $num_paddocks = getPaddockCountForPlan($plan);
     $tot_ads = empty($paddocks) ? 0 : $paddocks[$num_paddocks][3];
     $avg_ads = $tot_ads/$num_paddocks;
@@ -101,6 +102,10 @@ function farm_grazing_plan_summary_page($plan_obj) {
     $recovery_period = $tot_grazing_days / $num_rotations;
     $grazing_period = $recovery_period / $num_paddocks;
     $drought_reserve_grazing_period = $days_of_drought_reserve /$num_paddocks;
+
+    if ($herd_size > $est_carrying_capacity) {
+      drupal_set_message(t('Herd size is TOO BIG!'), 'error');
+    }
 
 
     // markup
@@ -127,6 +132,12 @@ function farm_grazing_plan_summary_page($plan_obj) {
     $form['summary']['tot_grazing_days'] = array(
       '#prefix' => '<p>' . t('Total Grazing Days Required: '),
       '#markup' => $tot_grazing_days,
+      '#suffix' => '</p>',
+    );
+
+    $form['summary']['herd_size'] = array(
+      '#prefix' => '<p>' . t('Herd Size (SAU): '),
+      '#markup' => $herd_size,
       '#suffix' => '</p>',
     );
 
@@ -172,103 +183,3 @@ function farm_grazing_plan_summary_page($plan_obj) {
   return $form;
 }
 
-
-/**
- *
- */
-function getNonGrowingSummaryForPlanId($plan_id) {
-  
-  // get herds size if defined
-  $herd_size = 0; // TODO
-
-  $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
-
-  $num_rotations = $wrapper->field_expected_rotations->value();
-  $num_paddocks = getPaddockCountForPlan($plan_id);
-  $days_drought_reserve = $wrapper->field_days_of_drought_reserve->value();
-  $days_bulk_feeding = $wrapper->field_days_bulk_feeding->value();
-  $expected_days_non_growth = $wrapper->field_expected_days_non_growth->value();
-  $days_drought_grazing = $days_drought_reserve / $num_paddocks;
-  $grazing_period = ($expected_days_non_growth + $days_drought_reserve - $days_bulk_feeding) / $num_rotations / $num_paddocks;
-
-  // each row in $rows consists of
-  // paddock, area, ada, avail_ads, max_grazing_days, planned_harvest_per_rotation, remaining_harvest_aft_first, planned_tot_harvest, forage_excess_deficit, avail_drought_ads, max_drought_grazing_days
-
-  $rows = array();
-  $sums = array(0,0,0,0,0,0,0,0,0,0);
-
-  $results = db_query('select paddock_id, quality from {farm_grazing_plan_paddock} where plan_id=:plan', array(':plan' => $plan_id));
-  foreach($results as $record) {
-    $name = taxonomy_term_load($record->paddock_id)->name;
-    $area = farm_area_calculate_area($record->paddock_id);
-    $ada = $record->quality;
-    $row = array(
-      $name,                // paddock
-      $area,                // area (needs to be round)
-      $ada,                 // ada
-      $area*$ada,           // 0, avail_ads (needs to be round)
-      $area*$ada*$grazing_period,   // 1, max_grazing_days (needs / avg_ads)
-      $herd_size*$area*$ada/$area,  // 2, planned_harvest_per_rotation (needs / avg_ads)
-      $ada,                 // 3, remaining_harvest_aft_first (needs - $row[5])
-      $num_rotations,       // 4, planned_tot_harvest (needs * $row[5])
-      $days_bulk_feeding,   // 5, forage_excess_deficit (needs - $row[7])
-      $area,                // 6, avail_drought_ads (needs * $row[8])
-      $days_drought_reserve,// 7, max_drought_grazing_days (needs *$row[9]/(sums[6]/$num_paddocks
-    );
-    $rows[] = $row;
-
-    // accumulate some sums
-    for($i=0; $i<3; $i++) {
-      $sums[$i] += $row[$i+3];
-    }
-  }
-
-  // fix up sums and rows as needed
-  $avg_ads = $sums[0] / $num_paddocks;
-  $sums[1] = $sums[1] / $avg_ads;
-  $sums[2] = $sums[2] / $avg_ads;
-  for ($i=0; $i<$num_paddocks; $i++) {
-    $rows[$i][4] = $rows[$i][4] / $avg_ads;
-    $rows[$i][5] = $rows[$i][5] / $avg_ads;
-    $rows[$i][6] = $days_bulk_feeding - $rows[$i][5];
-    $rows[$i][7] = $rows[$i][5] * $num_rotations;
-    $rows[$i][8] = $days_bulk_feeding - $rows[$i][7];
-    $rows[$i][9] = $rows[$i][1] * $rows[$i][8];
-    // accumulate more sums
-    $sums[2] += $rows[$i][5];
-    $sums[3] += $rows[$i][6];
-    $sums[4] += $rows[$i][7];
-    $sums[5] += $rows[$i][8];
-    $sums[6] += $rows[$i][9];
-  }
-  $avg_avail_drought_ads = $sums[6] / $num_paddocks;
-  for ($i=0; $i<$num_paddocks; $i++) {
-    $rows[$i][10] = $rows[$i][9] * $days_drought_grazing / $avg_avail_drought_ads;
-    $sums[7] += $rows[$i][10];
-    $sums[8] += $rows[$i][1];
-    $sums[9] += $rows[$i][2];
-  }
-
-  // push the totals
-  $totals = array('<b>'.t('Column Sums').'</b>', $sums[8], $sums[9]);
-  for ($i=0; $i<8; $i++) {
-    $totals[] = $sums[$i];
-  }
-  $rows[] = $totals;
-
-  // push the averages
-  $totals[0] = '<b>'.t('Column Average').'</b>';
-  for ($i=1; $i<11; $i++) {
-    $totals[$i] /= $num_paddocks;
-  }
-  $rows[] = $totals;
-
-  // round table values to one digit
-  for ($i=0; $i<$num_paddocks+2; $i++) {
-    for ($j=1; $j<11; $j++) {
-      $rows[$i][$j] = round($rows[$i][$j], 1);
-    }
-  }
-
-  return $rows;
-}

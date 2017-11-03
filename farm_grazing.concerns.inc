@@ -14,8 +14,12 @@ function farm_grazing_plan_concerns_form($form, &$form_state, $plan_obj) {
   $farm_grazing_factors = $wrapper->field_farm_grazing_factors->value();
   $days_bulk_feeding = $wrapper->field_days_bulk_feeding->value();
   $days_of_drought_reserve = $wrapper->field_days_of_drought_reserve->value();
-  $expected_days_non_growth = $wrapper->field_expected_days_non_growth->value();
   $expected_rotations = $wrapper->field_expected_rotations->value();
+  $start_ts = $wrapper->field_farm_date_range->value->value();
+  $end_ts = $wrapper->field_farm_date_range->value2->value();
+
+  $expected_days_non_growth = floor(($end_ts-$start_ts)/3600/24);
+
 
   //dpm('grazing_growing_season: ' . $grazing_growing_season);
   //kpr($farm_grazing_factors);
@@ -39,10 +43,6 @@ function farm_grazing_plan_concerns_form($form, &$form_state, $plan_obj) {
     '#type' => 'value',
     '#value' => $plan,
   );
-  //$form['growing_season'] = array(
-  //  '#type' => 'value',
-  //  '#value' => $grazing_growing_season,
-  //);
 
   $form['section_1']['text'] =  array(
     '#markup' => '<h2>' . $growing_season . '</h2>' .
@@ -89,7 +89,7 @@ function farm_grazing_plan_concerns_form($form, &$form_state, $plan_obj) {
       '#type' => 'textfield',
       '#title' => t('Expected days of non-growth'),
       '#default_value' => $expected_days_non_growth,
-      '#required' => TRUE,
+      '#disabled' => TRUE,
     );
     $form['non_growing']['expected_rotations'] = array(
       '#type' => 'textfield',
@@ -164,10 +164,6 @@ function farm_grazing_plan_concerns_form_validate($form, &$form_state) {
       $form_state['input']['days_of_drought_reserve'] < 0) {
     form_set_error('days_of_drought_reserve', t('Days of drought reserve required must be numeric >= 0'));
   }
-  if (! is_numeric($form_state['input']['expected_days_non_growth']) or
-      $form_state['input']['expected_days_non_growth'] < 0) {
-    form_set_error('expected_days_non_growth', t('Expected days of non-growth must be numeric >= 0'));
-  }
   if (! is_numeric($form_state['input']['expected_rotations']) or
       $form_state['input']['expected_rotations'] < 0) {
     form_set_error('expected_rotations', t('Number of planned rotations must be numeric >= 0'));
@@ -196,9 +192,6 @@ function farm_grazing_plan_concerns_form_submit($form, &$form_state) {
   }
   if (isset($form_state['values']['days_of_drought_reserve'])) {
     $wrapper->field_days_of_drought_reserve->set($form_state['values']['days_of_drought_reserve']);
-  }
-  if (isset($form_state['values']['expected_days_non_growth'])) {
-    $wrapper->field_expected_days_non_growth->set($form_state['values']['expected_days_non_growth']);
   }
   if (isset($form_state['values']['expected_rotations'])) {
     $wrapper->field_expected_rotations->set($form_state['values']['expected_rotations']);
