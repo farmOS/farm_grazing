@@ -41,7 +41,7 @@ function farm_grazing_plan_productivity_form($form, &$form_state, $plan_obj) {
 
   $num = 0;
   $pad_avg = 0;
-  $tot_avg = 0;
+  $tot_sum = 0;
 
   foreach ($selected as $paddock_id => $quality) {
     $term = taxonomy_term_load($paddock_id);
@@ -62,12 +62,18 @@ function farm_grazing_plan_productivity_form($form, &$form_state, $plan_obj) {
       '#markup' => round($tot_quality, 1),
       '#suffix' => '</p>',
     );
-    $tot_avg = $tot_avg + $tot_quality;
+    $tot_sum = $tot_sum + $tot_quality;
     $num++;
   }
 
   $pad_avg = $pad_avg / $num;
-  $tot_avg = $tot_avg / $num;
+  $tot_avg = $tot_sum / $num;
+
+  $form['summary']['paddock_cnt'] = array(
+    '#prefix' => '<p>' . t('Paddock count: '),
+    '#markup' => $num,
+    '#suffix' => '</p>',
+  );
 
   $form['summary']['avg_rating'] = array(
     '#prefix' => '<p>' . t('Average AD/A or Rating: '),
@@ -78,6 +84,12 @@ function farm_grazing_plan_productivity_form($form, &$form_state, $plan_obj) {
   $form['summary']['avg_tot_rating'] = array(
     '#prefix' => '<p>' . t('Average Total AD/A or Rating: '),
     '#markup' => round($tot_avg, 1),
+    '#suffix' => '</p>',
+  );
+
+  $form['summary']['cum_tot_rating'] = array(
+    '#prefix' => '<p>' . t('Cumulative Total AD/A or Rating: '),
+    '#markup' => round($tot_sum, 1),
     '#suffix' => '</p>',
   );
 

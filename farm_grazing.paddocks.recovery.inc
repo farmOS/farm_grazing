@@ -12,18 +12,10 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
 
   // get the plan id from the plan object
   $plan = $plan_obj->id;
-
-  $form['#tree'] = true;
-
-  // Return markup
-  $form['text'] = array(
-    '#markup' => t('<p>Enter your minimum and maximum recovery periods (in days) for each planned month.</p>'),
-  );
-
-  $form['plan'] = array(
-    '#type' => 'value',
-    '#value' => $plan,
-  );
+  $wrapper = entity_metadata_wrapper('farm_plan', $plan);
+  $grazing_growing_season = $wrapper->field_grazing_growing_season->value();
+  $start_ts = $wrapper->field_farm_date_range->value->value();
+  $end_ts = $wrapper->field_farm_date_range->value2->value();
 
   $header = array(
     t('Month'),
@@ -31,18 +23,59 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
     t('Max. Recovery Days'),
   );
 
-  $minmax = getPlanRecovery($plan);
-
   // get the start date month and year
   $start_date = new DateTime();
-  $start_date->setTimestamp($plan_obj->field_farm_date_range['und'][0]['value']);
+  $start_date->setTimestamp($start_ts);
 
   // get the end date month and year
   $end_date = new DateTime();
-  $end_date->setTimestamp($plan_obj->field_farm_date_range['und'][0]['value2']);
+  $end_date->setTimestamp($end_ts);
 
   // get the DateInterval between them
   $diff = $start_date->diff($end_date);
+
+  // get the number of paddocks in the plan
+  $num_paddocks = getPaddockCountForPlan($plan);
+
+  $form['#tree'] = true;
+
+  $disabled = FALSE;
+  if (! $grazing_growing_season) {  // non-growing season here
+
+    $days_bulk_feeding = $wrapper->field_days_bulk_feeding->value();
+    $days_of_drought_reserve = $wrapper->field_days_of_drought_reserve->value();
+    $expected_days_non_growth = $wrapper->field_expected_days_non_growth->value();
+    $expected_rotations = $wrapper->field_expected_rotations->value();
+
+    $recovery_period = ( $expected_days_non_growth + $days_of_drought_reserve 
+      - $days_bulk_feeding ) / $expected_rotations;
+
+    $disabled = TRUE;
+
+    $form['text'] = array(
+      '#markup' => t('<p>Recovery period is computed for non-growing season plans.</p>'),
+    );
+
+  }
+  else {
+
+    $form['text'] = array(
+      '#markup' => t('<p>Enter your minimum and maximum recovery periods (in days) for each planned month of the growing season plan.</p>'),
+    );
+
+  }
+
+  $form['plan'] = array(
+    '#type' => 'value',
+    '#value' => $plan,
+  );
+
+  if ($grazing_growing_season) {
+    $minmax = getPlanRecovery($plan);
+  }
+  else {
+    $minmax = array();
+  }
 
   $form['months'] = array(
     '#theme' => 'farm_grazing_paddocks_recovery',
@@ -54,18 +87,22 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
   $date = $start_date;
   $minmin =  999999999;
   $maxmax = -999999999;
-  $num_paddocks = 0;
   $rows = array();
   for( $i = 0; $i <= $num_months; $i++ ) {
     $key = $date->format('Ym');
     if (isset($minmax[$key])) {
       $min = $minmax[$key][0];
       $max = $minmax[$key][1];
-      $num_paddocks++;
     }
     else {
-      $min = 0;
-      $max = 0;
+      if ($grazing_growing_season) {
+        $min = 0;
+        $max = 0;
+      }
+      else {
+        $min = $recovery_period;
+        $max = $recovery_period;
+      }
     }
     if ($min > 0 and $min < $minmin) {
       $minmin = $min;
@@ -81,12 +118,14 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
       '#default_value' => $min,
       '#size' => 30,
       '#maxlength' => 30,
+      '#disabled' => $disabled,
     );
     $form['months'][$key]['max'] = array(
       '#type' => 'textfield',
       '#default_value' => $max,
       '#size' => 30,
       '#maxlength' => 30,
+      '#disabled' => $disabled,
     );
 
     // increment the month
@@ -110,26 +149,38 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
     '#markup' => $num_paddocks,
     '#suffix' => '</p>',
   );
+
+  if ($grazing_growing_season) {
+    $min_grazing = round($minmin/($num_paddocks-$herd_cnt), 1);
+    $max_grazing = round($maxmax/($num_paddocks-$herd_cnt), 1);
+  }
+  else {
+    $min_grazing = round($recovery_period / $num_paddocks, 1);
+    $max_grazing = $min_grazing;
+  }
+
   $form['summary']['min_grazing'] = array(
     '#prefix' => '<p>' . t('Est. Min. Grazing Period: '),
-    '#markup' => round($minmin/($num_paddocks-$herd_cnt)),
+    '#markup' => round($minmin/($num_paddocks-$herd_cnt), 1),
     '#suffix' => '</p>',
   );
   $form['summary']['max_grazing'] = array(
     '#prefix' => '<p>' . t('Est. Max. Grazing Period: '),
-    '#markup' => round($maxmax/($num_paddocks-$herd_cnt)),
+    '#markup' => round($maxmax/($num_paddocks-$herd_cnt), 1),
     '#suffix' => '</p>',
   );
 
 
-  // Return markup.
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Save'),
-    '#submit' => array('farm_grazing_plan_recovery_form_submit'),
-    '#validate' => array('farm_grazing_plan_recovery_form_validate'),
-  );
+  if ($grazing_growing_season) {
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Save'),
+      '#submit' => array('farm_grazing_plan_recovery_form_submit'),
+      '#validate' => array('farm_grazing_plan_recovery_form_validate'),
+    );
+  }
 
+  // Return markup.
   return $form;
 }
 
