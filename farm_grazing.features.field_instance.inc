@@ -98,51 +98,6 @@ function farm_grazing_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance:
-  // 'farm_plan-grazing-field_expected_days_non_growth'.
-  $field_instances['farm_plan-grazing-field_expected_days_non_growth'] = array(
-    'bundle' => 'grazing',
-    'default_value' => array(
-      0 => array(
-        'value' => 0,
-      ),
-    ),
-    'deleted' => 0,
-    'description' => '',
-    'display' => array(
-      'default' => array(
-        'label' => 'inline',
-        'module' => 'number',
-        'settings' => array(
-          'decimal_separator' => '.',
-          'prefix_suffix' => TRUE,
-          'scale' => 0,
-          'thousand_separator' => '',
-        ),
-        'type' => 'number_integer',
-        'weight' => 4,
-      ),
-    ),
-    'entity_type' => 'farm_plan',
-    'field_name' => 'field_expected_days_non_growth',
-    'label' => 'Expected days non growth',
-    'required' => 0,
-    'settings' => array(
-      'max' => '',
-      'min' => 0,
-      'prefix' => '',
-      'suffix' => '',
-      'user_register_form' => FALSE,
-    ),
-    'widget' => array(
-      'active' => 0,
-      'module' => 'number',
-      'settings' => array(),
-      'type' => 'number',
-      'weight' => 7,
-    ),
-  );
-
   // Exported field_instance: 'farm_plan-grazing-field_expected_rotations'.
   $field_instances['farm_plan-grazing-field_expected_rotations'] = array(
     'bundle' => 'grazing',
@@ -310,7 +265,6 @@ function farm_grazing_field_default_field_instances() {
   t('Days of Drought Reserve');
   t('Define the date range for this grazing plan.');
   t('Does this plan take place during the growing season? This will affect some calculations and recommendations when you are planning your rotations.');
-  t('Expected days non growth');
   t('Expected number of rotations');
   t('Gather the team of people that implemented last years plan and that will be responsible for this year\'s plan. Consider your goals and the goals for the landscape your wish to create. Make a list of factors that will touch on livestock, wildlife, crops, haying, etc. Think through how the entire ranch will be used considering the number of cells, herds, stocking rates, cropping, drought reserve and biological monitoring. Enter all ideas in this planning factors field for future reference.');
   t('Growing season');
