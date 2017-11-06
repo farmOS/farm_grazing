@@ -22,7 +22,7 @@ function farm_grazing_plan_herds_paddocks_form($form, &$form_state, $plan_obj) {
   );
 
   // Get a list of paddocks to build options array
-  $query = db_query('SELECT p.*, t.name FROM {farm_grazing_plan_paddock} p LEFT JOIN taxonomy_term_data t ON p.paddock_id=t.tid ORDER BY t.name');
+  $query = db_query('SELECT p.*, t.name FROM {farm_grazing_plan_paddock} p LEFT JOIN taxonomy_term_data t ON p.paddock_id=t.tid WHERE plan_id=:plan_id ORDER BY t.name', array(':plan_id'=>$plan));
   $records = $query->fetchAll();
 
   // build the select options array

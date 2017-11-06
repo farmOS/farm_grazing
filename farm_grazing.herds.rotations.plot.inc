@@ -213,9 +213,23 @@ function get_paddock_exclusions($plan_id, $paddock_id) {
 function get_paddock_recovery($plan_id, $paddock_id, $end_date) {
   // load the plan dates
   list($p_start, $p_end) = getFarmPlanDatesFromId($plan_id, 'Y-m-d');
-
   list($yr, $mon, $day) = explode('-', $end_date);
-  $recovery = db_query('SELECT (min_recovery+max_recovery)/2.0 AS avg_recovery FROM {farm_grazing_plan_recovery} WHERE plan_id=:plan_id AND month=:month', array(':plan_id' => $plan_id, ':month' => $yr.$mon))->fetchField();
+
+  $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
+  $grazing_growing_season = $wrapper->field_grazing_growing_season->value();
+
+  if ($grazing_growing_season) {
+    $recovery = db_query('SELECT (min_recovery+max_recovery)/2.0 AS avg_recovery FROM {farm_grazing_plan_recovery} WHERE plan_id=:plan_id AND month=:month', array(':plan_id' => $plan_id, ':month' => $yr.$mon))->fetchField();
+  }
+  else {
+    $expected_days_non_growth = $wrapper->field_expected_days_non_growth->value();
+    $days_of_drought_reserve = $wrapper->field_days_of_drought_reserve->value();
+    $days_bulk_feeding = $wrapper->field_days_bulk_feeding->value();
+    $expected_rotations = $wrapper->field_expected_rotations->value();
+
+    $recovery = ( $expected_days_non_growth + $days_of_drought_reserve
+      - $days_bulk_feeding ) / $expected_rotations;
+  }
 
   // sday = end_date - plan start
   $sday = get_days_between_dates($p_start, $end_date);

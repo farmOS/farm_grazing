@@ -628,14 +628,14 @@ function getHerdSizeInSau($plan_id) {
 
 
 /**
- * getNonGrowingSummaryForPlanId($plan_id)
+ * getNonGrowingSummaryForPlanId($plan_id, $add_ids=0)
  *
  * Compute statistics for paddocks in non-growing season plan
  */
-function getNonGrowingSummaryForPlanId($plan_id) {
+function getNonGrowingSummaryForPlanId($plan_id, $add_ids=0) {
   
   // get herds size if defined
-  $herd_size = 0; // TODO
+  $herd_size = getHerdSizeInSau($plan_id);
 
   $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
 
@@ -675,6 +675,9 @@ function getNonGrowingSummaryForPlanId($plan_id) {
       $area,                // 6, avail_drought_ads (needs * $row[8])
       $days_drought_reserve,// 7, max_drought_grazing_days (needs *$row[9]/(sums[6]/$num_paddocks
     );
+    if ($add_ids) {
+      $row[] = $record->paddock_id;
+    }
     $rows[] = $row;
 
     // accumulate some sums

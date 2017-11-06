@@ -8,6 +8,9 @@ include_once "farm_grazing.utils.inc";
 function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
 
   $plan = $plan_obj->id;
+  $wrapper = entity_metadata_wrapper('farm_plan', $plan);
+
+  $grazing_growing_season = $wrapper->field_grazing_growing_season->value();
 
   // Set the page title.
   drupal_set_title(t('Select paddock rotation order for each herd'));
@@ -23,31 +26,43 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
       <p>Drag and drop to reorder the paddocks for each herd. Avoid grazing during paddock exclusions or recovery periods.</p>'),
   );
 
-  // build optional control to reset the number of grazing dats
-  $form['reset_grazing_days'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Reset Grazing Days'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
-  $form['reset_grazing_days']['select'] = array(
-    '#type' => 'select',
-    '#title' => t('Which Grazing Days'),
-    '#description' => t('Select the option to reset all fields below.'),
-    '#options' => array(
-      '0' => '- ' . t('Select Grazing Days Option') . ' -',
-      '1' => 'Minimum grazing days',
-      '2' => 'Average grazing days',
-      '3' => 'Maximum grazing days',
-    ),
-    '#required' => FALSE,
-  );
-  $form['reset_grazing_days']['submit'] = array(
-    '#type' => 'submit',
-    '#id' => 'reset-submit',
-    '#value' => t('Update Grazing Days'),
-    '#submit' => array('farm_grazing_plan_rotations_form_submit'),
-  );
+  if ($grazing_growing_season) {
+    // build optional control to reset the number of grazing dats
+    $form['reset_grazing_days'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Reset Grazing Days'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $form['reset_grazing_days']['select'] = array(
+      '#type' => 'select',
+      '#title' => t('Which Grazing Days'),
+      '#description' => t('Select the option to reset all fields below.'),
+      '#options' => array(
+        '0' => '- ' . t('Select Grazing Days Option') . ' -',
+        '1' => 'Minimum grazing days',
+        '2' => 'Average grazing days',
+        '3' => 'Maximum grazing days',
+      ),
+      '#required' => FALSE,
+    );
+    $form['reset_grazing_days']['submit'] = array(
+      '#type' => 'submit',
+      '#id' => 'reset-submit',
+      '#value' => t('Update Grazing Days'),
+      '#submit' => array('farm_grazing_plan_rotations_form_submit'),
+    );
+  }
+  else {
+    // get non-growing season grazing days and cache it here
+    $ng_pad = getNonGrowingSummaryForPlanId($plan, 1);
+    $ng_grazing = array();
+    for ($i=0; $i<count($ng_pad)-2; $i++) {
+      $ng_grazing[$ng_pad[$i][11]] = $ng_pad[$i][4];
+    }
+    //kpr($ng_pad);
+    //kpr($ng_grazing);
+  }
 
   // build sections for each herds associated with this plan
   $query = db_query('SELECT h.*, a.name FROM {farm_grazing_herds} h JOIN {farm_asset} a ON h.herd_id=a.id WHERE plan_id=:plan_id ORDER BY a.name',
@@ -84,7 +99,12 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     foreach ($paddocks as $pad) {
       // weight might be null
       $i = max($pad->weight, $i);
-      $grazing_days = getPaddockGrazingDays($pad->duration, $pad->paddock_id, $plan, $rec->herd_id, $minOrMax);
+      if ($grazing_growing_season) {
+        $grazing_days = getPaddockGrazingDays($pad->duration, $pad->paddock_id, $plan, $rec->herd_id, $minOrMax);
+      }
+      else {
+        $grazing_days = $ng_grazing[$pad->paddock_id];
+      }
       $start_str = $start_date->format('Y-m-d');
       $end_date = $start_date;
       $end_date->modify('+' . round($grazing_days) . ' days');
@@ -125,6 +145,9 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
           ),
         ),
       );
+      if (! $grazing_growing_season) {
+        $form['herds'][$rec->herd_id]['rotations'][$pad->id]['grazing_days']['#disabled'] = TRUE;
+      }
       $start_date = $end_date;
       $i++;
     }
