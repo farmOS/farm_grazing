@@ -509,7 +509,7 @@ function get_grazing_group_detailed_info($asset_id, &$data) {
   }
 
   // get the asset children and process them
-  $children  = farm_group_get_members($asset);
+  $children  = farm_group_members($asset);
   if ($asset->type == 'group' and ! empty($children)) {
     foreach ($children as $child) {
       get_grazing_group_detailed_info($child->id, $data);
@@ -600,13 +600,6 @@ function summarize_grazing_group_detailed_info(&$data) {
 function getHerdDataAndSummary($herd_id, &$data) {
   get_grazing_group_detailed_info($herd_id, $data);
   return summarize_grazing_group_detailed_info($data);
-}
-
-/**
- * TODO Remove dummy function farm_group_get_members
- */
-function farm_group_get_members($obj) {
-  return array();
 }
 
 /**
