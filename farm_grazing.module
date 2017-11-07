@@ -321,6 +321,83 @@ function farm_grazing_animal_types() {
 }
 
 /**
+ * Implements hook_entity_view_alter().
+ */
+function farm_grazing_entity_view_alter(&$build, $type) {
+
+  // If it's not a farm_asset, or if the entity object is not available, bail.
+  if ($type != 'farm_asset' || empty($build['#entity'])) {
+    return;
+  }
+
+  // Alias the asset variable.
+  $asset = $build['#entity'];
+
+  // If it isn't an animal asset, bail.
+  if ($asset->type != 'animal') {
+    return;
+  }
+
+  // Start an empty output string.
+  $output = '';
+
+  // Define the properties we care about.
+  $properties = array(
+    'animal_type',
+    'planned_arrival',
+    'planned_departure',
+  );
+
+  // Iterate through the properties.
+  foreach ($properties as $name) {
+
+    // Load the property.
+    $property = farm_asset_property_get($asset->id, 'farm_grazing_' . $name);
+
+    // If it doesn't exist, skip it.
+    if (empty($property)) {
+      continue;
+    }
+
+    // Add output based on the property.
+    $label = '';
+    $value = '';
+    switch ($name) {
+      case 'animal_type':
+        $types = farm_grazing_animal_types();
+        if (!empty($types[$property]['name'])) {
+          $label = t('Grazing animal type');
+          $value = $types[$property]['name'];
+        }
+        break;
+      case 'planned_arrival':
+        $label = t('Planned arrival');
+        $value = $property;
+        break;
+      case 'planned_departure':
+        $label = t('Planned departure');
+        $value = $property;
+        break;
+    }
+
+    // If a label and value are available, add it to the output.
+    if (!empty($label) && !empty($value)) {
+      $output .= '<div><strong>' . $label . ': </strong> ' . $value . '</div>';
+    }
+  }
+
+  // If there is output, add it to the build array.
+  if (!empty($output)) {
+    $build['grazing_properties'] = array(
+      '#markup' => $output,
+      '#prefix' => '<div class="grazing-properties">',
+      '#suffix' => '</div>',
+      '#weight' => 100,
+    );
+  }
+}
+
+/**
  * Implements hook_form_FORM_ID_alter().
  */
 function farm_grazing_form_farm_asset_form_alter(&$form, &$form_state, $form_id) {
