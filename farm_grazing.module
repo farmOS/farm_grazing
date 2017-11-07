@@ -598,38 +598,3 @@ function farm_grazing_plan_asset_update($asset) {
    */
   drupal_set_message(t('If this asset is part of a grazing plan, you should check to see if your change affects that plan.'), 'warning');
 }
-
-/**
- * Helper function for retrieving the weight of an asset.
- *
- * @param FarmAsset $asset
- *   The asset to get weight for.
- *
- * @return array
- *   Returns an array of quantity information about the asset's weight, based
- *   on its latest weight quantity log. Returns an empty array if nothing is
- *   found.
- */
-function farm_grazing_asset_weight($asset) {
-
-  // Load the latest log with a 'weight' quantity measurement for this asset.
-  $log = farm_quantity_asset_log($asset, 'weight');
-
-  // if no weight observation log exists for asset
-  if (empty($log)) {
-    return array();
-  }
-
-  // Extract quantity data from the log.
-  $data = farm_quantity_log_data($log, 'weight');
-
-  // Iterate through the data and return the first one with a value.
-  foreach ($data as $quantity) {
-    if (!empty($quantity['value'])) {
-      return $quantity;
-    }
-  }
-
-  // If nothing was returned, return an empty array.
-  return array();
-}

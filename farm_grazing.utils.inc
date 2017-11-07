@@ -530,7 +530,7 @@ function get_grazing_group_detailed_info($asset_id, &$data) {
     // get the group quantity for asset count
     $head_count = farm_inventory($asset);
 
-    $weight = farm_grazing_asset_weight($asset);
+    $weight = farm_livestock_animal_weight($asset);
     $dmi_factor = getAnimalTypeDmiFactor($type);
 
     // add the record to the results

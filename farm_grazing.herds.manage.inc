@@ -409,7 +409,7 @@ function farm_grazing_validate_herd($herd_id) {
   }
 
   //  has weight
-  $data = farm_grazing_asset_weight($herd);
+  $data = farm_livestock_animal_weight($herd);
   if (empty($data) || empty($data['value'])) {
     drupal_set_message(t('Herd') . '(<a href="' . base_path() . 'farm/asset/' . $herd_id . '">' .
       $herd->name .
