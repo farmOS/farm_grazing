@@ -256,13 +256,17 @@ function getFarmPlanDatesFromId($plan_id, $format=NULL) {
  */
 function getFarmPlanDates($plan_obj, $format=NULL) {
 
+  $wrapper = entity_metadata_wrapper('farm_plan', $plan_obj->id);
+  $start_ts = $wrapper->field_farm_date_range->value->value();
+  $end_ts = $wrapper->field_farm_date_range->value2->value();
+
   // get the start date
   $start_date = new DateTime();
-  $start_date->setTimestamp($plan_obj->field_farm_date_range['und'][0]['value']);
+  $start_date->setTimestamp($start_ts);
 
   // get the start date
   $end_date = new DateTime();
-  $end_date->setTimestamp($plan_obj->field_farm_date_range['und'][0]['value2']);
+  $end_date->setTimestamp($end_ts);
 
   if ($format == NULL) {
     return array($start_date, $end_date);

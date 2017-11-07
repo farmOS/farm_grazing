@@ -24,6 +24,10 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   // get the plan id from the plan object
   $plan = $plan_obj->id;
 
+  $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
+  $start_ts = $wrapper->field_farm_date_range->value->value();
+  $end_ts = $wrapper->field_farm_date_range->value2->value();
+
   // Set the page title.
   drupal_set_title(t('Manage Herds for Plan'));
 
@@ -186,11 +190,11 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
 
   // get the start date month and year
   $start_date = new DateTime();
-  $start_date->setTimestamp($plan_obj->field_farm_date_range['und'][0]['value']);
+  $start_date->setTimestamp($start_ts);
 
   // get the end date month and year
   $end_date = new DateTime();
-  $end_date->setTimestamp($plan_obj->field_farm_date_range['und'][0]['value2']);
+  $end_date->setTimestamp($end_ts);
 
   // get the DateInterval between them
   $diff = $start_date->diff($end_date);

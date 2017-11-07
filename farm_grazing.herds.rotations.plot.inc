@@ -13,6 +13,10 @@ include_once "farm_grazing.utils.inc";
  * @returns an image showing rotation in calendar or calendar header image
  */
 function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) {
+  $wrapper = entity_metadata_wrapper('farm_plan', $plan_obj->id);
+  $start_ts = $wrapper->field_farm_date_range->value->value();
+  $end_ts = $wrapper->field_farm_date_range->value2->value();
+
   // Set the header Content-type to 'image/png'.
   drupal_add_http_header('Content-Type', 'image/png');
 
@@ -39,12 +43,12 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
 
   // get the start date month and year
   $plan_start = new DateTime();
-  $plan_start->setTimestamp($plan_obj->field_farm_date_range['und'][0]['value']);
+  $plan_start->setTimestamp($start_ts);
   $plan_start = $plan_start->format('Y-m-d');
 
   // get the end date month and year
   $plan_end = new DateTime();
-  $plan_end->setTimestamp($plan_obj->field_farm_date_range['und'][0]['value2']);
+  $plan_end->setTimestamp($end_ts);
   $plan_end = $plan_end->format('Y-m-d');
 
   // get number of days in plan
