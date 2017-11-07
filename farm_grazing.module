@@ -304,6 +304,23 @@ function farm_grazing_plan_options() {
 }
 
 /**
+ * Load an array of animal types.
+ *
+ * @return array
+ *   Returns an array of animal types.
+ */
+function farm_grazing_animal_types() {
+  $types = array();
+  $result = db_query('SELECT * FROM farm_grazing_animal_types ORDER BY name DESC');
+  foreach ($result as $record) {
+    if (!empty($record->type_id)) {
+      $types[$record->type_id] = (array) $record;
+    }
+  }
+  return $types;
+}
+
+/**
  * Implements hook_form_FORM_ID_alter().
  */
 function farm_grazing_form_farm_asset_form_alter(&$form, &$form_state, $form_id) {
@@ -326,13 +343,11 @@ function farm_grazing_form_farm_asset_form_alter(&$form, &$form_state, $form_id)
     '#weight' => 100,
   );
 
-  // Load a list of animal type options.
+  // Build a list of animal type options.
+  $animal_types = farm_grazing_animal_types();
   $animal_type_options = array('');
-  $result = db_query('SELECT * FROM farm_grazing_animal_types ORDER BY name DESC');
-  foreach ($result as $record) {
-    if (!empty($record->type_id) && !empty($record->name)) {
-      $animal_type_options[$record->type_id] = $record->name;
-    }
+  foreach ($animal_types as $animal_type) {
+    $animal_type_options[$animal_type['type_id']] = $animal_type['name'];
   }
 
   // Animal type dropdown.
