@@ -513,10 +513,12 @@ function get_grazing_group_detailed_info($asset_id, &$data) {
   }
 
   // get the asset children and process them
-  $children  = farm_group_members($asset);
-  if ($asset->type == 'group' and ! empty($children)) {
-    foreach ($children as $child) {
-      get_grazing_group_detailed_info($child->id, $data);
+  if ($asset->type == 'group') {
+    $children  = farm_group_members($asset);
+    if (!empty($children)) {
+      foreach ($children as $child) {
+        get_grazing_group_detailed_info($child->id, $data);
+      }
     }
   }
   else {

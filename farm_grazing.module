@@ -311,8 +311,8 @@ function farm_grazing_form_farm_asset_form_alter(&$form, &$form_state, $form_id)
   // Get the farm asset entity from the form.
   $asset = $form['farm_asset']['#value'];
 
-  // If the asset is not a group or animal, bail.
-  if (empty($asset->type) || !in_array($asset->type, array('group', 'animal'))) {
+  // If the asset is not an animal, bail.
+  if (empty($asset->type) || $asset->type != 'animal') {
     return;
   }
 
@@ -320,7 +320,7 @@ function farm_grazing_form_farm_asset_form_alter(&$form, &$form_state, $form_id)
   $form['farm_grazing'] = array(
     '#type' => 'fieldset',
     '#title' => t('Grazing'),
-    '#description' => t('If this asset is used in a grazing plan, the following information is required for plan calculations.'),
+    '#description' => t('If this animal is used in a grazing plan, the following information is required for plan calculations.'),
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
     '#weight' => 100,
