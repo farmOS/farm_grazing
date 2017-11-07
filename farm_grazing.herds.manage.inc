@@ -24,7 +24,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   // get the plan id from the plan object
   $plan = $plan_obj->id;
 
-  $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
+  $wrapper = entity_metadata_wrapper('farm_plan', $plan);
   $start_ts = $wrapper->field_farm_date_range->value->value();
   $end_ts = $wrapper->field_farm_date_range->value2->value();
 
