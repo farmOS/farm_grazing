@@ -226,6 +226,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   // and sum up total SAUs by month
   $rows = array();
   $num_plan_months = $num_months;
+  kpr($herd_details);
   foreach ($herd_details as $this_herd) {
     // initial row for this herd
     $row = array();
@@ -242,7 +243,11 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
 
       // generate array of months between start and end
       $num_months = $diff->y * 12 + $diff->m;
-      $date = $start_date;
+
+      // force the date to first day of month
+      list($y, $m, $d) = explode(',', $start_date->format('Y,m,d'));
+      $date = new DateTime();
+      $date->setDate($y, $m, 1);
 
       // sum up the sau by month
       for( $i = 0; $i <= $num_months; $i++ ) {
