@@ -226,7 +226,6 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   // and sum up total SAUs by month
   $rows = array();
   $num_plan_months = $num_months;
-  kpr($herd_details);
   foreach ($herd_details as $this_herd) {
     // initial row for this herd
     $row = array();
