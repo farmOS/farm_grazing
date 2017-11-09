@@ -226,7 +226,9 @@ function get_paddock_recovery($plan_id, $paddock_id, $end_date) {
     $recovery = db_query('SELECT (min_recovery+max_recovery)/2.0 AS avg_recovery FROM {farm_grazing_plan_recovery} WHERE plan_id=:plan_id AND month=:month', array(':plan_id' => $plan_id, ':month' => $yr.$mon))->fetchField();
   }
   else {
-    $expected_days_non_growth = $wrapper->field_expected_days_non_growth->value();
+    $start_ts = $wrapper->field_farm_date_range->value->value();
+    $end_ts = $wrapper->field_farm_date_range->value2->value();
+    $expected_days_non_growth = floor(($end_ts-$start_ts)/3600/24);
     $days_of_drought_reserve = $wrapper->field_days_of_drought_reserve->value();
     $days_bulk_feeding = $wrapper->field_days_bulk_feeding->value();
     $expected_rotations = $wrapper->field_expected_rotations->value();

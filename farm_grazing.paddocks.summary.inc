@@ -15,7 +15,9 @@ function farm_grazing_plan_summary_page($plan_obj) {
   $farm_grazing_factors = $wrapper->field_farm_grazing_factors->value();
   $days_bulk_feeding = $wrapper->field_days_bulk_feeding->value();
   $days_of_drought_reserve = $wrapper->field_days_of_drought_reserve->value();
-  $expected_days_non_growth = $wrapper->field_expected_days_non_growth->value();
+  $start_ts = $wrapper->field_farm_date_range->value->value();
+  $end_ts = $wrapper->field_farm_date_range->value2->value();
+  $expected_days_non_growth = floor(($end_ts-$start_ts)/3600/24);
   $num_rotations = $wrapper->field_expected_rotations->value();
 
   if ($grazing_growing_season) {

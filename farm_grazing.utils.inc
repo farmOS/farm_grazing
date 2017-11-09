@@ -670,8 +670,8 @@ function getNonGrowingSummaryForPlanId($plan_id, $add_ids=0) {
     $ada = $record->quality;
     $row = array(
       $name,                // paddock
-      $area,                // area (needs to be round)
-      $ada,                 // ada
+      $area,                // 8, area (needs to be round)
+      $ada,                 // 9, ada
       $area*$ada,           // 0, avail_ads (needs to be round)
       $area*$ada*$grazing_period,   // 1, max_grazing_days (needs / avg_ads)
       $herd_size*$area*$ada/$area,  // 2, planned_harvest_per_rotation (needs / avg_ads)
@@ -687,35 +687,37 @@ function getNonGrowingSummaryForPlanId($plan_id, $add_ids=0) {
     $rows[] = $row;
 
     // accumulate some sums
-    for($i=0; $i<3; $i++) {
+    // [0] available ads
+    // [1] max. grazing days
+    // [2] planned harvest per rotation
+    for($i=0; $i<2; $i++) {
       $sums[$i] += $row[$i+3];
     }
   }
 
   // fix up sums and rows as needed
   $avg_ads = $sums[0] / $num_paddocks;
-  $sums[1] = $sums[1] / $avg_ads;
-  $sums[2] = $sums[2] / $avg_ads;
+  $sums[1] = $sums[1] / $avg_ads; // max. grazing days
   for ($i=0; $i<$num_paddocks; $i++) {
     $rows[$i][4] = $rows[$i][4] / $avg_ads;
-    $rows[$i][5] = $rows[$i][5] / $avg_ads;
-    $rows[$i][6] = $days_bulk_feeding - $rows[$i][5];
+    $rows[$i][5] = $herd_size * $rows[$i][4] / $rows[$i][1];
+    $rows[$i][6] = $rows[$i][2] - $rows[$i][5];
     $rows[$i][7] = $rows[$i][5] * $num_rotations;
-    $rows[$i][8] = $days_bulk_feeding - $rows[$i][7];
+    $rows[$i][8] = $rows[$i][2] - $rows[$i][7];
     $rows[$i][9] = $rows[$i][1] * $rows[$i][8];
     // accumulate more sums
-    $sums[2] += $rows[$i][5];
-    $sums[3] += $rows[$i][6];
-    $sums[4] += $rows[$i][7];
-    $sums[5] += $rows[$i][8];
-    $sums[6] += $rows[$i][9];
+    $sums[2] += $rows[$i][5]; // planned harvest per rotation
+    $sums[3] += $rows[$i][6]; // remaining ada aft.first rotation
+    $sums[4] += $rows[$i][7]; // planned total harvest
+    $sums[5] += $rows[$i][8]; // forage excess/deficit - planned drought reserve
+    $sums[6] += $rows[$i][9]; // available drought ads
   }
   $avg_avail_drought_ads = $sums[6] / $num_paddocks;
   for ($i=0; $i<$num_paddocks; $i++) {
     $rows[$i][10] = $rows[$i][9] * $days_drought_grazing / $avg_avail_drought_ads;
-    $sums[7] += $rows[$i][10];
-    $sums[8] += $rows[$i][1];
-    $sums[9] += $rows[$i][2];
+    $sums[7] += $rows[$i][10];  // max. drought grazing days
+    $sums[8] += $rows[$i][1];   // area
+    $sums[9] += $rows[$i][2];   // ada/h
   }
 
   // push the totals

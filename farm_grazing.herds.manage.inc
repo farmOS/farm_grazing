@@ -360,7 +360,7 @@ function farm_grazing_plan_herds_form_validate($form, &$form_state) {
   $herd_id = $form_state['input']['add']['herd_id'];
 
   if (farm_grazing_validate_herd($herd_id)) {
-    form_set_error('herd_id', t('Please fix the issues listed before adding this herd to the plan.'));
+    //form_set_error('herd_id', t('Please fix the issues listed before adding this herd to the plan.'));
   }
 
 }
