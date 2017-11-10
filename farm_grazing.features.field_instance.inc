@@ -192,7 +192,7 @@ function farm_grazing_field_default_field_instances() {
     'bundle' => 'grazing',
     'default_value' => NULL,
     'deleted' => 0,
-    'description' => 'Gather the team of people that implemented last years plan and that will be responsible for this year\'s plan. Consider your goals and the goals for the landscape your wish to create. Make a list of factors that will touch on livestock, wildlife, crops, haying, etc. Think through how the entire ranch will be used considering the number of cells, herds, stocking rates, cropping, drought reserve and biological monitoring. Enter all ideas in this planning factors field for future reference.',
+    'description' => 'Gather the team of people that implemented last years plan and that will be responsible for this year\'s plan. Consider your goals and the goals for the landscape you wish to create. Make a list of factors that will touch on livestock, wildlife, crops, haying, etc. Think through how the entire ranch will be used considering the number of cells, herds, stocking rates, cropping, drought reserve and biological monitoring. Enter all ideas in this planning factors field for future reference.',
     'display' => array(
       'default' => array(
         'label' => 'above',
@@ -266,7 +266,7 @@ function farm_grazing_field_default_field_instances() {
   t('Define the date range for this grazing plan.');
   t('Does this plan take place during the growing season? This will affect some calculations and recommendations when you are planning your rotations.');
   t('Expected number of rotations');
-  t('Gather the team of people that implemented last years plan and that will be responsible for this year\'s plan. Consider your goals and the goals for the landscape your wish to create. Make a list of factors that will touch on livestock, wildlife, crops, haying, etc. Think through how the entire ranch will be used considering the number of cells, herds, stocking rates, cropping, drought reserve and biological monitoring. Enter all ideas in this planning factors field for future reference.');
+  t('Gather the team of people that implemented last years plan and that will be responsible for this year\'s plan. Consider your goals and the goals for the landscape you wish to create. Make a list of factors that will touch on livestock, wildlife, crops, haying, etc. Think through how the entire ranch will be used considering the number of cells, herds, stocking rates, cropping, drought reserve and biological monitoring. Enter all ideas in this planning factors field for future reference.');
   t('Growing season');
   t('Planning factors');
 
