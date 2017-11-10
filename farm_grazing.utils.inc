@@ -601,10 +601,81 @@ function summarize_grazing_group_detailed_info(&$data) {
 }
 
 /**
+ * farm_grazing_validate_herd($herd_id)
+ *
+ * when a herd is attached to a grazing plan or otherwise modified
+ * this function checks that all components of the herd have required
+ * properties and initial observations.
+ *
+ * it should return null if ok, otherwise a document enumerating the
+ * problems with links to where the user can fix them.
+ *
+ */
+function farm_grazing_validate_herd($herd_id, &$data) {
+  $errors = 0;
+
+  get_grazing_group_detailed_info($herd_id, $data);
+
+  foreach ($data as $animal) {
+
+    // Things to validate
+    //  farm_grazing_animal_type property exists and is valid
+    $type = $animal['type'];
+    if (empty($type)) {
+      drupal_set_message(t('Animal') . '(<a href="' . base_path() . 'farm/asset/
+' . $animal['id'] . '/edit">' .
+      $animal['name'] .
+      '</a>)' .t(' needs its Animal Type property set.'), 'error');
+      $errors++;
+    }
+
+    //  farm_grazing_planned_arrival property exists and is valid
+    $arrival = $animal['arrival'];
+    if (empty($arrival)) {
+      drupal_set_message(t('Animal') . '(<a href="' . base_path() . 'farm/asset/
+' . $animal['id'] . '/edit">' .
+      $animal['name'] .
+      '</a>)' .t(' needs its Planned Arrival date set.'), 'error');
+      $errors++;
+    }
+
+    //  farm_grazing_planned_departure property exists and is valid
+    $departure = $animal['departure'];
+    if (empty($departure)) {
+      drupal_set_message(t('Animal') . '(<a href="' . base_path() . 'farm/asset/
+' . $animal['id'] . '/edit">' .
+      $animal['name'] .
+      '</a>)' .t(' needs its Planned Departure date set.'), 'error');
+      $errors++;
+    }
+
+    //  has weight
+    $weight = $animal['weight'];
+    if (empty($weight)) {
+      drupal_set_message(t('Animal') . '(<a href="' . base_path() . 'farm/asset/
+' . $animal['id'] . '">' .
+        $animal['name'] .
+        '</a>)' .t(' needs an Observation -> Quantity -> weight set.'), 'error')
+;
+      $errors++;
+    }
+
+    //  TODO are all animals/groups are in some paddock
+
+    //  TODO is asset attached to another active plan?
+
+  }
+
+  return $errors;
+}
+
+
+/**
  * getHerdDataAndSummary($herd_id, &$data)
  */
 function getHerdDataAndSummary($herd_id, &$data) {
-  get_grazing_group_detailed_info($herd_id, $data);
+  farm_grazing_validate_herd($herd_id, $data);
+  //get_grazing_group_detailed_info($herd_id, $data);
   return summarize_grazing_group_detailed_info($data);
 }
 

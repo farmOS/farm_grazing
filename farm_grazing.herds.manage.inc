@@ -359,73 +359,11 @@ function farm_grazing_plan_herds_form_validate($form, &$form_state) {
   $plan_id = $form_state['values']['plan'];
   $herd_id = $form_state['input']['add']['herd_id'];
 
-  if (farm_grazing_validate_herd($herd_id)) {
-    //form_set_error('herd_id', t('Please fix the issues listed before adding this herd to the plan.'));
+  $data = array();
+  if (farm_grazing_validate_herd($herd_id, $data)) {
+    form_set_error('herd_id', t('Please fix the issues listed before adding this herd to the plan.'));
   }
 
-}
-
-/**
- * farm_grazing_validate_herd($herd_id)
- *
- * when a herd is attached to a grazing plan or otherwise modified
- * this function checks that all components of the herd have required
- * properties and initial observations.
- *
- * it should return null if ok, otherwise a document enumerating the
- * problems with links to where the user can fix them.
- *
- */
-function farm_grazing_validate_herd($herd_id) {
-  // TODO farm_grazing_validate_herd($herd_id) needs to support membership
-
-  $errors = 0;
-
-  // load the asset
-  $herd = farm_asset_load($herd_id);
-
-  // Things to validate
-  //  farm_grazing_animal_type property exists and is valid
-  $type = farm_asset_property_get($herd_id, 'farm_grazing_animal_type');
-  if (empty($type)) {
-    drupal_set_message(t('Herd') . '(<a href="' . base_path() . 'farm/asset/' . $herd_id . '/edit">' .
-    $herd->name .
-    '</a>)' .t(' needs its Animal Type property set.'), 'error');
-    $errors++;
-  }
-
-  //  farm_grazing_planned_arrival property exists and is valid
-  $arrival = farm_asset_property_get($herd_id, 'farm_grazing_planned_arrival');
-  if (empty($arrival)) {
-    drupal_set_message(t('Herd') . '(<a href="' . base_path() . 'farm/asset/' . $herd_id . '/edit">' .
-    $herd->name .
-    '</a>)' .t(' needs its Planned Arrival date set.'), 'error');
-    $errors++;
-  }
-
-  //  farm_grazing_planned_departure property exists and is valid
-  $departure = farm_asset_property_get($herd_id, 'farm_grazing_planned_departure');
-  if (empty($departure)) {
-    drupal_set_message(t('Herd') . '(<a href="' . base_path() . 'farm/asset/' . $herd_id . '/edit">' .
-    $herd->name .
-    '</a>)' .t(' needs its Planned Departure date set.'), 'error');
-    $errors++;
-  }
-
-  //  has weight
-  $data = farm_livestock_animal_weight($herd);
-  if (empty($data) || empty($data['value'])) {
-    drupal_set_message(t('Herd') . '(<a href="' . base_path() . 'farm/asset/' . $herd_id . '">' .
-      $herd->name .
-      '</a>)' .t(' needs an Observation -> Quantity -> weight set.'), 'error');
-    $errors++;
-  }
-
-  //  TODO are all animals/groups are in some paddock
-
-  //  TODO is asset attached to another active plan?
-
-  return $errors;
 }
 
 /**
