@@ -43,7 +43,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     '#markup' => t('<p>' .
       t('A herd is defined as a group of animals that will be rotated between paddocks together regardless of the make up of animals in the herd.') .
       '</p><p>' .
-      t('Herds are defined in farmOS as groups under the "Assets -> Groups" menu, then they can be selected here. You can also add to a herd, combine herds, split some animals out of a herd, or ship animals out of the plan.') .
+      t('You can define animals ') . '<a href="' . base_path() . 'farm/asset/add/animal?destination=farm/assets/animals" target="_new">' . t('HERE') . '</a> ' . t('and assign them to a group. See the Help for more information.') .
       '</p></p>' .
       t('Click on the herd name to remove it from the plan.') .
       '</p>' .
