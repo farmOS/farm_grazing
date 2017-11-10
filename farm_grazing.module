@@ -626,7 +626,26 @@ function farm_grazing_help($path, $arg) {
       return '<p>' . t('Use the Check Min/Max Recovery Period below and if any recovery period is much too short, you must add days to the minimum grazing periods in other paddocks that can absorb them. Follow the same procedure for maximum grazing periods, though the problems will probably be less critical if you can\'t make complete adjustments.') . '</p>';
     case 'farm/plan/%/herds':
     case 'farm/plan/%/herds/default':
-      return '<p>' . t('A herd is defined as a group of animals that will be rotated between paddock to together regardless of the make up of animals in the herd.') . '</p><p>' . t('Most smaller ranches will only have a single herd as you will need more paddocks to support multiple herds and allow for adequate recovery periods of the paddocks.') . '</p><p>' . t('If you are new to this planning method or you have a smaller ranch, try to keep your plan simple to start with and built it based on a single herd.') . '</p>';
+      return '<p>' . t('A herd is defined as a group of animals that will be rotated between paddock to together regardless of the make up of animals in the herd.') . '</p><p>' . t('Most smaller ranches will only have a single herd as you will need more paddocks to support multiple herds and allow for adequate recovery periods of the paddocks.') . '</p><p>' . t('If you are new to this planning method or you have a smaller ranch, try to keep your plan simple to start with and built it based on a single herd.') . '</p><p>' . t('You can define animals ') . '<a href="' . base_path() . 'farm/asset/add/animal?destination=farm/assets/animals" target="_new">' . t('HERE') . '</a> ' . t('and assign them to a group. You will need to enter all of the following fields:') . '<ul>' .
+      '<li>' . t('Name') . '</li>' .
+      '<li>' . t('Species/breed') . '</li>' .
+      '<li>' . t('Description (optional)') . '</li>' .
+      '<li>' . t('Location (optional)') . '</li>' .
+      '<li>' . t('Weight') . '</li>' .
+      '<li>' . t('Inventory (Head count)') . '</li>' .
+      '<li>' . t('Group memebership (Herd name)') . '</li>' .
+      '<ul>' .
+      '<li>' . t('Select an existing group (Herd)') . '</li>' .
+      '<li>' . t('or Create a new group (Herd)') . '</li>' .
+      '</ul>' .
+      '<li>' . t('Grazing') . '</li>' .
+      '<ul>' .
+      '<li>' . t('Animal type') . '</li>' .
+      '<li>' . t('Planned arrival date') . '</li>' .
+      '<li>' . t('Planned departure date') . '</li>' .
+      '</ul>' .
+      '</ul></p>'
+      ;
     case 'farm/plan/%/herds/paddocks':
       return '<p>' . t('Add or remove paddocks from each herd in your plan. In the next two steps you will review the historical grazing patterns and then order the paddock rotations for each herd.') . '</p>';
     case 'farm/plan/%/herds/history':
