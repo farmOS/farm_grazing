@@ -653,7 +653,9 @@ function getNonGrowingSummaryForPlanId($plan_id, $add_ids=0) {
 
   $start_ts = $wrapper->field_farm_date_range->value->value();
   $end_ts = $wrapper->field_farm_date_range->value2->value();
-  $expected_days_non_growth = floor(($end_ts-$start_ts)/3600/24);
+  $plan_days = floor(($end_ts-$start_ts)/3600/24);
+
+  $expected_days_non_growth = $plan_days - $days_drought_reserve + $days_bulk_feeding;
 
   $grazing_period = ($expected_days_non_growth + $days_drought_reserve - $days_bulk_feeding) / $num_rotations / $num_paddocks;
 

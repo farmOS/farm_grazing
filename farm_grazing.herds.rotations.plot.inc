@@ -13,6 +13,9 @@ include_once "farm_grazing.utils.inc";
  * @returns an image showing rotation in calendar or calendar header image
  */
 function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) {
+  // for debug output
+  //$fp = fopen('php://stderr', 'a');
+
   $wrapper = entity_metadata_wrapper('farm_plan', $plan_obj->id);
   $start_ts = $wrapper->field_farm_date_range->value->value();
   $end_ts = $wrapper->field_farm_date_range->value2->value();
@@ -53,6 +56,10 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
 
   // get number of days in plan
   $plan_days = get_days_between_dates($plan_start, $plan_end);
+
+  //$plan_days2 = floor(($end_ts-$start_ts)/3600/24);
+
+  //fputs($fp, "plan_days=$plan_days, plan_days2=$plan_days2\n");
 
   // get number of days from start of plan to start_date
   $days_to_start = get_days_between_dates($plan_start, $start_date);
@@ -228,13 +235,10 @@ function get_paddock_recovery($plan_id, $paddock_id, $end_date) {
   else {
     $start_ts = $wrapper->field_farm_date_range->value->value();
     $end_ts = $wrapper->field_farm_date_range->value2->value();
-    $expected_days_non_growth = floor(($end_ts-$start_ts)/3600/24);
-    $days_of_drought_reserve = $wrapper->field_days_of_drought_reserve->value();
-    $days_bulk_feeding = $wrapper->field_days_bulk_feeding->value();
-    $expected_rotations = $wrapper->field_expected_rotations->value();
+    $plan_days = floor(($end_ts-$start_ts)/3600/24);
 
-    $recovery = ( $expected_days_non_growth + $days_of_drought_reserve
-      - $days_bulk_feeding ) / $expected_rotations;
+    $expected_rotations = $wrapper->field_expected_rotations->value();
+    $recovery = $plan_days / $expected_rotations;
   }
 
   // sday = end_date - plan start

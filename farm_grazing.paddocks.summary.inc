@@ -11,14 +11,17 @@ function farm_grazing_plan_summary_page($plan_obj) {
   $plan = $plan_obj->id;
   $wrapper = entity_metadata_wrapper('farm_plan', $plan);
 
+  $num_rotations = $wrapper->field_expected_rotations->value();
   $grazing_growing_season = $wrapper->field_grazing_growing_season->value();
   $farm_grazing_factors = $wrapper->field_farm_grazing_factors->value();
   $days_bulk_feeding = $wrapper->field_days_bulk_feeding->value();
   $days_of_drought_reserve = $wrapper->field_days_of_drought_reserve->value();
+
   $start_ts = $wrapper->field_farm_date_range->value->value();
   $end_ts = $wrapper->field_farm_date_range->value2->value();
-  $expected_days_non_growth = floor(($end_ts-$start_ts)/3600/24);
-  $num_rotations = $wrapper->field_expected_rotations->value();
+  $plan_days = floor(($end_ts-$start_ts)/3600/24);
+
+  $expected_days_non_growth = $plan_days - $days_of_drought_reserve + $days_bulk_feeding;
 
   if ($grazing_growing_season) {
 
@@ -99,7 +102,7 @@ function farm_grazing_plan_summary_page($plan_obj) {
     $num_paddocks = getPaddockCountForPlan($plan);
     $tot_ads = empty($paddocks) ? 0 : $paddocks[$num_paddocks][3];
     $avg_ads = $tot_ads/$num_paddocks;
-    $tot_grazing_days = $expected_days_non_growth + $days_of_drought_reserve - $days_bulk_feeding;
+    $tot_grazing_days = $plan_days;
     $est_carrying_capacity = $tot_ads / $tot_grazing_days;
     $recovery_period = $tot_grazing_days / $num_rotations;
     $grazing_period = $recovery_period / $num_paddocks;
