@@ -83,7 +83,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
 
     // build a table of paddocks assigned to this herd
     $query = db_query('SELECT p.id, p.plan_id, p.herd_id, p.paddock_id,
-        p.duration, p.start_date, p.weight as weight, t.name
+        p.duration, p.start_date, p.log_id, p.weight as weight, t.name
       FROM {farm_grazing_rotations} p
       LEFT JOIN taxonomy_term_data t ON p.paddock_id=t.tid
       WHERE plan_id=:plan_id AND herd_id=:herd_id
@@ -131,6 +131,10 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
           '#markup' => '<img src="' . base_path() . 'farm/grazing/plan/' .  $plan .
             '/plot/' . $pad->paddock_id . '/' . $start_str . '/' . $end_str .
             '">',
+        ),
+        'log_id' => array(
+          '#type' => 'value',
+          '#value' => !empty($pad->log_id) ? $pad->log_id : 0,
         ),
         'weight' => array(
           '#type' => 'weight',
@@ -187,6 +191,20 @@ function theme_farm_grazing_plan_rotations_form($variables) {
     $rows = array();
     foreach (element_children($form['herds'][$herd_id]['rotations']) as $rid) {
       $item =& $form['herds'][$herd_id]['rotations'][$rid];
+
+      // Build movement log columns (link and done checkbox)
+      $log_link = '';
+      $log_done = '';
+      if (!empty($item['log_id']['#value'])) {
+        $log = log_load($item['log_id']['#value']);
+        $uri = entity_uri('log', $log);
+        $log_link = l(t('View log'), $uri['path']);
+        if (!empty($log->done)) {
+          $log_done = '✔';
+        }
+      }
+
+      // Assemble the row.
       $rows[] = array(
         'data' => array(
           drupal_render($item['name']),
@@ -194,6 +212,8 @@ function theme_farm_grazing_plan_rotations_form($variables) {
           drupal_render($item['start_date']),
           drupal_render($item['end_date']),
           drupal_render($item['image']),
+          $log_link,
+          $log_done,
           drupal_render($item['weight']),
         ),
         'class' => array('draggable'),
@@ -206,6 +226,8 @@ function theme_farm_grazing_plan_rotations_form($variables) {
       t('Start Date'),
       t('End Date'),
       '<img src="' . base_path() . 'farm/grazing/plan/'.$plan.'/plot/0/0/0">',
+      t('Movement Log'),
+      t('Movement Done'),
       t('Sort weight'),
     );
 
