@@ -164,12 +164,22 @@ function farm_grazing_plan_herds_paddocks_form_submit($form, &$form_state) {
   $ids = explode(',', $paddock_id);
   foreach ($ids as $i => $paddock_id) {
 
+    // Load the herd.
+    $herd = farm_asset_load($herd_id);
+
+    // Load the paddock.
+    $paddock = taxonomy_term_load($paddock_id);
+
+    // Create movement log.
+    $log = farm_movement_create($herd, array($paddock), REQUEST_TIME, 'farm_activity', FALSE);
+
     //db_insert('farm_grazing_herd_paddocks')
     db_insert('farm_grazing_rotations')
       ->fields(array(
         'paddock_id' => $paddock_id,
         'plan_id' => $plan_id,
         'herd_id' => $herd_id,
+        'log_id' => !empty($log->id) ? $log->id : 0,
         'weight' => $i,
         ))
         ->execute();
