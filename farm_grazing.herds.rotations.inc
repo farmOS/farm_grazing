@@ -240,6 +240,8 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
   //fputs($fp, print_r($form_state['values'], true));
 
   $plan_id = $form_state['values']['plan'];
+  $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
+  $plan_start_ts = $wrapper->field_farm_date_range->value->value();
 
   if ($form_state['values']['op'] == t('Save Changes')) {
     foreach ($form_state['values']['herds'] as $herd_id => $rotations) {
@@ -275,15 +277,19 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
     $records = db_query('SELECT id, paddock_id, herd_id FROM {farm_grazing_rotations} WHERE plan_id=:plan_id', array(':plan_id' => $plan_id));
 
     $cache = array();
+    $start_date = $plan_start_ts;
     foreach ($records as $rec) {
       $days = getPaddockGrazingDays(NULL, $rec->paddock_id, $plan_id, $rec->herd_id, $cache, $mode);
       db_update('farm_grazing_rotations')
         ->fields(array(
           'duration' => $days,
-          'start_date' => NULL,
+          'start_date' => $start_date,
           ))
         ->condition('id', $rec->id)
         ->execute();
+
+      // increment the paddock start_date by the duration in seconds
+      $start_date += $days * 24 * 3600;
     }
 
   }
