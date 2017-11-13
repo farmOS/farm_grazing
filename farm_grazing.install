@@ -67,6 +67,14 @@ function farm_grazing_schema() {
       ),
     ),
     'primary key' => array('id'),
+    'indexes' => array(
+      'plan_id' => array('plan_id'),
+      'herd_id' => array('herd_id'),
+      'paddock_id' => array('paddock_id'),
+      'log_id' => array('log_id'),
+      'start_date' => array('start_date'),
+      'weight' => array('weight'),
+    ),
   );
 
 #  $schema['farm_grazing_herd_paddocks'] = array(
