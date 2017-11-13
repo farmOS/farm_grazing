@@ -48,6 +48,9 @@ function farm_grazing_schema() {
       'start_date' => array(
         'description' => 'Planned start date for rotation into paddock',
         'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'default' => 0,
       ),
 #      'log_id' => array(
 #        'description' => 'FK reference to the movement log',
