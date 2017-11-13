@@ -223,6 +223,15 @@ function farm_grazing_plan_herds_paddocks_delete_submit($form, &$form_state) {
   //$fp = fopen('php://stderr', 'a');
   //fputs($fp, print_r($form_state, true));
 
+  // Delete log.
+  $log_id = db_query('SELECT log_id FROM {farm_grazing_rotations} WHERE id = :id', array(':id' => $form_state['values']['rid']))->fetchField();
+  if (!empty($log_id)) {
+    $log = log_load($log_id);
+    if (!empty($log)) {
+      log_delete($log);
+    }
+  }
+
   //db_delete('farm_grazing_herd_paddocks')
   db_delete('farm_grazing_rotations')
     ->condition('id', $form_state['values']['rid'])
