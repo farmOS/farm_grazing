@@ -13,7 +13,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
   $grazing_growing_season = $wrapper->field_grazing_growing_season->value();
 
   // Set the page title.
-  drupal_set_title(t('Select paddock rotation order for each herd'));
+  drupal_set_title(t('Create paddock rotations for each herd'));
 
   $form['#tree'] = TRUE;
 
@@ -24,6 +24,54 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
   $form['text'] = array(
     '#markup' => t('
       <p>Drag and drop to reorder the paddocks for each herd. Avoid grazing during paddock exclusions or recovery periods.</p>'),
+  );
+
+  // Get a list of all herds associated with this plan.
+  $query = db_query('SELECT h.*, a.name FROM {farm_grazing_herds} h JOIN {farm_asset} a ON h.herd_id=a.id WHERE plan_id=:plan_id ORDER BY a.name', array(':plan_id' => $plan));
+  $herd_records = $query->fetchAll();
+
+  // Get a list of all paddocks associated with this plan.
+  $query = db_query('SELECT p.*, t.name FROM {farm_grazing_plan_paddock} p LEFT JOIN taxonomy_term_data t ON p.paddock_id=t.tid WHERE plan_id=:plan_id ORDER BY t.name', array(':plan_id'=>$plan));
+  $paddock_records = $query->fetchAll();
+
+  // Create an array of herd options for the select list.
+  $herd_options = array();
+  foreach ($herd_records as $rec) {
+    $herd_options[$rec->herd_id] = $rec->name;
+  }
+
+  // Create an array of paddock options for the select list.
+  $paddock_options = array();
+  foreach ($paddock_records as $rec) {
+    $paddock_options[$rec->paddock_id] = $rec->name;
+  }
+
+  // Add a fieldset with options for adding additional paddock rotations for a
+  // given herd.
+  $form['add'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Add a paddock rotation'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['add']['herd_id'] = array(
+    '#type' => 'select',
+    '#title' => t('Herd'),
+    '#description' => t('Select a herd you want to add a paddock to.'),
+    '#options' => $herd_options,
+  );
+  $form['add']['paddock_id'] = array(
+    '#type' => 'select',
+    '#title' => t('Paddock'),
+    '#description' => t('Select paddock(s) you want to add to this herd.'),
+    '#options' => $paddock_options,
+    '#multiple' => TRUE,
+  );
+  $form['add']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Add rotation'),
+    '#submit' => array('farm_grazing_plan_rotation_add_validate'),
+    '#submit' => array('farm_grazing_plan_rotation_add_submit'),
   );
 
   if ($grazing_growing_season) {
@@ -65,16 +113,12 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
   }
 
   // build sections for each herds associated with this plan
-  $query = db_query('SELECT h.*, a.name FROM {farm_grazing_herds} h JOIN {farm_asset} a ON h.herd_id=a.id WHERE plan_id=:plan_id ORDER BY a.name',
-    array(':plan_id' => $plan));
-  $records = $query->fetchAll();
-
   $form['herds'] = array();
 
   $cache = NULL;
 
   // foreach herd
-  foreach ($records as $rec) {
+  foreach ($herd_records as $rec) {
 
     // create a section for the herd and list the paddocks assigned to it
     $form['herds'][$rec->herd_id]['title'] = array(
@@ -181,6 +225,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
   $output = drupal_render($form['plan']);
   $output .= drupal_render($form['text']);
 
+  $output .= drupal_render($form['add']);
   $output .= drupal_render($form['reset_grazing_days']);
 
   foreach (element_children($form['herds']) as $herd_id) {
@@ -204,6 +249,9 @@ function theme_farm_grazing_plan_rotations_form($variables) {
         }
       }
 
+      // Build a link to remove the rotation.
+      $remove_link = l(t('Remove'), 'farm/plan/' . $plan . '/herds/rotations/' . $rid . '/delete', array('query' => array('destination' => current_path())));
+
       // Assemble the row.
       $rows[] = array(
         'data' => array(
@@ -214,6 +262,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
           drupal_render($item['image']),
           $log_link,
           $log_done,
+          $remove_link,
           drupal_render($item['weight']),
         ),
         'class' => array('draggable'),
@@ -228,6 +277,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
       '<img src="' . base_path() . 'farm/grazing/plan/'.$plan.'/plot/0/0/0">',
       t('Movement Log'),
       t('Movement Done'),
+      t('Remove'),
       t('Sort weight'),
     );
 
@@ -252,7 +302,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
 }
 
 /**
- *
+ * Rotations form submit.
  */
 function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
   // debug output
@@ -332,9 +382,126 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
       // increment the paddock start_date by the duration in seconds
       $start_date += $days * 24 * 3600;
     }
-
   }
-
 }
 
+/**
+ * Rotation add validate function.
+ */
+function farm_grazing_plan_rotation_add_validate($form, &$form_state) {
 
+  // Make sure that both a herd and paddock(s) are selected.
+  if (empty($form_state['values']['add']['herd_id'])) {
+    form_set_error('add][herd_id', t('You must select a herd.'));
+  }
+  if (empty($form_state['values']['add']['paddock_id'])) {
+    form_set_error('add][paddock_id', t('You must select paddocks.'));
+  }
+}
+
+/**
+ * Rotation add submit function.
+ */
+function farm_grazing_plan_rotation_add_submit($form, &$form_state) {
+
+  $plan_id = $form_state['values']['plan'];
+  $herd_id = $form_state['values']['add']['herd_id'];
+  $paddock_ids = $form_state['values']['add']['paddock_id'];
+
+  // handle case for adding all paddocks
+  foreach ($paddock_ids as $i => $paddock_id) {
+
+    // Load the herd.
+    $herd = farm_asset_load($herd_id);
+
+    // Load the paddock.
+    $paddock = taxonomy_term_load($paddock_id);
+
+    // Calculate the start date.
+    $start_date = REQUEST_TIME;
+
+    // Create movement log.
+    $log = farm_movement_create($herd, array($paddock), $start_date, 'farm_activity', FALSE);
+
+    //db_insert('farm_grazing_herd_paddocks')
+    db_insert('farm_grazing_rotations')
+      ->fields(array(
+        'paddock_id' => $paddock_id,
+        'plan_id' => $plan_id,
+        'herd_id' => $herd_id,
+        'start_date' => $start_date,
+        'log_id' => !empty($log->id) ? $log->id : 0,
+        'weight' => $i,
+      ))
+      ->execute();
+  }
+}
+
+/**
+ * Rotation delete form.
+ */
+function farm_grazing_plan_rotation_delete_form($form, &$form_state, $plan, $rotation_id) {
+
+  // Load the rotation record.
+  $rotation = db_query('SELECT * FROM {farm_grazing_rotations} WHERE id = :id', array(':id' => $rotation_id))->fetch();
+
+  // If the rotation doesn't exist, show page not found.
+  if (empty($rotation)) {
+    drupal_not_found();
+    drupal_exit();
+  }
+
+  // Save the rotation ID to the form.
+  $form['rotation_id'] = array(
+    '#type' => 'value',
+    '#value' => $rotation->id,
+  );
+
+  // Load the herd.
+  $herd = farm_asset_load($rotation->herd_id);
+
+  // Load the paddock.
+  $paddock = taxonomy_term_load($rotation->paddock_id);
+
+  // Build a return path.
+  $path = drupal_get_destination();
+  if ($path['destination'] == current_path()) {
+    $plan_uri = entity_uri('farm_plan', $plan);
+    $path = $plan_uri['path'];
+  }
+
+  // Build and return a confirmation form.
+  return confirm_form($form,
+    t('Are you sure you want to remove paddock %paddock_name from %herd_name?', array('%paddock_name' => $paddock->name, '%herd_name' => $herd->name)),
+    $path,
+    t('You can add it back later if you change your mind.'),
+    t('Remove it!'),
+    t('Cancel')
+  );
+}
+
+/**
+ * Rotation delete form submit.
+ */
+function farm_grazing_plan_rotation_delete_form_submit($form, &$form_state) {
+
+  // If a rotation ID wasn't set, bail.
+  if (empty($form_state['values']['rotation_id'])) {
+    return;
+  }
+  $rotation_id = $form_state['values']['rotation_id'];
+
+  // Delete log.
+  $log_id = db_query('SELECT log_id FROM {farm_grazing_rotations} WHERE id = :id', array(':id' => $rotation_id))->fetchField();
+  if (!empty($log_id)) {
+    $log = log_load($log_id);
+    if (!empty($log)) {
+      log_delete($log);
+    }
+  }
+
+  // Delete the rotation record.
+  db_delete('farm_grazing_rotations')
+    ->condition('id', $rotation_id)
+    ->execute();
+}
