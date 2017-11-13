@@ -265,6 +265,15 @@ function theme_farm_grazing_plan_rotations_form($variables) {
       // Build a link to remove the rotation.
       $remove_link = l(t('Remove'), 'farm/plan/' . $plan . '/herds/rotations/' . $rid . '/delete', array('query' => array('destination' => current_path())));
 
+      $class = array('draggable');
+      $weight = drupal_render($item['weight']);
+      if ($log_done == '✔') {
+        $class = array();
+        $remove_link = '';
+        $item['grazing_days']['#disabled'] = TRUE;
+        $weight = '';
+      }
+
       // Assemble the row.
       $rows[] = array(
         'data' => array(
@@ -276,9 +285,9 @@ function theme_farm_grazing_plan_rotations_form($variables) {
           $log_link,
           $log_done,
           $remove_link,
-          drupal_render($item['weight']),
+          $weight,
         ),
-        'class' => array('draggable'),
+        'class' => $class,
       );
     }
 
