@@ -244,11 +244,23 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
   if ($form_state['values']['op'] == t('Save Changes')) {
     foreach ($form_state['values']['herds'] as $herd_id => $rotations) {
       foreach ($rotations['rotations'] as $rid => $data) {
+
+        // Calculate the start date as a timestamp.
+        $start_date = strtotime($data['start_date']);
+
+        // Update the log.
+        if (!empty($data['log_id'])) {
+          $log = log_load($data['log_id']);
+          $log->timestamp = $start_date;
+          log_save($log);
+        }
+
+        // Update the rotation record.
         db_update('farm_grazing_rotations')
           ->fields(array(
             'duration' => $data['grazing_days'],
             'weight' => $data['weight'],
-            'start_date' => strtotime($data['start_date']),
+            'start_date' => $start_date,
           ))
           ->condition('id', $rid)
           ->condition('herd_id', $herd_id)
@@ -272,12 +284,21 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
     }
 
     // update all rotation records in plan
-    $records = db_query('SELECT id, paddock_id, herd_id FROM {farm_grazing_rotations} WHERE plan_id=:plan_id', array(':plan_id' => $plan_id));
+    $records = db_query('SELECT id, paddock_id, herd_id, log_id FROM {farm_grazing_rotations} WHERE plan_id=:plan_id', array(':plan_id' => $plan_id));
 
     $cache = array();
     $start_date = $plan_start_ts;
     foreach ($records as $rec) {
       $days = getPaddockGrazingDays(NULL, $rec->paddock_id, $plan_id, $rec->herd_id, $cache, $mode);
+
+      // Update the log.
+      if (!empty($rec->log_id)) {
+        $log = log_load($rec->log_id);
+        $log->timestamp = $start_date;
+        log_save($log);
+      }
+
+      // Update the rotation record.
       db_update('farm_grazing_rotations')
         ->fields(array(
           'duration' => $days,
