@@ -52,12 +52,13 @@ function farm_grazing_schema() {
         'unsigned' => TRUE,
         'default' => 0,
       ),
-#      'log_id' => array(
-#        'description' => 'FK reference to the movement log',
-#        'type' => 'int',
-#        'not null' => TRUE,
-#        'unsigned' => TRUE,
-#      ),
+      'log_id' => array(
+        'description' => 'FK reference to the movement log',
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'default' => 0,
+      ),
       'weight' => array(
         'description' => 'Order of rotations',
         'type' => 'int',
