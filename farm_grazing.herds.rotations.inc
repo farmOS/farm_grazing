@@ -83,11 +83,11 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
 
     // build a table of paddocks assigned to this herd
     $query = db_query('SELECT p.id, p.plan_id, p.herd_id, p.paddock_id,
-        p.duration, p.start_date, coalesce(p.weight, 0) as weight, t.name
+        p.duration, p.start_date, p.weight as weight, t.name
       FROM {farm_grazing_rotations} p
       LEFT JOIN taxonomy_term_data t ON p.paddock_id=t.tid
       WHERE plan_id=:plan_id AND herd_id=:herd_id
-      ORDER BY 7, 6 ASC',
+      ORDER BY p.weight, p.start_date ASC',
       array(':plan_id' => $plan, ':herd_id' => $rec->herd_id));
     $paddocks = $query->fetchAll();
     $rowcnt = $query->rowCount();
