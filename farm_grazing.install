@@ -58,6 +58,8 @@ function farm_grazing_schema() {
       'weight' => array(
         'description' => 'Order of rotations',
         'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
       ),
     ),
     'primary key' => array('id'),
