@@ -408,7 +408,12 @@ function farm_grazing_plan_rotation_add_submit($form, &$form_state) {
   $herd_id = $form_state['values']['add']['herd_id'];
   $paddock_ids = $form_state['values']['add']['paddock_id'];
 
-  // handle case for adding all paddocks
+  // Get the timestamp of the end of the last rotation.
+  /**
+   * @todo
+   */
+
+  // Iterate through the paddocks and add rotation records.
   foreach ($paddock_ids as $i => $paddock_id) {
 
     // Load the herd.
@@ -418,6 +423,10 @@ function farm_grazing_plan_rotation_add_submit($form, &$form_state) {
     $paddock = taxonomy_term_load($paddock_id);
 
     // Calculate the start date.
+    /**
+     * We need to change this to calculate based on the previous paddock.
+     * @todo
+     */
     $start_date = REQUEST_TIME;
 
     // Create movement log.
@@ -504,4 +513,10 @@ function farm_grazing_plan_rotation_delete_form_submit($form, &$form_state) {
   db_delete('farm_grazing_rotations')
     ->condition('id', $rotation_id)
     ->execute();
+
+  /**
+   * @todo
+   * Update all the rotations that came after this one.
+   * (both the rotation records and the logs).
+   */
 }
