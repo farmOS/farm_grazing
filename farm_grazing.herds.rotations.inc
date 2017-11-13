@@ -97,8 +97,6 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     $start_date = date_create_from_format('Y-m-d', $arrival);
     $i = 1;
     foreach ($paddocks as $pad) {
-      // weight might be null
-      $i = max($pad->weight, $i);
       if ($grazing_growing_season) {
         $grazing_days = getPaddockGrazingDays($pad->duration, $pad->paddock_id, $plan, $rec->herd_id, $minOrMax);
       }
@@ -137,7 +135,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
         'weight' => array(
           '#type' => 'weight',
           '#title' => t('Order'),
-          '#default_value' => $i,
+          '#default_value' => $pad->weight,
           '#delta' => $rowcnt,
           '#title_display' => 'invisible',
           '#attributes' => array(

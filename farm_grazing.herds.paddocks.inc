@@ -137,7 +137,7 @@ function farm_grazing_plan_herds_paddocks_form_submit($form, &$form_state) {
 
   // handle case for adding all paddocks
   $ids = explode(',', $paddock_id);
-  foreach ($ids as $paddock_id) {
+  foreach ($ids as $i => $paddock_id) {
 
     //db_insert('farm_grazing_herd_paddocks')
     db_insert('farm_grazing_rotations')
@@ -145,6 +145,7 @@ function farm_grazing_plan_herds_paddocks_form_submit($form, &$form_state) {
         'paddock_id' => $paddock_id,
         'plan_id' => $plan_id,
         'herd_id' => $herd_id,
+        'weight' => $i,
         ))
         ->execute();
   }
