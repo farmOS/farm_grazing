@@ -196,6 +196,9 @@ function farm_grazing_plan_herds_paddocks_delete($form, &$form_state, $plan, $he
   //fputs($fp, print_r($form_state, true));
   //fputs($fp, print_r(array('plan_id'=>$plan, 'rid'=>$rid)));
 
+  // If the log is done, do not allow deleting the rotation.
+  // @TODO
+
   $form['plan_id'] = array(
     '#type' => 'value',
     '#value' => $plan,
