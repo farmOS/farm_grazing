@@ -67,6 +67,18 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     '#options' => $paddock_options,
     '#multiple' => TRUE,
   );
+  $form['add']['mode'] = array(
+    '#type' => 'select',
+    '#title' => t('Default Grazing days'),
+    '#description' => t('Select whether to use minimum, average or maximum grazing days for the paddocks added.'),
+    '#options' => array(
+      '1' => t('Minimum grazing days'),
+      '2' => t('Average grazing days'),
+      '3' => t('Maximum grazing days'),
+    ),
+    '#default_value' => '2',
+    '#required' => FALSE,
+  );
   $form['add']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Add rotation'),
@@ -88,9 +100,9 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
       '#description' => t('Select the option to reset all fields below.'),
       '#options' => array(
         '0' => '- ' . t('Select Grazing Days Option') . ' -',
-        '1' => 'Minimum grazing days',
-        '2' => 'Average grazing days',
-        '3' => 'Maximum grazing days',
+        '1' => t('Minimum grazing days'),
+        '2' => t('Average grazing days'),
+        '3' => t('Maximum grazing days'),
       ),
       '#required' => FALSE,
     );
@@ -140,9 +152,10 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     $arrival = getHerdEarliestArrival($rec->herd_id);
     $start_date = date_create_from_format('Y-m-d', $arrival);
     $i = 1;
+    $cache = array();
     foreach ($paddocks as $pad) {
       if ($grazing_growing_season) {
-        $grazing_days = getPaddockGrazingDays($pad->duration, $pad->paddock_id, $plan, $rec->herd_id, $minOrMax);
+        $grazing_days = getPaddockGrazingDays($pad->duration, $pad->paddock_id, $plan, $rec->herd_id, $cache);
       }
       else {
         $grazing_days = $ng_grazing[$pad->paddock_id];
@@ -407,12 +420,19 @@ function farm_grazing_plan_rotation_add_submit($form, &$form_state) {
   $plan_id = $form_state['values']['plan'];
   $herd_id = $form_state['values']['add']['herd_id'];
   $paddock_ids = $form_state['values']['add']['paddock_id'];
+  $mode = $form_state['values']['add']['mode'];
 
   // Get the timestamp of the end of the last rotation.
-  /**
-   * @todo
-   */
+  $result = db_query("SELECT duration, start_date, weight FROM {farm_grazing_rotations} WHERE plan_id=:plan_id AND herd_id=:herd_id ORDER BY weight DESC LIMIT 1", array(':plan_id' => $plan_id, ':herd_id' => $herd_id));
+  $record = $result->fetchAssoc();
 
+  // Calculate the start date.
+  $start_date = $record['start_date'] + $record['duration'] * 24 * 3600;
+
+  // get the weight of the next record to add
+  $weight = $record['weight'] + 1;
+
+  $cache = array();
   // Iterate through the paddocks and add rotation records.
   foreach ($paddock_ids as $i => $paddock_id) {
 
@@ -422,12 +442,8 @@ function farm_grazing_plan_rotation_add_submit($form, &$form_state) {
     // Load the paddock.
     $paddock = taxonomy_term_load($paddock_id);
 
-    // Calculate the start date.
-    /**
-     * We need to change this to calculate based on the previous paddock.
-     * @todo
-     */
-    $start_date = REQUEST_TIME;
+    // get the paddock duration ie: num grazing days
+    $duration = getPaddockGrazingDays(NULL, $paddock_id, $plan_id, $herd_id, $cache, $mode);
 
     // Create movement log.
     $log = farm_movement_create($herd, array($paddock), $start_date, 'farm_activity', FALSE);
@@ -438,11 +454,15 @@ function farm_grazing_plan_rotation_add_submit($form, &$form_state) {
         'paddock_id' => $paddock_id,
         'plan_id' => $plan_id,
         'herd_id' => $herd_id,
+        'duration' => $duration,
         'start_date' => $start_date,
         'log_id' => !empty($log->id) ? $log->id : 0,
-        'weight' => $i,
+        'weight' => $weight + $i,
       ))
       ->execute();
+
+    // update the start_date for the next paddock by duration in seconds
+    $start_date += $duration * 24 * 3600;
   }
 }
 
@@ -509,14 +529,32 @@ function farm_grazing_plan_rotation_delete_form_submit($form, &$form_state) {
     }
   }
 
+  // get duration and start_date of record being deleted
+  $result = db_query("SELECT duration, start_date, plan_id, herd_id FROM {farm_grazing_rotations} WHERE id=:id", array(':id' => $rotation_id));
+  $rec_delete = $result->fetchAssoc();
+  $plan_id = $rec_delete['plan_id'];
+  $herd_id = $rec_delete['herd_id'];
+  $duration = $rec_delete['duration'] * 24 * 3600; // in seconds
+  $start_date = $rec_delete['start_date'];
+
   // Delete the rotation record.
   db_delete('farm_grazing_rotations')
     ->condition('id', $rotation_id)
     ->execute();
 
-  /**
-   * @todo
-   * Update all the rotations that came after this one.
-   * (both the rotation records and the logs).
-   */
+  // for all records following this one
+  $records = db_query("SELECT id, log_id, start_date FROM {farm_grazing_rotations} WHERE start_date>:start_date AND plan_id=:plan_id AND herd_id=:herd_id", array(':start_date' => $start_date, ':plan_id' => $plan_id, ':herd_id' => $herd_id));
+  foreach ($records as $rec) {
+    //   set the start_date = start_date - duration
+    //   update database
+    db_update('farm_grazing_rotations')
+      ->expression('start_date', 'start_date - :duration', array( ':duration' => $duration))
+      ->condition('id', $rec->id)
+      ->execute();
+
+    //   update log
+    $log = log_load($rec->log_id);
+    $log->timestamp = $log->timestamp - $duration;
+    log_save($log);
+  }
 }
