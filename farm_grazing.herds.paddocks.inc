@@ -71,6 +71,7 @@ function farm_grazing_plan_herds_paddocks_form($form, &$form_state, $plan_obj) {
   $form['add']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Add paddock to herd'),
+    '#validate' => array('farm_grazing_plan_herds_paddocks_form_validate'),
     '#submit' => array('farm_grazing_plan_herds_paddocks_form_submit'),
   );
 
@@ -119,6 +120,30 @@ function farm_grazing_plan_herds_paddocks_form($form, &$form_state, $plan_obj) {
   } // end foreach herd
 
   return $form;
+}
+
+/**
+ * Validation handler for paddocks form.
+ */
+function farm_grazing_plan_herds_paddocks_form_validate($form, &$form_state) {
+
+  // Ensure that the herd is valid.
+  if (empty($form_state['values']['herd_id'])) {
+    form_set_error('herd_id', t('Invalid herd ID.'));
+  }
+  $herd = farm_asset_load($form_state['values']['herd_id']);
+  if (empty($herd)) {
+    form_set_error('herd_id', t('Could not load herd (asset ID: @asset_id).', array('@asset_id' => $form_state['values']['herd_id'])));
+  }
+
+  // Ensure the paddock is valid.
+  if (empty($form_state['values']['paddock_id'])) {
+    form_set_error('paddock_id', t('Invalid paddock ID.'));
+  }
+  $paddock = taxonomy_term_load($form_state['values']['paddock_id']);
+  if (empty($paddock)) {
+    form_set_error('paddock_id', t('Could not load paddock (area ID: @area_id).', array('@area_id' => $form_state['values']['paddock_id'])));
+  }
 }
 
 /**
