@@ -158,6 +158,10 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
 
           // Calculate the number of days that the asset was in the paddock
           // for each month during the specified time span.
+
+          // threshold is the number of days overlap in the month
+          // for the month to be counted.
+          $threshold = 15;
           countMonths($arrival, $departure, $row, $threshold);
 
           // debug output

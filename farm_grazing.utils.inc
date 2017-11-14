@@ -384,7 +384,8 @@ function countMonths($start_date, $end_date, &$months, $threshold=15) {
       $year++;
     }
 
-    $days = overlapInDays($month_start, $month_end, $startDate2, $endDate2);
+    // get the number of days in this month
+    $days = overlapInDays($month_start, $month_end, $month_start, $month_end);
     if ($days >= $threshold) {
       $months[$mon]++;
       $months[13]++;  // increment the total
