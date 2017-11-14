@@ -345,8 +345,10 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
         // Update the log.
         if (!empty($data['log_id'])) {
           $log = log_load($data['log_id']);
-          $log->timestamp = $start_date;
-          log_save($log);
+          if (!empty($log)) {
+            $log->timestamp = $start_date;
+            log_save($log);
+          }
         }
 
         // Update the rotation record.
@@ -388,8 +390,10 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
       // Update the log.
       if (!empty($rec->log_id)) {
         $log = log_load($rec->log_id);
-        $log->timestamp = $start_date;
-        log_save($log);
+        if (!empty($log)) {
+          $log->timestamp = $start_date;
+          log_save($log);
+        }
       }
 
       // Update the rotation record.
@@ -563,7 +567,9 @@ function farm_grazing_plan_rotation_delete_form_submit($form, &$form_state) {
 
     //   update log
     $log = log_load($rec->log_id);
-    $log->timestamp = $log->timestamp - $duration;
-    log_save($log);
+    if (!empty($log)) {
+      $log->timestamp = $log->timestamp - $duration;
+      log_save($log);
+    }
   }
 }
