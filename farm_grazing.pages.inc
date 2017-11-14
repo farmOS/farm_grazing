@@ -44,9 +44,6 @@ include "farm_grazing.paddocks.summary.inc";
 //'page callback' => 'drupal_get_form(farm_grazing_plan_herds_form)',
 include "farm_grazing.herds.manage.inc";
 
-//'page callback' => 'drupal_get_form(farm_grazing_plan_herds_paddocks_form)',
-include "farm_grazing.herds.paddocks.inc";
-
 //'page callback' => 'drupal_get_form(farm_grazing_plan_history_form)',
 include "farm_grazing.herds.history.inc";
 
