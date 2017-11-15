@@ -248,3 +248,31 @@ function farm_grazing_plan_recovery_form_submit($form, &$form_state) {
   }
 }
 
+/**
+ * Implements hook_theme for farmgrazing_paddocks_recovery
+ */
+function theme_farm_grazing_paddocks_recovery(&$vars) {
+
+  //kpr($vars);
+
+  $form = $vars['form'];
+
+  $rows = array();
+  foreach (element_children($form) as $key) {
+    $rows[] = array(
+      render($form[$key]['month']),
+      render($form[$key]['min']),
+      render($form[$key]['max']),
+    );
+  }
+
+  $header = $form['#header'];
+
+  return theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+    'submit' => render($form['submit']),
+    )
+  );
+}
+

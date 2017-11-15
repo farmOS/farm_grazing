@@ -513,70 +513,16 @@ function farm_grazing_theme() {
     'farm_grazing_paddocks_productivity' => array(
       // The renderable element is the form.
       'render element' => 'form',
+      'file' => 'farm_grazing.paddocks.productivity.inc',
     ),
     'farm_grazing_paddocks_recovery' => array(
       'render element' => 'form',
+      'file' => 'farm_grazing.paddocks.recovery.inc',
     ),
     'farm_grazing_plan_rotations_form' => array(
       'render element' => 'form',
       'file' => 'farm_grazing.herds.rotations.inc',
     ),
-  );
-}
-
-/**
- * Implements hook_theme for farm_grazing_paddocks_productivity
- */
-function theme_farm_grazing_paddocks_productivity(&$vars) {
-
-  //kpr($vars);
-
-  $form = $vars['form'];
-
-  $rows = array();
-  foreach (element_children($form) as $key) {
-    $rows[] = array(
-      render($form[$key]['name']),
-      render($form[$key]['quality']),
-      render($form[$key]['total']),
-    );
-  }
-
-  $header = $form['#header'];
-
-  return theme('table', array(
-    'header' => $header,
-    'rows' => $rows,
-    'submit' => render($form['submit']),
-    )
-  );
-}
-
-/**
- * Implements hook_theme for farmgrazing_paddocks_recovery
- */
-function theme_farm_grazing_paddocks_recovery(&$vars) {
-
-  //kpr($vars);
-
-  $form = $vars['form'];
-
-  $rows = array();
-  foreach (element_children($form) as $key) {
-    $rows[] = array(
-      render($form[$key]['month']),
-      render($form[$key]['min']),
-      render($form[$key]['max']),
-    );
-  }
-
-  $header = $form['#header'];
-
-  return theme('table', array(
-    'header' => $header,
-    'rows' => $rows,
-    'submit' => render($form['submit']),
-    )
   );
 }
 
