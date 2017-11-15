@@ -495,13 +495,12 @@ function farm_grazing_entity_view($entity, $type, $view_mode, $langcode) {
   $entity->content['introduction'] = array(
     '#markup' => t('<h1>Getting Started</h1>
       <p>Welcome to the Holistic Grazing Planning Application.</p>
-      <h1>For the First Time</h1>
+      <h2>For the First Time</h2>
       <p>To get started, you need to define your ranch\'s paddocks. This is done on the "Areas" tab at the top of the page. This needs to be done once initially and anytime you decide to change the layout of paddocks on the ranch.</p>
-      <h1>Making a New Plan</h1>
-      <p>If you have already defined your Paddocks for the ranch, then you need to create a Plan, use the [Manage Plan] tab on the left, or select an existing plan from the drop down menu. When you start the application it will automatically remember the plan you used last.</p>
-      <p>Now that you have a "active" plan to work with, you can follow the planning process by using the tabs on the left in "Grazing Plan". The process follows the order of the tabs from top to bottom. You can revisit any tab as needed to review or change your inputs.</p>
-      <p>The "Calendar" tab on the left will be an essential part of the planning application. Most elements of your plan will have dates associated with them and anything with a related date or date range will get rendered in the Calendar. This provides you with critical information like whether events conflict time-wise and may need to be moved around or other actions may need to be planned to accomdate the conflicts.</p>
-      <p>Next Steps: Simple go to the next tab "Identify Planning Factors" and work your way down the planning list. Each tab has a context specific [Help] button to discuss issues and concerns related to that planning step.</p>'),
+      <h2>Making a Plan</h2>
+      <p>This is the "active" plan you are working with. The planning process follows the order of the tabs from left to right and top to bottom. You can revisit any tab as needed to review or change your inputs.</p>
+      <p>The View will bring you back here and the Edit tab allows you edit information about the plan.</p>
+      <p>Next Steps: Simple go to the next tab "Concerns" and work your way across the planning tabs. The Paddocks and Herds tabs both have sub-menu steps that you should work left to right.</p>'),
     '#weight' => 100,
   );
 }
