@@ -32,7 +32,6 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   drupal_set_title(t('Manage Herds for Plan'));
 
   $form['#tree'] = true;
-  $form['#theme'] = 'theme_farm_grazing_plan_herds_form';
 
   $form['plan'] = array(
     '#type' => 'value',
@@ -148,8 +147,6 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     );
   }
 
-  kpr($herd_details);
-
   // --------- Add table of herd details for each herd -----------------
 
   // ['herd_details'][herd_id]['title']
@@ -191,13 +188,17 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#maxlength' => 30,
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['sau'] = array(
-        '#markup' => round($rec['weight']/1000.0,2),
+        '#markup' => round($rec['weight']/1000.0, 2),
+      );
+      $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['dmi'] = array(
+        '#markup' => round($rec['head_count'] * $rec['weight'] * $rec['dmi_factor'], 2),
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['arrival'] = array(
         '#type' => 'date_popup',
         '#date_format' => 'M j Y',
         '#date_type' => DATE_FORMAT_UNIX,
         '#date_year_range' => '-10:+3',
+        '#date_label_position' => 'none',
         '#default_value' => $rec['arrival'],
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['departure'] = array(
@@ -205,6 +206,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#date_format' => 'M j Y',
         '#date_type' => DATE_FORMAT_UNIX,
         '#date_year_range' => '-10:+3',
+        '#date_label_position' => 'none',
         '#default_value' => $rec['departure'],
       );
     }   
@@ -357,8 +359,6 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     '#markup' => '<p>' . t('Stocking Rate: ') . $rate . '</p>',
   );
 
-  kpr($form);
-
   // Return the form.
   return $form;
 }
@@ -488,8 +488,9 @@ function theme_farm_grazing_plan_herds_form(&$vars) {
   $form = $vars['form'];
 
   // debug to see if theme_* is getting called
-  $fp = fopen('php://stderr', 'a');
-  fputs($fp, "\nHello\n");
+  //$fp = fopen('php://stderr', 'a');
+  //fputs($fp, "Hello\n");
+
 
   $output = drupal_render($form['plan']);
   $output .= drupal_render($form['text']);
@@ -549,6 +550,7 @@ function theme_farm_grazing_plan_herds_form(&$vars) {
           drupal_render($item['head_count']),
           drupal_render($item['weight']),
           drupal_render($item['sau']),
+          drupal_render($item['dmi']),
           drupal_render($item['arrival']),
           drupal_render($item['departure']),
         ),
@@ -582,28 +584,37 @@ function theme_farm_grazing_plan_herds_form(&$vars) {
 
   $header = array();
   $rows = array();
-  foreach (element_children($form['section_3']) as $herd_id) {
+  $first = TRUE;
+  foreach (element_children($form['section_3']['herds']) as $herd_id) {
     // assemble the table rows
     $data = array();
+  
     foreach (element_children($form['section_3']['herds'][$herd_id]) as $hdr) {
-      $item =& $form['section_3'][$herd_id]['animals'][$hdr];
-      if ($hdr == 'Herd') {
-        $header[] = t($hdr);
+      $item =& $form['section_3']['herds'][$herd_id][$hdr];
+
+      if ($first) {
+        if ($hdr == 'Herd') {
+          $header[] = t($hdr);
+        }
+        else {
+          $header[] = $hdr;
+        }
       }
-      else {
-        $header[] = $hdr;
-      }
+
       $data[] = drupal_render($item);
     }
     $rows[] = array( 'data' => $data );
+    $first = FALSE;
   }
 
-  $output .= theme('table', array(
+  $table = array(
     'header' => $header,
     'rows' => $rows,
     'empty' => t('No data or herds.'),
     'attributes' => array('id' => 'sau_by_month_table'),
-  ));
+  );
+
+  $output .= theme('table', $table);
 
   // render any remaining elements
   $output .= drupal_render_children($form);
