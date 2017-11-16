@@ -31,7 +31,7 @@ function farm_grazing_field_default_field_instances() {
           'thousand_separator' => '',
         ),
         'type' => 'number_integer',
-        'weight' => 5,
+        'weight' => 2,
       ),
     ),
     'entity_type' => 'farm_plan',
@@ -50,7 +50,7 @@ function farm_grazing_field_default_field_instances() {
       'module' => 'number',
       'settings' => array(),
       'type' => 'number',
-      'weight' => 6,
+      'weight' => 4,
     ),
   );
 
@@ -75,7 +75,7 @@ function farm_grazing_field_default_field_instances() {
           'thousand_separator' => '',
         ),
         'type' => 'number_integer',
-        'weight' => 6,
+        'weight' => 3,
       ),
     ),
     'entity_type' => 'farm_plan',
@@ -94,7 +94,7 @@ function farm_grazing_field_default_field_instances() {
       'module' => 'number',
       'settings' => array(),
       'type' => 'number',
-      'weight' => 8,
+      'weight' => 5,
     ),
   );
 
@@ -115,7 +115,7 @@ function farm_grazing_field_default_field_instances() {
           'thousand_separator' => '',
         ),
         'type' => 'number_integer',
-        'weight' => 7,
+        'weight' => 4,
       ),
     ),
     'entity_type' => 'farm_plan',
@@ -134,7 +134,7 @@ function farm_grazing_field_default_field_instances() {
       'module' => 'number',
       'settings' => array(),
       'type' => 'number',
-      'weight' => 9,
+      'weight' => 6,
     ),
   );
 
@@ -178,12 +178,12 @@ function farm_grazing_field_default_field_instances() {
         'input_format' => 'm/d/Y - H:i:s',
         'input_format_custom' => '',
         'label_position' => 'none',
-        'no_fieldset' => 0,
+        'no_fieldset' => 1,
         'text_parts' => array(),
         'year_range' => '-10:+3',
       ),
       'type' => 'date_popup',
-      'weight' => 1,
+      'weight' => 2,
     ),
   );
 
@@ -199,7 +199,7 @@ function farm_grazing_field_default_field_instances() {
         'module' => 'text',
         'settings' => array(),
         'type' => 'text_default',
-        'weight' => 2,
+        'weight' => 5,
       ),
     ),
     'entity_type' => 'farm_plan',
@@ -217,7 +217,7 @@ function farm_grazing_field_default_field_instances() {
         'rows' => 5,
       ),
       'type' => 'text_textarea',
-      'weight' => 3,
+      'weight' => 4,
     ),
   );
 
@@ -226,11 +226,11 @@ function farm_grazing_field_default_field_instances() {
     'bundle' => 'grazing',
     'default_value' => array(
       0 => array(
-        'value' => 0,
+        'value' => 1,
       ),
     ),
     'deleted' => 0,
-    'description' => 'Does this plan take place during the growing season? This will affect some calculations and recommendations when you are planning your rotations.',
+    'description' => 'Does this plan take place during the growing season? Uncheck this box if your paddocks will not have actively growing forage during the date range of the plan. This will affect some calculations and recommendations when you are planning your rotations, and will utilize the settings below.',
     'display' => array(
       'default' => array(
         'label' => 'inline',
@@ -254,7 +254,7 @@ function farm_grazing_field_default_field_instances() {
         'display_label' => 1,
       ),
       'type' => 'options_onoff',
-      'weight' => 2,
+      'weight' => 3,
     ),
   );
 
@@ -264,7 +264,7 @@ function farm_grazing_field_default_field_instances() {
   t('Days bulk feeding');
   t('Days of drought reserve');
   t('Define the date range for this grazing plan.');
-  t('Does this plan take place during the growing season? This will affect some calculations and recommendations when you are planning your rotations.');
+  t('Does this plan take place during the growing season? Uncheck this box if your paddocks will not have actively growing forage during the date range of the plan. This will affect some calculations and recommendations when you are planning your rotations, and will utilize the settings below.');
   t('Expected number of rotations');
   t('Gather the team of people that implemented last years plan and that will be responsible for this year\'s plan. Consider your goals and the goals for the landscape you wish to create. Make a list of factors that will touch on livestock, wildlife, crops, haying, etc. Think through how the entire ranch will be used considering the number of cells, herds, stocking rates, cropping, drought reserve and biological monitoring. Enter all ideas in this planning factors field for future reference.');
   t('Growing season');
