@@ -158,6 +158,14 @@ function farm_grazing_plan_concerns_form_validate($form, &$form_state) {
   //$fp = fopen('php://stderr', 'a');
   //fputs($fp, print_r($form_state['input'], true));
 
+  // Load the plan object into an EntityMetadataWrapper.
+  $wrapper = entity_metadata_wrapper('farm_plan', $form_state['values']['plan']);
+
+  // Only perform the following validation if this is a non-growing season.
+  if (!empty($wrapper->field_grazing_growing_season->value())) {
+    return;
+  }
+
   if (! is_numeric($form_state['input']['days_bulk_feeding']) or
       $form_state['input']['days_bulk_feeding'] < 0) {
     form_set_error('days_bulk_feeding', t('Days bulk feeding must be numeric >= 0'));
