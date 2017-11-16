@@ -45,6 +45,24 @@ function farm_grazing_config_animal_types_form($form, &$form_state) {
     );
   }
 
+  // Fieldset for adding a new type.
+  $form['add'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Add animal type'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['add']['name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Animal type'),
+  );
+  $form['add']['dmi_factor'] = array(
+    '#type' => 'textfield',
+    '#title' => t('DMI factor'),
+    '#description' => t('What is the dry matter intake factor for this animal type?'),
+    '#element_validate' => array('element_validate_number'),
+  );
+
   // Submit button.
   $form['submit'] = array(
     '#type' => 'submit',
