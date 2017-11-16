@@ -64,7 +64,7 @@ function get_selected_paddock_quality_for_plan($plan) {
 }
 
 /**
- * getHerdEarliestArrival($herd_id)
+ * getHerdEarliestArrival($herd_id, $plan_id)
  *
  * Recursive walk through herd and find the earliest arrival date for any
  * part of the herd.
@@ -72,9 +72,9 @@ function get_selected_paddock_quality_for_plan($plan) {
  * @param $herd_id  int
  * @returns string YYYY-MM-DD
  */
-function getHerdEarliestArrival($herd_id) {
+function getHerdEarliestArrival($herd_id, $plan_id) {
   $data = array();
-  $summary = getHerdDataAndSummary($herd_id, $data);
+  $summary = getHerdDataAndSummary($herd_id, $plan_id, $data);
   return $summary['arrival'];
 }
 
@@ -612,12 +612,12 @@ function summarize_grazing_group_detailed_info(&$data) {
  * problems with links to where the user can fix them.
  *
  */
-function farm_grazing_validate_herd($herd_id, &$data) {
+function farm_grazing_validate_herd($herd_id, $plan_id, &$data) {
   $errors = 0;
 
   get_grazing_group_detailed_info($herd_id, $data);
 
-  foreach ($data as $animal) {
+  foreach ($data as &$animal) {
 
     // Things to validate
     //  farm_grazing_animal_type property exists and is valid
@@ -630,24 +630,23 @@ function farm_grazing_validate_herd($herd_id, &$data) {
       $errors++;
     }
 
-    //  farm_grazing_planned_arrival property exists and is valid
-    $arrival = $animal['arrival'];
-    if (empty($arrival)) {
-      drupal_set_message(t('Animal') . '(<a href="' . base_path() . 'farm/asset/
-' . $animal['id'] . '/edit">' .
-      $animal['name'] .
-      '</a>)' .t(' needs its Planned Arrival date set.'), 'error');
-      $errors++;
+    //  if farm_grazing_planned_arrival property is null set to plan start date
+    if (empty($animal['arrival'])) {
+      $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
+      $ts = $wrapper->field_farm_date_range->value->value();
+      $dt = new DateTime();
+      $dt->setTimestamp($ts);
+      $animal['arrival'] = $dt->format('Y-m-d');
     }
 
-    //  farm_grazing_planned_departure property exists and is valid
+    //  if farm_grazing_planned_departure property is null set to plan end date
     $departure = $animal['departure'];
-    if (empty($departure)) {
-      drupal_set_message(t('Animal') . '(<a href="' . base_path() . 'farm/asset/
-' . $animal['id'] . '/edit">' .
-      $animal['name'] .
-      '</a>)' .t(' needs its Planned Departure date set.'), 'error');
-      $errors++;
+    if (empty($animal['departure'])) {
+      $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
+      $ts = $wrapper->field_farm_date_range->value2->value();
+      $dt = new DateTime();
+      $dt->setTimestamp($ts);
+      $animal['departure'] = $dt->format('Y-m-d');
     }
 
     //  has weight
@@ -672,11 +671,10 @@ function farm_grazing_validate_herd($herd_id, &$data) {
 
 
 /**
- * getHerdDataAndSummary($herd_id, &$data)
+ * getHerdDataAndSummary($herd_id, $plan_id, &$data)
  */
-function getHerdDataAndSummary($herd_id, &$data) {
-  farm_grazing_validate_herd($herd_id, $data);
-  //get_grazing_group_detailed_info($herd_id, $data);
+function getHerdDataAndSummary($herd_id, $plan_id, &$data) {
+  farm_grazing_validate_herd($herd_id, $plan_id, $data);
   return summarize_grazing_group_detailed_info($data);
 }
 
@@ -696,7 +694,7 @@ function getHerdSizeInSau($plan_id) {
     }
 
     $data = array();
-    $summary = getHerdDataAndSummary($record->herd_id, $data);
+    $summary = getHerdDataAndSummary($record->herd_id, $plan_id, $data);
 
     $tot_sau += $summary['herd_sau'];
   }

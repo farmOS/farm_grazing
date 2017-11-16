@@ -104,7 +104,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     $group = farm_asset_load($record->herd_id);
 
     $data = array();
-    $summary = getHerdDataAndSummary($record->herd_id, $data);
+    $summary = getHerdDataAndSummary($record->herd_id, $plan, $data);
 
     // save all the herd info here, we'll use it later
     // to generate the tables we display
