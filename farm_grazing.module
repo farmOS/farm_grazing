@@ -57,19 +57,6 @@ function farm_grazing_menu() {
   // Planning Factors.
   // Are both handled as part of the grazing_plan entity
 
-  // Management concerns.
-  $items['farm/plan/%farm_plan/concerns'] = array(
-    'title' => 'Concerns',
-    'description' => 'Define management and ranch events that could impact planning.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('farm_grazing_plan_concerns_form', 2),
-    'access callback' => 'farm_grazing_plan_access',
-    'access arguments' => array(2),
-    'file' => 'farm_grazing.concerns.inc',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 10,
-  );
-
   // Paddocks.
   // This has sub menu items that deal with paddocks
   $items['farm/plan/%farm_plan/paddocks'] = array(
@@ -81,7 +68,7 @@ function farm_grazing_menu() {
     'access arguments' => array(2),
     'file' => 'farm_grazing.paddocks.select.inc',
     'type' => MENU_LOCAL_TASK,
-    'weight' => 20,
+    'weight' => 10,
   );
 
   // Herds.
@@ -94,20 +81,7 @@ function farm_grazing_menu() {
     'access arguments' => array(2),
     'file' => 'farm_grazing.herds.manage.inc',
     'type' => MENU_LOCAL_TASK,
-    'weight' => 30,
-  );
-
-  // Implement.
-  $items['farm/plan/%farm_plan/implement'] = array(
-    'title' => 'Implement',
-    'description' => 'Implement the plan and monitor results.',
-    'page callback' => 'farm_grazing_plan_implement_page',
-    'page arguments' => array(2),
-    'access callback' => 'farm_grazing_plan_access',
-    'access arguments' => array(2),
-    'file' => 'farm_grazing.implement.monitor.inc',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 40,
+    'weight' => 20,
   );
 
   // Paddocks - Select
@@ -231,14 +205,6 @@ function farm_grazing_menu() {
     'access arguments' => array('edit any grazing plans'),
     'file' => 'farm_grazing.herds.rotations.inc',
     'type' => MENU_CALLBACK,
-  );
-
-  // Implement - Monitor
-  $items['farm/plan/%farm_plan/implement/monitor'] = array(
-    'title' => 'Monitor',
-    'description' => 'Monitor paddocks and herds.',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => 10,
   );
 
   // Callback for generating a paddock rotation image.
@@ -519,6 +485,62 @@ function farm_grazing_entity_view($entity, $type, $view_mode, $langcode) {
       <p>The View will bring you back here and the Edit tab allows you edit information about the plan.</p>
       <p>Next Steps: Simple go to the next tab "Concerns" and work your way across the planning tabs. The Paddocks and Herds tabs both have sub-menu steps that you should work left to right.</p>'),
     '#weight' => 100,
+  );
+
+  // Add concerns form.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.concerns');
+  $entity->content['concerns'] = drupal_get_form('farm_grazing_plan_concerns_form', $entity);
+  $entity->content['concerns']['#weight'] = 101;
+
+  // Add "Implement the plan" content.
+  $entity->content['implement'] = array(
+    '#markup' => '<h1>' . t('Implement the plan') . '</h1>' .
+      '<h2>' .t('Recheck your plan') . '</h2>' .
+      '<p>' . t('Review your plan regularly, print out reports, check that the plan is on track and make adjustments as needed.') . '</p>' .
+      '<h2>' . t('Monitor Your Paddocks') . '</h2>' .
+      '<p>' . t('Monitor the growth and recovery of your paddocks. Also assess the quality of the paddock you are moving the herd to and record it as a monitor event here.') . '</p>' .
+      '<ul>' .
+      '<li><a href="' . base_path() . 'farm/assets/groups">' . t('Herd movements') . '</a></li>' .
+      '<ul>' .
+      '<li>' . t('Click Herd movements link above') . '</li>' .
+      '<li>' . t('Select a herd to move') . '</li>' .
+      '<li>' . t('Click Add activity') . '</li>' .
+      '<li>' . t('Click Movements') . '</li>' .
+      '<li>' . t('Select paddock for "Movement to"') . '</li>' .
+      '<li>' . t('Click "Save Log"') . '</li>' .
+      '</ul>' .
+      '<li><a href="' . base_path() . 'farm/area">' . t('Observations on paddock leaving') . '</a></li>' .
+      '<ul><ul>' .
+      '<li>' . t('Select paddock you are making an observation of') . '</li>' .
+      '<li>' . t('Click "Add Observation"') . '</li>' .
+      '<li>' . t('Use "General" for errors or general text comments') . '</li>' .
+      '<li>' . t('Use "Quantity"->"Add another item" to add quantity observations') . '</li>' .
+      '</ul></ul>' .
+      '<ul>' .
+      '<li>' . t('Residual feed left on the paddock') . '</li>' .
+      '<li>' . t('The current growth rate on the paddock') . '</li>' .
+      '<li>' . t('Was a serious error made on the paddock') . '</li>' .
+      '<li>' . t('Soil moisture') . '</li>' .
+      '</ul>' .
+      '<li><a href="' . base_path() . 'farm/area">' . t('Observations on paddock entering') . '</a></li>' .
+      '<ul><ul>' .
+      '<li>' . t('Select paddock you are making an observation of') . '</li>' .
+      '<li>' . t('Click "Add Observation"') . '</li>' .
+      '<li>' . t('Use "General" for errors or general text comments') . '</li>' .
+      '<li>' . t('Use "Quantity"->"Add another item" to add quantity observations') . '</li>' .
+      '</ul></ul>' .
+      '<ul>' .
+      '<li>' . t('Quality of paddock') . '</li>' .
+      '<li>' . t('Estimate of feed on paddock') . '</li>' .
+      '<li>' . t('Soil moisture') . '</li>' .
+      '</ul>' .
+      '</ul>' .
+      '<h2>' . t('How to Replan if Needed') . '</h2>' .
+      '<p>' . t('You can make changes to your plan at any time. Actual events obviously can not be changed, but you can replan future events. There are two approaches to replanning.') . '<ol>' .
+      '<li>' . t('is to just update the current plan for minor changes') . '</li>' .
+      '<li>' . t('another is to create a new plan, for major changes, based on the remaining days and abandon the old plan for now.') . '</li>' .
+      '<p>' . t('The advantage to making a new plan is that you can keep the original plan around for archival purposes and look at it in the future to re-assess assumptions or conditions that changed and forced the replan. On the new plan, you might need to sell stock to reduce the requirements for intake if you are in a drought or had a fire that burnt through some padocks or add more paddocks that you had not planned to use in the original plan. If you only need to make minor changes then use your existing plan, otherwise start a new plan.') . '</p>',
+    '#weight' => 102,
   );
 }
 

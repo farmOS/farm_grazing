@@ -29,23 +29,13 @@ function farm_grazing_plan_concerns_form($form, &$form_state, $plan_obj) {
   //dpm('expected_days_non_growth: ' . $expected_days_non_growth);
   //dpm('expected_rotations: ' . $expected_rotations);
 
-  if ($grazing_growing_season) {
-    $growing_season = t('A Growing Season Plan');
-  }
-  else {
-    $growing_season = t('A Non-Growing Season Plan');
-  }
-
-  // Set the page title.
-  drupal_set_title(t('Management concerns'));
-
   $form['plan'] = array(
     '#type' => 'value',
     '#value' => $plan,
   );
 
   $form['section_1']['text'] =  array(
-    '#markup' => '<h2>' . $growing_season . '</h2>' .
+    '#markup' => '<h2>Management concerns</h2>' .
       '<p>' . t('In this section, think about various factors that influence your calendar for the plan. Consider:') . '</p>' .
       '<ul>' .
           '<li>' . t('Livestock events like birthing, breeding, weaning, etc and when these are planned.') .

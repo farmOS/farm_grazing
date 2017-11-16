@@ -23,9 +23,6 @@ function farm_grazing_config_animal_types_form($form, $form_state) {
 
 //-------------- Start of page/form callbacks --------------------
 
-//'page callback' => 'farm_grazing_plan_concerns_page',
-include "farm_grazing.concerns.inc";
-
 //'page callback' => 'drupal_get_form(farm_grazing_select_paddocks_form)',
 include "farm_grazing.paddocks.select.inc";
 
@@ -52,7 +49,3 @@ include "farm_grazing.herds.rotations.inc";
 
 //'page callback' => 'farm_grazing_plan_plot',
 include "farm_grazing.herds.rotations.plot.inc";
-
-//'page callback' => 'farm_grazing_plan_implement_page',
-include "farm_grazing.implement.monitor.inc";
-
