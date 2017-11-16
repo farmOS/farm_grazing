@@ -250,15 +250,14 @@ function farm_grazing_menu() {
 
   // -------------- config forms --------------------------
 
-  // TODO I think Mike is doing this elsewhere
-  $items['farm/grazing/config/animal_types'] = array(
-    'title' => 'Mange Animal Types',
-    'description' => 'Add/Edit/Remove/Import/Export Animal Types.',
+  // Animal type configuration.
+  $items['admin/config/farm/grazing_animal_types'] = array(
+    'title' => 'Grazing animal types',
+    'description' => 'Manage animal types used in the grazing planning process.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('farm_grazing_config_animal_types_form'),
-    'access arguments' => array('edit any grazing plans'),
-    'file' => 'farm_grazing.pages.inc',
-    'type' => MENU_CALLBACK,
+    'access arguments' => array('administer farm_grazing module'),
+    'file' => 'farm_grazing.admin.inc',
   );
 
   return $items;
@@ -591,6 +590,10 @@ function farm_grazing_theme() {
     'farm_grazing_plan_rotations_form' => array(
       'render element' => 'form',
       'file' => 'farm_grazing.herds.rotations.inc',
+    ),
+    'farm_grazing_config_animal_types_form' => array(
+      'render element' => 'form',
+      'file' => 'farm_grazing.admin.inc',
     ),
   );
 }

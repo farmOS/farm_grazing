@@ -7,20 +7,6 @@
 
 include_once "farm_grazing.utils.inc";
 
-
-
-// -------------- config forms ---------------------
-
-/**
- * function farm_grazing_config_animal_types_form
- *
- * TODO I think Mike is doing this elsewhere??
- */
-function farm_grazing_config_animal_types_form($form, $form_state) {
-
-}
-
-
 //-------------- Start of page/form callbacks --------------------
 
 //'page callback' => 'drupal_get_form(farm_grazing_select_paddocks_form)',
