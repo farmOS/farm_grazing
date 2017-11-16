@@ -40,6 +40,32 @@ function farm_grazing_farm_ui_entities() {
 }
 
 /**
+ * Implements hook_permission().
+ */
+function farm_grazing_permission() {
+  $perms = array(
+    'administer farm_grazing module' => array(
+      'title' => t('Administer farm grazing module'),
+    ),
+  );
+  return $perms;
+}
+
+/**
+ * Implements hook_farm_access_perms().
+ */
+function farm_grazing_farm_access_perms($role) {
+  $perms = array();
+
+  // If the role is "Farm Manager", grant access to grazing configuration.
+  if ($role == 'Farm Manager') {
+    $perms[] = 'administer farm_grazing module';
+  }
+
+  return $perms;
+}
+
+/**
  * Implements hook_menu().
  */
 function farm_grazing_menu() {
