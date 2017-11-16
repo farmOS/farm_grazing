@@ -519,6 +519,10 @@ function farm_grazing_theme() {
       'render element' => 'form',
       'file' => 'farm_grazing.paddocks.recovery.inc',
     ),
+    'farm_grazing_plan_herds_form' => array(
+      'render element' => 'form',
+      'file' => 'farm_grazing.herds.manage.inc',
+    ),
     'farm_grazing_plan_rotations_form' => array(
       'render element' => 'form',
       'file' => 'farm_grazing.herds.rotations.inc',

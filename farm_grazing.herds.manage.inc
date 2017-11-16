@@ -32,6 +32,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   drupal_set_title(t('Manage Herds for Plan'));
 
   $form['#tree'] = true;
+  $form['#theme'] = 'theme_farm_grazing_plan_herds_form';
 
   $form['plan'] = array(
     '#type' => 'value',
@@ -61,10 +62,10 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     $herd_options[$record->id] = $record->name;
   }
 
-  // Form for adding a new exclusion.
+  // Form for adding a herd to a plan
   $form['add'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Add a herd'),
+    '#title' => t('Add a herd to the plan'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
@@ -78,24 +79,17 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   $form['add']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Add Herd to Plan'),
+    '#id' => 'add-herd',
     '#submit' => array('farm_grazing_plan_herds_form_submit'),
     '#validate' => array('farm_grazing_plan_herds_form_validate'),
   );
 
-  $table = array(
-    'header' => array(
-      t('Herd Name'),
-      t('Head Count'),
-      t('SAU'),
-      t('Daily Intake'),
-      t('Earliest Arrival'),
-      t('Latest Departure'),
-    ),
-    'rows' => array(),
-    'empty' => t('No herds found in plan'),
-  );
-
   $query = db_query('SELECT * FROM {farm_grazing_herds} WHERE plan_id=:plan_id', array(':plan_id' => $plan));
+
+  // table for herd summary
+  $form['section_1']['title'] = array(
+    '#markup' => '<h4>' . t('Summary of Herds in Plan') . '</h4>',
+  );
 
   // collect information about herds here
   $herd_details = array();
@@ -116,6 +110,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     // save all the herd info here, we'll use it later
     // to generate the tables we display
     $herd_details[] = array(
+      'herd_id' => $record->herd_id,
       'herd_name' => $group->name,
       'herd_data' => $data,
       'summary' => $summary,
@@ -128,65 +123,105 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     $departure_date = $summary['departure'];
 
     // build the section 1 summary table
-    $table['rows'][] = array(
-      '<a href="' . base_path() . 'farm/grazing/plan/' . $plan . '/herd/' . $record->herd_id .
-        '/edit?destination=farm/plan/' . $plan . '/herds">' .
-        $group->name . '</a>',
-      $summary['head_count'],
-      $summary['herd_sau'],
-      $summary['herd_dmi'],
-      $arrival_date,
-      $departure_date,
+    $form['section_1']['herds'][$record->herd_id] = array(
+      'name' => array(
+        '#markup' => $group->name,
+      ),
+      'head_count' => array(
+        '#markup' => $summary['head_count'],
+      ),
+      'herd_sau' => array(
+        '#markup' => $summary['herd_sau'],
+      ),
+      'herd_dmi' => array(
+        '#markup' => $summary['herd_dmi'],
+      ),
+      'arrival_date' => array(
+        '#markup' => $arrival_date,
+      ),
+      'departure_date' => array(
+        '#markup' => $departure_date,
+      ),
+      'remove' => array(
+        '#markup' => l(t('Remove'), base_path() . 'farm/grazing/plan/' . $plan . '/herd/' . $record->herd_id . '/edit', array('query' => array('destination' => current_path()))),
+      )
     );
   }
 
-  // table for herd summary
-  $form['section_1'] = array(
-    '#markup' => '<h4>' . t('Summary of Herds in Plan') . '</h4>',
-  );
-  $form['section_1_table'] = array(
-    '#markup' => theme('table', $table),
-  );
+  kpr($herd_details);
 
-  // Add table of herd details for each herd
-  $cnt = 0;
+  // --------- Add table of herd details for each herd -----------------
+
+  // ['herd_details'][herd_id]['title']
+  // ['herd_details'][herd_id]['animals'][asset_id][fields]
+
+  $animal_types = farm_grazing_animal_types();
+  $type_options = array();
+  foreach ($animal_types as $animal_type) {
+    $type_options[$animal_type['type_id']] = $animal_type['name'];
+  }
+
   foreach ($herd_details as $this_herd) {
-    // define the table
-    $table = array(
-      'header' => array(
-        t('Herd Name'),
-        t('Type'),
-        t('Head Count'),
-        t('SAU'),
-        t('Daily Intake'),
-        t('Planned Arrival'),
-        t('Planned Departure'),
-      ),
-      'rows' => array(),
-      'empty' => t('No animals found in herd'),
+
+    $form['herd_details'][$this_herd['herd_id']]['title'] = array(
+      '#prefix' => '<h4>',
+      '#markup' => t('Herd Details for ') . $this_herd['herd_name'],
+      '#suffix' => '</h4>',
     );
 
     foreach ($this_herd['herd_data'] as $rec) {
-      $table['rows'][] = array(
-        $rec['name'],
-        getAnimalTypeName($rec['type']),
-        $rec['head_count'],
-        $rec['weight']/1000.0,
-        $rec['weight']*$rec['dmi_factor']/100.0,
-        $rec['arrival'],
-        $rec['departure'],
+      $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['name'] = array(
+        '#markup' => $rec['name'],
+      );
+      $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['type'] = array(
+        '#type' => 'select',
+        '#options' => $type_options,
+        '#default_value' => getAnimalTypeName($rec['type']),
+      );
+      $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['head_count'] = array(
+        '#type' => 'textfield',
+        '#default_value' => $rec['head_count'],
+        '#size' => 30,
+        '#maxlength' => 30,
+      );
+      $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['weight'] = array(
+        '#type' => 'textfield',
+        '#default_value' => $rec['weight'],
+        '#size' => 30,
+        '#maxlength' => 30,
+      );
+      $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['sau'] = array(
+        '#markup' => round($rec['weight']/1000.0,2),
+      );
+      $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['arrival'] = array(
+        '#type' => 'date_popup',
+        '#date_format' => 'M j Y',
+        '#date_type' => DATE_FORMAT_UNIX,
+        '#date_year_range' => '-10:+3',
+        '#default_value' => $rec['arrival'],
+      );
+      $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['departure'] = array(
+        '#type' => 'date_popup',
+        '#date_format' => 'M j Y',
+        '#date_type' => DATE_FORMAT_UNIX,
+        '#date_year_range' => '-10:+3',
+        '#default_value' => $rec['departure'],
       );
     }   
-
-    $cnt++;
-    $form['section_2.' . $cnt] = array(
-      '#markup' => '<h4>' . t('Herd Details for ') . $this_herd['herd_name'] . '</h4>',
-    );
-
-    $form['section_2.'.$cnt.'_table'] = array(
-      '#markup' => theme('table', $table),
-    );
   }
+
+  $form['actions'] = array(
+    '#type' => 'actions',
+  );
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#id' => 'save-changes',
+    '#value' => t('Save Changes'),
+    '#submit' => array('farm_grazing_plan_herds_form_submit'),
+    '#validate' => array('farm_grazing_plan_herds_form_validate'),
+  );
+
+  // -- add SAU by Month table -------------------------------
 
   // get the start date month and year
   $start_date = new DateTime();
@@ -199,16 +234,11 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   // get the DateInterval between them
   $diff = $start_date->diff($end_date);
 
-    // define the table
-    $table = array(
-      'header' => array(t('Herd')),
-      'rows' => array(),
-      'empty' => t('No data found for herds'),
-    );
-
   // generate array of months between start and end
   $num_months = $diff->y * 12 + $diff->m;
   $date = $start_date;
+
+  $header = array('Herd');  // don't t() this, it gets done in theme_
 
   // generate the header text
   $helper = array();
@@ -216,7 +246,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     $key = $date->format('Ym');
     $helper[$key] = $i;
 
-    $table['header'][] = $date->format('M Y');
+    $header[] = $date->format('M Y');
 
     // increment the month
     $date->modify('+1 month');
@@ -260,6 +290,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
       }
     }
     array_unshift($row, $this_herd['herd_name']);
+    array_push($row, $this_herd['herd_id']);
     $rows[] = $row;
   }
 
@@ -278,17 +309,27 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
       $peak_sau = $sum;
     }
   }
-
+  array_push($totals, -1); // push a dummay herd_id field
   $rows[] = $totals;
-  $table['rows'] = $rows;
 
   // Add table SAU by Plan Month for each herd
-  $form['section_3'] = array(
-    '#markup' => '<h4>' . t('SAU by Month') . '</h4>',
+  $form['section_3']['title'] = array(
+    '#prefix' => '<h4>',
+    '#markup' => t('SAU by Month'),
+    '#suffix' => '</h4>',
   );
-  $form['section_3_table'] = array(
-    '#markup' => theme('table', $table),
-  );
+
+  foreach ($rows as $row) {
+    $herd_id = array_pop($row);
+    $form['section_3']['herds'][$herd_id] = array();
+    $i = 0;
+    foreach ($row as $item) {
+      $form['section_3']['herds'][$herd_id][$header[$i]] = array(
+        '#markup' => $item,
+      );
+      $i++;
+    }
+  }
 
   $paddocks_in_plan = get_selected_paddock_quality_for_plan($plan);
   $cell_size = 0;
@@ -315,6 +356,8 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   $form['section_4_stocking_rate'] = array(
     '#markup' => '<p>' . t('Stocking Rate: ') . $rate . '</p>',
   );
+
+  kpr($form);
 
   // Return the form.
   return $form;
@@ -438,3 +481,132 @@ function farm_grazing_herd_edit_form_submit($form, &$form_state) {
 
 }
 
+/**
+ * theme_farm_grazing_plan_herds_form
+ */
+function theme_farm_grazing_plan_herds_form(&$vars) {
+  $form = $vars['form'];
+
+  // debug to see if theme_* is getting called
+  $fp = fopen('php://stderr', 'a');
+  fputs($fp, "\nHello\n");
+
+  $output = drupal_render($form['plan']);
+  $output .= drupal_render($form['text']);
+  $output .= drupal_render($form['add']);
+
+  $output .= drupal_render($form['section_1']['title']);
+  $rows = array();
+  foreach (element_children($form['section_1']['herds']) as $herd_id) {
+    $item =& $form['section_1']['herds'][$herd_id];
+    $rows[] = array(
+      'data' => array(
+        drupal_render($item['name']),
+        drupal_render($item['head_count']),
+        drupal_render($item['herd_sau']),
+        drupal_render($item['herd_dmi']),
+        drupal_render($item['arrival_date']),
+        drupal_render($item['departure_date']),
+        drupal_render($item['remove']),
+      ),
+    );
+  }
+
+  $header = array(
+    t('Herd Name'),
+    t('Head Count'),
+    t('SAU'),
+    t('Daily Intake'),
+    t('Earliest Arrival'),
+    t('Latest Departure'),
+    t('Remove'),
+  );
+
+  $output .= theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+    'empty' => t('No Herds Defined for this Plan.'),
+    'attributes' => array('id' => 'herd_summary_table'),
+  ));
+
+  // render tables for herd details
+
+  foreach (element_children($form['herd_details']) as $herd_id) {
+    // render table titles
+    $output .= drupal_render($form['herd_details'][$herd_id]['title']);
+    $table_id = 'herd_details_' . $herd_id;
+
+    // assemble the table rows
+    $rows = array();
+    foreach (element_children($form['herd_details'][$herd_id]['animals']) as $aid) {
+      $item =& $form['herd_details'][$herd_id]['animals'][$aid];
+
+      // Assemble the row.
+      $rows[] = array(
+        'data' => array(
+          drupal_render($item['name']),
+          drupal_render($item['type']),
+          drupal_render($item['head_count']),
+          drupal_render($item['weight']),
+          drupal_render($item['sau']),
+          drupal_render($item['arrival']),
+          drupal_render($item['departure']),
+        ),
+      );
+    }
+
+    // define the table
+    $header = array(
+      t('Herd Name'),
+      t('Type'),
+      t('Head Count'),
+      t('Weight'),
+      t('SAU'),
+      t('Daily Intake'),
+      t('Planned Arrival'),
+      t('Planned Departure'),
+    );
+
+    $output .= theme('table', array(
+      'header' => $header,
+      'rows' => $rows,
+      'empty' => t('No animals found in herd'),
+      'attributes' => array('id' => $table_id),
+    ));
+  }
+
+  // render SAU by Month table
+
+  // render table titles
+  $output .= drupal_render($form['section_3']['title']);
+
+  $header = array();
+  $rows = array();
+  foreach (element_children($form['section_3']) as $herd_id) {
+    // assemble the table rows
+    $data = array();
+    foreach (element_children($form['section_3']['herds'][$herd_id]) as $hdr) {
+      $item =& $form['section_3'][$herd_id]['animals'][$hdr];
+      if ($hdr == 'Herd') {
+        $header[] = t($hdr);
+      }
+      else {
+        $header[] = $hdr;
+      }
+      $data[] = drupal_render($item);
+    }
+    $rows[] = array( 'data' => $data );
+  }
+
+  $output .= theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+    'empty' => t('No data or herds.'),
+    'attributes' => array('id' => 'sau_by_month_table'),
+  ));
+
+  // render any remaining elements
+  $output .= drupal_render_children($form);
+
+  return $output;
+}
