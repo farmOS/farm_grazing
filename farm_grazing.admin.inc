@@ -11,7 +11,7 @@ function farm_grazing_config_animal_types_form($form, &$form_state) {
   // Help text.
   $form['help'] = array(
     '#type' => 'markup',
-    '#markup' => t('This form allows you to edit the animal type options used in the grazing planning process.'),
+    '#markup' => t('This form allows you to edit the animal type options used in the grazing planning process. The DMI (dry matter intake) factor is used to compute the amount of dry matter intake an animal requires (DMI = animal weight x  DMI factor / 100).'),
     '#prefix' => '<p>',
     '#suffix' => '</p>',
   );
