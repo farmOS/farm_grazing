@@ -1,7 +1,5 @@
 <?php
 
-include_once "farm_grazing.utils.inc";
-
 /**
  * Paddock exclusions list, add, edit, delete form.
  */
@@ -47,7 +45,7 @@ function farm_grazing_exclusions_form($form, &$form_state, $plan_obj) {
 
     // Assemble the row.
     $table['rows'][] = array(
-      '<a href="' . base_path() . 'farm/grazing/exclusions/' . $record->id . '/edit?destination=farm/plan/' . $plan . '/paddocks/exclusions">' . $record->name . '</a>',
+      l($record->name, 'farm/grazing/exclusions/' . $record->id . '/edit', array('query' => array('destination' => 'farm/plan/' . $plan . '/paddocks/exclusions'))),
       $start_date,
       $end_date,
       $record->reason,
@@ -120,10 +118,6 @@ function farm_grazing_exclusions_form($form, &$form_state, $plan_obj) {
  */
 function farm_grazing_exclusions_form_submit($form, &$form_state) {
 
-  // debug output
-  //$fp = fopen('php://stderr', 'a');
-  //fputs($fp, print_r($form_state, true));
-
   // if user clicked Cancel, get out of here
   if ($form_state['clicked_button']['#id'] == 'edit-cancel') {
     return;
@@ -153,6 +147,7 @@ function farm_grazing_exclusions_form_submit($form, &$form_state) {
       // Update existing record
       drupal_write_record('farm_grazing_paddock_exclusions', $record, 'id');
       break;
+
     case 'edit-delete':
       // Delete an existing record
       db_delete('farm_grazing_paddock_exclusions')
@@ -167,7 +162,7 @@ function farm_grazing_exclusions_form_submit($form, &$form_state) {
  * Edit/Delete exclusion form callback
  */
 function farm_grazing_exclusions_edit_form($form, &$form_state, $exclusion_id) {
-  
+
   // Set page Title
   drupal_set_title(t('Edit or Delete Exclusion'));
 
@@ -191,8 +186,6 @@ function farm_grazing_exclusions_edit_form($form, &$form_state, $exclusion_id) {
   $term = taxonomy_term_load($exclusion->paddock_id);
 
   // Format the start and end dates.
-  $format = 'Y-m-d';
-  $format = 'd-m-Y';
   $format = 'M j Y';
   $start_date = date('Y-m-d H:i:s', $exclusion->start_date);
   $end_date = date('Y-m-d H:i:s', $exclusion->end_date);
@@ -249,6 +242,4 @@ function farm_grazing_exclusions_edit_form($form, &$form_state, $exclusion_id) {
 
   // Return the form.
   return $form;
-
 }
-

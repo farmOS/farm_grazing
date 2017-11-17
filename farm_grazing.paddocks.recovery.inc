@@ -1,11 +1,12 @@
 <?php
 
-include_once "farm_grazing.utils.inc";
-
 /**
  * Paddock recovery page callback.
  */
 function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
+
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
 
   // Set the page title.
   drupal_set_title(t('Determine recovery periods'));
@@ -37,20 +38,21 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
   // get the number of paddocks in the plan
   $num_paddocks = getPaddockCountForPlan($plan);
 
-  $form['#tree'] = true;
+  $form['#tree'] = TRUE;
 
   $disabled = FALSE;
-  if (! $grazing_growing_season) {  // non-growing season here
+  // non-growing season here.
+  if (!$grazing_growing_season) {
 
     $days_bulk_feeding = $wrapper->field_days_bulk_feeding->value();
     $days_of_drought_reserve = $wrapper->field_days_of_drought_reserve->value();
     $start_ts = $wrapper->field_farm_date_range->value->value();
     $end_ts = $wrapper->field_farm_date_range->value2->value();
-    $expected_days_non_growth = floor(($end_ts-$start_ts)/3600/24);
+    $expected_days_non_growth = floor(($end_ts - $start_ts) / 3600 / 24);
     $expected_rotations = $wrapper->field_expected_rotations->value();
 
-    $recovery_period = ( $expected_days_non_growth + $days_of_drought_reserve 
-      - $days_bulk_feeding ) / $expected_rotations;
+    $recovery_period = ($expected_days_non_growth + $days_of_drought_reserve
+      - $days_bulk_feeding) / $expected_rotations;
 
     $disabled = TRUE;
 
@@ -87,10 +89,9 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
   // generate array of months between start and end
   $num_months = $diff->y * 12 + $diff->m;
   $date = $start_date;
-  $minmin =  999999999;
+  $minmin = 999999999;
   $maxmax = -999999999;
-  $rows = array();
-  for( $i = 0; $i <= $num_months; $i++ ) {
+  for ($i = 0; $i <= $num_months; $i++) {
     $key = $date->format('Ym');
     if (isset($minmax[$key])) {
       $min = $minmax[$key][0];
@@ -153,8 +154,8 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
   );
 
   if ($grazing_growing_season) {
-    $min_grazing = round($minmin/($num_paddocks-$herd_cnt), 1);
-    $max_grazing = round($maxmax/($num_paddocks-$herd_cnt), 1);
+    $min_grazing = round($minmin / ($num_paddocks - $herd_cnt), 1);
+    $max_grazing = round($maxmax / ($num_paddocks - $herd_cnt), 1);
   }
   else {
     $min_grazing = round($recovery_period / $num_paddocks, 1);
@@ -171,7 +172,6 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
     '#markup' => $max_grazing,
     '#suffix' => '</p>',
   );
-
 
   if ($grazing_growing_season) {
     $form['submit'] = array(
@@ -192,28 +192,23 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
 function getPlanRecovery($plan) {
   $minmax = array();
   $results = db_query('select month, min_recovery, max_recovery from {farm_grazing_plan_recovery} where plan_id=:plan', array(':plan' => $plan));
-  foreach($results as $record) {
+  foreach ($results as $record) {
     $minmax[$record->month] = array($record->min_recovery, $record->max_recovery);
   }
   return $minmax;
-  
-}
 
+}
 
 /**
  * Validate handler for farm_grazing_paddocks_recovery_form
  */
 function farm_grazing_plan_recovery_form_validate($form, &$form_state) {
 
-  // debug output
-  //$fp = fopen('php://stderr', 'a');
-  //fputs($fp, print_r($form_state['input'], true));
-
   foreach ($form_state['input']['months'] as $id => $val) {
-    if (! is_numeric($val['min']) or $val['min'] < 0.0) {
+    if (!is_numeric($val['min']) or $val['min'] < 0.0) {
       form_set_error('min_recovery', t('Min. Recovery Days must be numeric >= 0'));
     }
-    if (! is_numeric($val['max']) or $val['max'] < 0.0) {
+    if (!is_numeric($val['max']) or $val['max'] < 0.0) {
       form_set_error('max_recovery', t('Max. Recovery Days must be numeric >= 0'));
     }
     if ($val['min'] > $val['max']) {
@@ -222,15 +217,10 @@ function farm_grazing_plan_recovery_form_validate($form, &$form_state) {
   }
 }
 
-
 /**
  * Process the paddock recovery form on submit
  */
 function farm_grazing_plan_recovery_form_submit($form, &$form_state) {
-
-  // debug output
-  //$fp = fopen('php://stderr', 'a');
-  //fputs($fp, print_r($form_state['values'], true));
 
   $plan = $form_state['values']['plan'];
 
@@ -249,11 +239,9 @@ function farm_grazing_plan_recovery_form_submit($form, &$form_state) {
 }
 
 /**
- * Implements hook_theme for farmgrazing_paddocks_recovery
+ * Implements hook_theme for farm_grazing_paddocks_recovery
  */
 function theme_farm_grazing_paddocks_recovery(&$vars) {
-
-  //kpr($vars);
 
   $form = $vars['form'];
 
@@ -272,7 +260,5 @@ function theme_farm_grazing_paddocks_recovery(&$vars) {
     'header' => $header,
     'rows' => $rows,
     'submit' => render($form['submit']),
-    )
-  );
+  ));
 }
-

@@ -1,11 +1,12 @@
 <?php
 
-include_once "farm_grazing.utils.inc";
-
 /**
  * History page callback.
  */
-function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
+function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {
+
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
 
   // get list of paddocks in plan or all paddocks
   // looking back 1, 3, 5, 7, 9, all years
@@ -68,7 +69,6 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
   $form['select']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Update Page'),
-    //'#submit' => array('farm_grazing_plan_history_form'),
     '#ajax' => array(
       'wrapper' => 'farm-grazing-history',
       'callback' => 'farm_grazing_plan_history_form_ajax',
@@ -119,15 +119,12 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
       $paddocks = taxonomy_term_load_multiple($paddock_ids);
     }
 
-    // debug output
-    //$fp = fopen('php://stderr', 'a');
-
     // Iterate through the paddocks.
     foreach ($paddocks as $paddock) {
 
       // create array to hold our data
       //    [name, 12 months, total, last grazed]
-      $row = array($paddock->name,0,0,0,0,0,0,0,0,0,0,0,0,0,'');
+      $row = array($paddock->name, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '');
 
       $date_last_grazed = 0;
 
@@ -158,22 +155,10 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
 
           // Calculate the number of days that the asset was in the paddock
           // for each month during the specified time span.
-
           // threshold is the number of days overlap in the month
           // for the month to be counted.
           $threshold = 15;
           countMonths($arrival, $departure, $row, $threshold);
-
-          // debug output
-          //fputs($fp, print_r(array(
-          //  'asset_id' => $asset_id,
-          //  'paddock' => $paddock->name,
-          //  'event_name' => $movement['arrive']->name,
-          //  'arrival' => $arrival,
-          //  'departure' => $departure,
-          //  'log_depart' => $movement['depart']->timestamp,
-          //  ), true)
-          //);
 
           // get date last grazed
           if ($departure > $date_last_grazed) {
@@ -221,4 +206,3 @@ function farm_grazing_plan_history_form_submit($form, &$form_state) {
 function farm_grazing_plan_history_form_ajax($form, $form_state) {
   return $form['section_table'];
 }
-

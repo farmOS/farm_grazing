@@ -1,11 +1,13 @@
 <?php
 
-include_once "farm_grazing.utils.inc";
-
 /**
  * Generate form with table of paddocks callback
  */
 function farm_grazing_select_paddocks_form($form, &$form_state, $plan_obj) {
+
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
+
   drupal_set_title(t('Select Paddocks'));
   $form['text'] = array(
     '#markup' => t('Select which paddocks you want available for use in this plan.'),
@@ -23,7 +25,6 @@ function farm_grazing_select_paddocks_form($form, &$form_state, $plan_obj) {
     }
 
     //$term = taxonomy_term_load($paddock->tid);
-
     $data[$paddock->tid] = array(
       $paddock->name,
       farm_area_calculate_area($paddock->tid),
@@ -40,8 +41,8 @@ function farm_grazing_select_paddocks_form($form, &$form_state, $plan_obj) {
   }
 
   $header = array(
-      t('Name'),
-      t('Area'),
+    t('Name'),
+    t('Area'),
   );
 
   $form['checkboxes'] = array(
@@ -71,6 +72,9 @@ function farm_grazing_select_paddocks_form($form, &$form_state, $plan_obj) {
  */
 function farm_grazing_select_paddocks_form_submit($form, &$form_state) {
 
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
+
   $plan = $form_state['values']['plan'];
 
   // get the old list of selected paddocks for comparison
@@ -86,15 +90,15 @@ function farm_grazing_select_paddocks_form_submit($form, &$form_state) {
       continue;
     }
     db_insert('farm_grazing_plan_paddock')
-    ->fields(array(
-      'paddock_id' => $key,
-      'plan_id' => $plan,
-    ))
-    ->execute();
+      ->fields(array(
+        'paddock_id' => $key,
+        'plan_id' => $plan,
+      ))
+      ->execute();
   }
 
   // next delete records that exist but are no longer selected
-  foreach($old_selected as $key) {
+  foreach ($old_selected as $key) {
     // if an existing db record is in the incoming selections
     // we have nothing to do
     // otherwise we should delete it
@@ -107,4 +111,3 @@ function farm_grazing_select_paddocks_form_submit($form, &$form_state) {
       ->execute();
   }
 }
-

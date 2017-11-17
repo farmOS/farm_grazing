@@ -43,7 +43,7 @@ function get_selected_paddock_for_plan($plan_id) {
   // and build an array of those that are currently selected
   $paddocks = array();
   $results = db_query('select paddock_id from {farm_grazing_plan_paddock} where plan_id=:plan', array(':plan' => $plan_id));
-  foreach($results as $record) {
+  foreach ($results as $record) {
     $paddocks[] = $record->paddock_id;
   }
   return $paddocks;
@@ -53,11 +53,11 @@ function get_selected_paddock_for_plan($plan_id) {
  * Get a list of all paddock_ids and quality from farm_grazing_plan_paddock
  */
 function get_selected_paddock_quality_for_plan($plan) {
-  // query table of paddocks for this plan 
+  // query table of paddocks for this plan
   // and build an array of those that are currently selected
   $selected = array();
   $results = db_query('select paddock_id, quality from {farm_grazing_plan_paddock} where plan_id=:plan', array(':plan' => $plan));
-  foreach($results as $record) {
+  foreach ($results as $record) {
     $selected[$record->paddock_id] = $record->quality;
   }
   return $selected;
@@ -84,16 +84,15 @@ function getHerdEarliestArrival($herd_id, $plan_id) {
  * @param duration - current saved value
  * @param paddock_id int
  * @param mode int
- *  0 = use saved value or avg if saved is null
- *  1 = force return to min grazing days
- *  2 = force return to avg grazing days
- *  3 = force return to max grazing days
- *
+ *   0 = use saved value or avg if saved is null
+ *   1 = force return to min grazing days
+ *   2 = force return to avg grazing days
+ *   3 = force return to max grazing days
  */
 function getPaddockGrazingDays($duration, $paddock_id, $plan_id, $herd_id, &$cache, $mode = 0) {
   if ($cache == NULL) {
     // build the cache as we are going to need it
-    $paddocks = getGrazingDaysForPlanId($plan_id, $d1, $d2, true);
+    $paddocks = getGrazingDaysForPlanId($plan_id, $d1, $d2, TRUE);
     $cache = array();
     foreach ($paddocks as $p) {
       $cache[$p[5]] = $p;
@@ -107,23 +106,30 @@ function getPaddockGrazingDays($duration, $paddock_id, $plan_id, $herd_id, &$cac
       if (isset($duration)) {
         $days = $duration;
       }
-      else {  // otherwise set it to the average
+      // Otherwise set it to the average.
+      else {
         if (isset($cache[$paddock_id])) {
           $days = ($cache[$paddock_id][3] + $cache[$paddock_id][4]) / 2.0;
         }
       }
       break;
-    case 1:  //set the grazing days to minimum
+
+    // Set the grazing days to minimum.
+    case 1:
       if (isset($cache[$paddock_id])) {
         $days = $cache[$paddock_id][3];
       }
       break;
-    case 2:  // set the grazing days to average
+
+    // Set the grazing days to average.
+    case 2:
       if (isset($cache[$paddock_id])) {
         $days = ($cache[$paddock_id][3] + $cache[$paddock_id][4]) / 2.0;
       }
       break;
-    case 3:  // set the grazing days to maximum
+
+    // Set the grazing days to maximum.
+    case 3:
       if (isset($cache[$paddock_id])) {
         $days = $cache[$paddock_id][4];
       }
@@ -151,7 +157,7 @@ function getGrazingDaysForPlanId($plan_id, &$chk_min_recovery, &$chk_max_recover
   $paddock_cnt = getPaddockCountForPlan($plan);
 
   $results = db_query('SELECT min(min_recovery) as minmin, max(max_recovery) as maxmax FROM {farm_grazing_plan_recovery} WHERE plan_id=:plan', array(':plan' => $plan));
-  foreach($results as $record) {
+  foreach ($results as $record) {
     $minmin = $record->minmin;
     $maxmax = $record->maxmax;
   }
@@ -162,29 +168,29 @@ function getGrazingDaysForPlanId($plan_id, &$chk_min_recovery, &$chk_max_recover
     $divisor = 1;
   }
 
-  $avg_min_graz = $minmin/$divisor;
-  $avg_max_graz = $maxmax/$divisor;
+  $avg_min_graz = $minmin / $divisor;
+  $avg_max_graz = $maxmax / $divisor;
 
   // get a list of selected paddocks (paddock_id, quality)
   $paddocks = array();
   $sum_tot_quality = 0;
   $results = db_query('select paddock_id, quality from {farm_grazing_plan_paddock} where plan_id=:plan', array(':plan' => $plan));
-  foreach($results as $record) {
+  foreach ($results as $record) {
     $term = taxonomy_term_load($record->paddock_id);
     $area = farm_area_calculate_area($record->paddock_id);
     $quality = $record->quality;
     $data = array(
       $term->name,
       round($area, 1),
-      round($area*$quality, 1),
-      $area*$quality*$avg_min_graz,
-      $area*$quality*$avg_max_graz,
+      round($area * $quality, 1),
+      $area * $quality * $avg_min_graz,
+      $area * $quality * $avg_max_graz,
     );
     if ($include_ids) {
       $data[] = $record->paddock_id;
     }
     $paddocks[] = $data;
-    $sum_tot_quality = $sum_tot_quality + $area*$quality;
+    $sum_tot_quality = $sum_tot_quality + $area * $quality;
   }
 
   // get average
@@ -203,10 +209,10 @@ function getGrazingDaysForPlanId($plan_id, &$chk_min_recovery, &$chk_max_recover
   $sum_quality = 0;
   $max_min = 0;
   $max_max = 0;
-  for ($i=0; $i<count($paddocks); $i++) {
+  for ($i = 0; $i < count($paddocks); $i++) {
     if ($avg_days > 0) {
-      $paddocks[$i][3] = round($paddocks[$i][3]/$avg_days, 1);
-      $paddocks[$i][4] = round($paddocks[$i][4]/$avg_days, 1);
+      $paddocks[$i][3] = round($paddocks[$i][3] / $avg_days, 1);
+      $paddocks[$i][4] = round($paddocks[$i][4] / $avg_days, 1);
     }
     else {
       $paddocks[$i][3] = 0;
@@ -246,7 +252,7 @@ function getGrazingDaysForPlanId($plan_id, &$chk_min_recovery, &$chk_max_recover
 /**
  * Get Farm Plan Dates from plan id and optionally format them.
  */
-function getFarmPlanDatesFromId($plan_id, $format=NULL) {
+function getFarmPlanDatesFromId($plan_id, $format = NULL) {
   $plan_obj = farm_plan_load($plan_id);
   return getFarmPlanDates($plan_obj, $format);
 }
@@ -254,7 +260,7 @@ function getFarmPlanDatesFromId($plan_id, $format=NULL) {
 /**
  * Get Farm Plan Dates from plan object and optionally format them.
  */
-function getFarmPlanDates($plan_obj, $format=NULL) {
+function getFarmPlanDates($plan_obj, $format = NULL) {
 
   $wrapper = entity_metadata_wrapper('farm_plan', $plan_obj->id);
   $start_ts = $wrapper->field_farm_date_range->value->value();
@@ -308,7 +314,6 @@ function getNumMonthsBetween($date1, $date2) {
   return array($y1, $m1, $num_months);
 }
 
-
 /**
  * daysAvailableByMonth($startDate1, $endDate1, $startDate2, $endDate2)
  * Compute the days overlap per month between start and end dates
@@ -324,13 +329,13 @@ function daysAvailableByMonth($startDate1, $endDate1, $startDate2, $endDate2) {
 
   list($year, $mon, $num_months) = getNumMonthsBetween($startDate1, $endDate1);
 
-  for ($i=0; $i<$num_months+1; $i++) {
+  for ($i = 0; $i < $num_months + 1; $i++) {
     $month_start = $year . '-' . sprintf('%02d', $mon) . '-01';
     if ($mon < 12) {
-      $month_end = $year . '-' . sprintf('%02d', $mon+1) . '-01';
+      $month_end = $year . '-' . sprintf('%02d', $mon + 1) . '-01';
     }
     else {
-      $month_end = ($year+1) . '-01-01';
+      $month_end = ($year + 1) . '-01-01';
     }
 
     // increment and adjust month, year
@@ -349,14 +354,14 @@ function daysAvailableByMonth($startDate1, $endDate1, $startDate2, $endDate2) {
 /**
  * countMonths($start_date, $end_date, &$months, $threshold=15)
  *
- * Used by Hreds/History to count months grazed
+ * Used by Herds/History to count months grazed
  *
  * @param $start_date   int, Timestamp
  * @param $end_date     int, Timestamp
  * @param &$months      array of 12 ints
  * @param $threshold    int, number of days in a month to count the month
  */
-function countMonths($start_date, $end_date, &$months, $threshold=15) {
+function countMonths($start_date, $end_date, &$months, $threshold = 15) {
   // convert timestamp ot YYYY-MM-DD
   $start = new DateTime();
   $start->setTimestamp($start_date);
@@ -368,13 +373,13 @@ function countMonths($start_date, $end_date, &$months, $threshold=15) {
 
   list($year, $mon, $num) = getNumMonthsBetween($start, $end);
 
-  for ($i=0; $i < $num; $i++) {
+  for ($i = 0; $i < $num; $i++) {
     $month_start = $year . '-' . sprintf('%02d', $mon) . '-01';
     if ($mon < 12) {
-      $month_end = $year . '-' . sprintf('%02d', $mon+1) . '-01';
+      $month_end = $year . '-' . sprintf('%02d', $mon + 1) . '-01';
     }
     else {
-      $month_end = ($year+1) . '-01-01';
+      $month_end = ($year + 1) . '-01-01';
     }
 
     // increment and adjust month, year
@@ -388,7 +393,8 @@ function countMonths($start_date, $end_date, &$months, $threshold=15) {
     $days = overlapInDays($month_start, $month_end, $month_start, $month_end);
     if ($days >= $threshold) {
       $months[$mon]++;
-      $months[13]++;  // increment the total
+      // Increment the total.
+      $months[13]++;
     }
   }
 }
@@ -430,7 +436,7 @@ function overlapInMinutes($startDate1, $endDate1, $startDate2, $endDate2) {
   $firstEnd = strtotime($firstEnd);
 
   // Subtract the two, divide by 60 to convert seconds to minutes, and round down
-  $overlap = floor( ($firstEnd - $lastStart) / 60 );
+  $overlap = floor(($firstEnd - $lastStart) / 60);
 
   // If the answer is greater than 0 use it.
   // If not, there is no overlap.
@@ -452,12 +458,11 @@ function get_days_between_dates($date1, $date2) {
   $date1 = strtotime($date1);
   $date2 = strtotime($date2);
 
-  $minutes = floor( ($date2 - $date1) / 60 );
-  $days = floor( $minutes / 60 / 24 );
+  $minutes = floor(($date2 - $date1) / 60);
+  $days = floor($minutes / 60 / 24);
 
   return $days;
 }
-
 
 /**
  * getAnimalTypeName($type)
@@ -476,7 +481,6 @@ function getAnimalTypeName($type) {
 function getAnimalTypeDmiFactor($type) {
   return db_query('SELECT dmi_factor FROM {farm_grazing_animal_types} WHERE type_id=:tid', array(':tid' => $type))->fetchField();
 }
-
 
 /**
  * get_grazing_group_detailed_info($asset_id, &$data)
@@ -515,7 +519,7 @@ function get_grazing_group_detailed_info($asset_id, &$data) {
 
   // get the asset children and process them
   if ($asset->type == 'group') {
-    $children  = farm_group_members($asset);
+    $children = farm_group_members($asset);
     if (!empty($children)) {
       foreach ($children as $child) {
         get_grazing_group_detailed_info($child->id, $data);
@@ -569,12 +573,11 @@ function get_grazing_group_detailed_info($asset_id, &$data) {
  *  $summary = summarize_grazing_group_detailed_info($data);
  */
 function summarize_grazing_group_detailed_info(&$data) {
-  $summary = array();
   $sum_sau = 0;
   $sum_dmi = 0;
   $head_count = 0;
-  $min_arrival = false;
-  $max_departure = false;
+  $min_arrival = FALSE;
+  $max_departure = FALSE;
 
   // summarize the data
   foreach ($data as $rec) {
@@ -583,10 +586,10 @@ function summarize_grazing_group_detailed_info(&$data) {
     $head_count = $head_count + $rec['head_count'];
 
     // date strings MUST be for as 'Y-m-d' ie: YYYY-MM-DD
-    if ($min_arrival === false or $rec['arrival'] < $min_arrival) {
+    if ($min_arrival === FALSE or $rec['arrival'] < $min_arrival) {
       $min_arrival = $rec['arrival'];
     }
-    if ($max_departure === false or $rec['departure'] > $max_departure) {
+    if ($max_departure === FALSE or $rec['departure'] > $max_departure) {
       $max_departure = $rec['departure'];
     }
   }
@@ -598,7 +601,7 @@ function summarize_grazing_group_detailed_info(&$data) {
     'herd_dmi' => $sum_dmi,
     'arrival' => $min_arrival,
     'departure' => $max_departure,
-    );
+  );
 }
 
 /**
@@ -609,7 +612,6 @@ function summarize_grazing_group_detailed_info(&$data) {
  * properties and initial observations.
  *
  * @returns $errors - the number of errors encountered
- *
  */
 function farm_grazing_validate_herd($herd_id, $plan_id, &$data) {
   $errors = 0;
@@ -618,14 +620,18 @@ function farm_grazing_validate_herd($herd_id, $plan_id, &$data) {
 
   foreach ($data as &$animal) {
 
+    // Build some animal arguments for use in translateables.
+    $animal_args = array(
+      '@animal_edit' => url('farm/asset/' . $animal['id'] . '/edit'),
+      '@animal_name' => $animal['name'],
+    );
+
     // Things to validate
     //  farm_grazing_animal_type property exists and is valid
     $type = $animal['type'];
     if (empty($type)) {
-      drupal_set_message(t('Animal') . '(<a href="' . base_path() . 'farm/asset/
-' . $animal['id'] . '/edit">' .
-      $animal['name'] .
-      '</a>)' .t(' needs its Animal Type property set.'), 'error');
+      $message = t('Animal "<a href="@animal_edit">@animal_name</a>" needs its Animal Type property set.', $animal_args);
+      drupal_set_message($message, 'error');
       $errors++;
     }
 
@@ -639,7 +645,6 @@ function farm_grazing_validate_herd($herd_id, $plan_id, &$data) {
     }
 
     //  if farm_grazing_planned_departure property is null set to plan end date
-    $departure = $animal['departure'];
     if (empty($animal['departure'])) {
       $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
       $ts = $wrapper->field_farm_date_range->value2->value();
@@ -651,11 +656,8 @@ function farm_grazing_validate_herd($herd_id, $plan_id, &$data) {
     //  has weight
     $weight = $animal['weight'];
     if (empty($weight)) {
-      drupal_set_message(t('Animal') . '(<a href="' . base_path() . 'farm/asset/
-' . $animal['id'] . '">' .
-        $animal['name'] .
-        '</a>)' .t(' needs an Observation -> Quantity -> weight set.'), 'error')
-;
+      $message = t('Animal "<a href="@animal_edit">@animal_name</a>" needs an Observation -> Quantity -> weight set.', $animal_args);
+      drupal_set_message($message, 'error');
       $errors++;
     }
 
@@ -701,14 +703,13 @@ function getHerdSizeInSau($plan_id) {
   return $tot_sau;
 }
 
-
 /**
  * getNonGrowingSummaryForPlanId($plan_id, $add_ids=0)
  *
  * Compute statistics for paddocks in non-growing season plan
  */
 function getNonGrowingSummaryForPlanId($plan_id, $add_ids=0) {
-  
+
   // get herds size if defined
   $herd_size = getHerdSizeInSau($plan_id);
 
@@ -722,7 +723,7 @@ function getNonGrowingSummaryForPlanId($plan_id, $add_ids=0) {
 
   $start_ts = $wrapper->field_farm_date_range->value->value();
   $end_ts = $wrapper->field_farm_date_range->value2->value();
-  $plan_days = floor(($end_ts-$start_ts)/3600/24);
+  $plan_days = floor(($end_ts - $start_ts) / 3600 / 24);
 
   $expected_days_non_growth = $plan_days - $days_drought_reserve + $days_bulk_feeding;
 
@@ -730,12 +731,11 @@ function getNonGrowingSummaryForPlanId($plan_id, $add_ids=0) {
 
   // each row in $rows consists of
   // paddock, area, ada, avail_ads, max_grazing_days, planned_harvest_per_rotation, remaining_harvest_aft_first, planned_tot_harvest, forage_excess_deficit, avail_drought_ads, max_drought_grazing_days
-
   $rows = array();
-  $sums = array(0,0,0,0,0,0,0,0,0,0);
+  $sums = array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
   $results = db_query('select paddock_id, quality from {farm_grazing_plan_paddock} where plan_id=:plan', array(':plan' => $plan_id));
-  foreach($results as $record) {
+  foreach ($results as $record) {
     $name = taxonomy_term_load($record->paddock_id)->name;
     $area = farm_area_calculate_area($record->paddock_id);
     $ada = $record->quality;
@@ -743,9 +743,9 @@ function getNonGrowingSummaryForPlanId($plan_id, $add_ids=0) {
       $name,                // paddock
       $area,                // 8, area (needs to be round)
       $ada,                 // 9, ada
-      $area*$ada,           // 0, avail_ads (needs to be round)
-      $area*$ada*$grazing_period,   // 1, max_grazing_days (needs / avg_ads)
-      $herd_size*$area*$ada/$area,  // 2, planned_harvest_per_rotation (needs / avg_ads)
+      $area * $ada,           // 0, avail_ads (needs to be round)
+      $area * $ada * $grazing_period,   // 1, max_grazing_days (needs / avg_ads)
+      $herd_size * $area * $ada/$area,  // 2, planned_harvest_per_rotation (needs / avg_ads)
       $ada,                 // 3, remaining_harvest_aft_first (needs - $row[5])
       $num_rotations,       // 4, planned_tot_harvest (needs * $row[5])
       $days_bulk_feeding,   // 5, forage_excess_deficit (needs - $row[7])
@@ -761,15 +761,16 @@ function getNonGrowingSummaryForPlanId($plan_id, $add_ids=0) {
     // [0] available ads
     // [1] max. grazing days
     // [2] planned harvest per rotation
-    for($i=0; $i<2; $i++) {
-      $sums[$i] += $row[$i+3];
+    for ($i = 0; $i < 2; $i++) {
+      $sums[$i] += $row[$i + 3];
     }
   }
 
   // fix up sums and rows as needed
   $avg_ads = $sums[0] / $num_paddocks;
-  $sums[1] = $sums[1] / $avg_ads; // max. grazing days
-  for ($i=0; $i<$num_paddocks; $i++) {
+  // max. grazing days.
+  $sums[1] = $sums[1] / $avg_ads;
+  for ($i = 0; $i < $num_paddocks; $i++) {
     $rows[$i][4] = $rows[$i][4] / $avg_ads;
     $rows[$i][5] = $herd_size * $rows[$i][4] / $rows[$i][1];
     $rows[$i][6] = $rows[$i][2] - $rows[$i][5];
@@ -784,7 +785,7 @@ function getNonGrowingSummaryForPlanId($plan_id, $add_ids=0) {
     $sums[6] += $rows[$i][9]; // available drought ads
   }
   $avg_avail_drought_ads = $sums[6] / $num_paddocks;
-  for ($i=0; $i<$num_paddocks; $i++) {
+  for ($i = 0; $i < $num_paddocks; $i++) {
     $rows[$i][10] = $rows[$i][9] * $days_drought_grazing / $avg_avail_drought_ads;
     $sums[7] += $rows[$i][10];  // max. drought grazing days
     $sums[8] += $rows[$i][1];   // area
@@ -792,22 +793,22 @@ function getNonGrowingSummaryForPlanId($plan_id, $add_ids=0) {
   }
 
   // push the totals
-  $totals = array('<b>'.t('Column Sums').'</b>', $sums[8], $sums[9]);
-  for ($i=0; $i<8; $i++) {
+  $totals = array('<b>' . t('Column Sums') . '</b>', $sums[8], $sums[9]);
+  for ($i = 0; $i < 8; $i++) {
     $totals[] = $sums[$i];
   }
   $rows[] = $totals;
 
   // push the averages
-  $totals[0] = '<b>'.t('Column Average').'</b>';
-  for ($i=1; $i<11; $i++) {
+  $totals[0] = '<b>' . t('Column Average') . '</b>';
+  for ($i = 1; $i < 11; $i++) {
     $totals[$i] /= $num_paddocks;
   }
   $rows[] = $totals;
 
   // round table values to one digit
-  for ($i=0; $i<$num_paddocks+2; $i++) {
-    for ($j=1; $j<11; $j++) {
+  for ($i = 0; $i < $num_paddocks + 2; $i++) {
+    for ($j = 1; $j < 11; $j++) {
       $rows[$i][$j] = round($rows[$i][$j], 1);
     }
   }
