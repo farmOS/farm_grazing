@@ -82,7 +82,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
   $form['add']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Add rotation'),
-    '#submit' => array('farm_grazing_plan_rotation_add_validate'),
+    '#validate' => array('farm_grazing_plan_rotation_add_validate'),
     '#submit' => array('farm_grazing_plan_rotation_add_submit'),
   );
 
