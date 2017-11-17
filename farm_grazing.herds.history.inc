@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Grazing history form.
+ */
+
+/**
  * History page callback.
  */
 function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {

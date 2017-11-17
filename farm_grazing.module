@@ -242,8 +242,6 @@ function farm_grazing_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  // -------------- config forms --------------------------
-
   // Animal type configuration.
   $items['admin/config/farm/grazing_animal_types'] = array(
     'title' => 'Grazing animal types',

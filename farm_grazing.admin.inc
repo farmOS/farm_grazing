@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Grazing configuration forms.
+ */
+
+/**
  * Grazing types config form.
  */
 function farm_grazing_config_animal_types_form($form, &$form_state) {

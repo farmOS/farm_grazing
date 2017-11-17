@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Functions for plotting grazing rotations as images.
+ */
+
+/**
  * Generate an image that plots a paddock rotation visualization.
  *
  * Parameters from URL

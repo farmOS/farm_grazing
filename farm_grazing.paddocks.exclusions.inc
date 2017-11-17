@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Grazing paddock exclusions form.
+ */
+
+/**
  * Paddock exclusions list, add, edit, delete form.
  */
 function farm_grazing_exclusions_form($form, &$form_state, $plan_obj) {

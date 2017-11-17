@@ -1,7 +1,12 @@
 <?php
 
 /**
- * Paddock summary page callback
+ * @file
+ * Grazing paddock summary form.
+ */
+
+/**
+ * Paddock summary page callback.
  */
 function farm_grazing_plan_summary_page($plan_obj) {
 

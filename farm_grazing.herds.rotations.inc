@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Grazing rotations form.
+ */
+
+/**
  * Periods page callback.
  */
 function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
@@ -236,6 +241,9 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
   return $form;
 }
 
+/**
+ * Theme function for the rotations form.
+ */
 function theme_farm_grazing_plan_rotations_form($variables) {
 
   // If the validation error message is set, bail.

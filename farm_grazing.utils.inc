@@ -1,6 +1,9 @@
 <?php
 
-// -------------- utility functions ----------------
+/**
+ * @file
+ * Grazing utility functions.
+ */
 
 /**
  * Utility function to fetch things from farmOS

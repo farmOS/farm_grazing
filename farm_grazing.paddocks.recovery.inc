@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Grazing paddock recovery form.
+ */
+
+/**
  * Paddock recovery page callback.
  */
 function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {

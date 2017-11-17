@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Grazing dashboard form.
+ */
+
+/**
  * Management concerns form callback.
  */
 function farm_grazing_plan_dashboard_form($form, &$form_state, $plan_obj) {

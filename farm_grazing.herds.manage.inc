@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Grazing herd management form.
+ */
+
+/**
  * Herd page callback.
  */
 function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {

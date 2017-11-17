@@ -1,7 +1,12 @@
 <?php
 
 /**
- * Generate form with table of paddocks callback
+ * @file
+ * Grazing paddock select form.
+ */
+
+/**
+ * Generate form with table of paddocks callback.
  */
 function farm_grazing_select_paddocks_form($form, &$form_state, $plan_obj) {
 

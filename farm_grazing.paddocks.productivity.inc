@@ -1,7 +1,12 @@
 <?php
 
 /**
- * Set paddock productivity form callback
+ * @file
+ * Grazing paddock productivity form.
+ */
+
+/**
+ * Set paddock productivity form callback.
  */
 function farm_grazing_plan_productivity_form($form, &$form_state, $plan_obj) {
 
