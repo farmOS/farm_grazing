@@ -507,7 +507,7 @@ function farm_grazing_entity_view($entity, $type, $view_mode, $langcode) {
 }
 
 /**
- * Implemants hook_theme
+ * Implements hook_theme
  */
 function farm_grazing_theme() {
   return array(
@@ -564,7 +564,7 @@ function farm_grazing_help($path, $arg) {
       return '<p>' . t('Define your paddocks in the') . ' <a href="' . base_path() . 'farm/areas">Areas</a> ' . t('tab above. Select which paddocks you want available for use in this plan here and then use tabs "Exclusions", "Productivity", "Recovery" and "Summary" to add additional information about your paddocks.') . '</p>';
 
     case 'farm/plan/%/paddocks/exclusions':
-      return '<p>' . t('Enter dates when a paddock can not under any circumstanceces have a herd on it and select type "Livestock". Also enter dates for paddocks that need special attention and select type "Special". Such paddocks could include a sacrificial paddock where you plan to run some animals on continuous graze, bare, eroding ground that needs healing, areas you want to rest for brush cover for wildlife, areas where you need to remove forage for fire protection, paddocks you plan to strip graze. Review the list of planning factors.') . '</p>' .
+      return '<p>' . t('Enter dates when a paddock can not under any circumstances have a herd on it and select type "Livestock". Also enter dates for paddocks that need special attention and select type "Special". Such paddocks could include a sacrificial paddock where you plan to run some animals on continuous graze, bare, eroding ground that needs healing, areas you want to rest for brush cover for wildlife, areas where you need to remove forage for fire protection, paddocks you plan to strip graze. Review the list of planning factors.') . '</p>' .
       '<p>' . t('Click on the paddock name to edit or delete it.') . '</p>';
 
     case 'farm/plan/%/paddocks/productivity':
@@ -585,7 +585,7 @@ function farm_grazing_help($path, $arg) {
       '<li>' . t('Location (optional)') . '</li>' .
       '<li>' . t('Weight') . '</li>' .
       '<li>' . t('Inventory (Head count)') . '</li>' .
-      '<li>' . t('Group memebership (Herd name)') . '</li>' .
+      '<li>' . t('Group membership (Herd name)') . '</li>' .
       '<ul>' .
       '<li>' . t('Select an existing group (Herd)') . '</li>' .
       '<li>' . t('or Create a new group (Herd)') . '</li>' .
@@ -605,7 +605,7 @@ function farm_grazing_help($path, $arg) {
       return '<p>' . t('Skip this step if this is your first grazing plan. Otherwise, check paddock by paddock over previous grazing charts for evidence of inappropriate heavy use of individual paddocks, repeated early or late season use of particular paddocks, or of paddocks that failed to receive adequate recovery time in the recent past. If paddocks were marked as heavily grazed, especially early or late in the season last year, exclude them in the early and late growing season this year to avoid repetition.') . '</p><p>' . t('This table counts the frequency of historical use in the given months. Ideally one would like to have these numbers consistent across the months in the plan over the long term. In the short term avoid reuse at start or end of the growing season. Also if a paddock has been used a lot in a given month then avoid using that month also.') . '</p>';
 
     case 'farm/plan/%/herds/rotations':
-      return '<p>' . t('You can reorder the paddocks by grabbing the row and dragging it up or down in the table or enter numerical values in the row weights column. The calendar has the various planning events shown on it. The green is where that paddock will get grazed. You avoid trying to graze the paddock where you have an exclusion marked in red. Move it up/down to avoid the exclusion.') . '</p><p>' . t('You should also look back at the Herds/History tab to avoid bad patterns like repeatitive grazing of the the same paddock at the start or end of a season or is getting more heavily used than others.') . '</p><p>' . t('Purple sections are where there are management events and orange areas indicate average paddock recovery time frames.');
+      return '<p>' . t('You can reorder the paddocks by grabbing the row and dragging it up or down in the table or enter numerical values in the row weights column. The calendar has the various planning events shown on it. The green is where that paddock will get grazed. You avoid trying to graze the paddock where you have an exclusion marked in red. Move it up/down to avoid the exclusion.') . '</p><p>' . t('You should also look back at the Herds/History tab to avoid bad patterns like repetitive grazing of the the same paddock at the start or end of a season or is getting more heavily used than others.') . '</p><p>' . t('Purple sections are where there are management events and orange areas indicate average paddock recovery time frames.');
 
     case 'farm/plan/%/implement':
     case 'farm/plan/%/implement/default':

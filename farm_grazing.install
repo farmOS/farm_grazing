@@ -145,7 +145,7 @@ function farm_grazing_schema() {
   );
 
 #  $schema['farm_grazing_herd_paddocks'] = array(
-#    'description' => 'List of padocks assigned to a herd in a plan.',
+#    'description' => 'List of paddocks assigned to a herd in a plan.',
 #    'fields' => array(
 #      'id' => array(
 #        'description' => 'PK for farm_grazing_herd_paddocks table',

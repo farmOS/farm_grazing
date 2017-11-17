@@ -354,7 +354,7 @@ function daysAvailableByMonth($startDate1, $endDate1, $startDate2, $endDate2) {
 /**
  * countMonths($start_date, $end_date, &$months, $threshold=15)
  *
- * Used by Hreds/History to count months grazed
+ * Used by Herds/History to count months grazed
  *
  * @param $start_date   int, Timestamp
  * @param $end_date     int, Timestamp

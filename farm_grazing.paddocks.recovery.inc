@@ -247,7 +247,7 @@ function farm_grazing_plan_recovery_form_submit($form, &$form_state) {
 }
 
 /**
- * Implements hook_theme for farmgrazing_paddocks_recovery
+ * Implements hook_theme for farm_grazing_paddocks_recovery
  */
 function theme_farm_grazing_paddocks_recovery(&$vars) {
 

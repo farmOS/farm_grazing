@@ -88,7 +88,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
   );
 
   if ($grazing_growing_season) {
-    // build optional control to reset the number of grazing dats
+    // build optional control to reset the number of grazing days
     $form['reset_grazing_days'] = array(
       '#type' => 'fieldset',
       '#title' => t('Reset Grazing Days'),
