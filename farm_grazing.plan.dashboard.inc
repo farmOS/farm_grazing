@@ -56,18 +56,19 @@ function farm_grazing_plan_dashboard_form($form, &$form_state, $plan_obj) {
 
   $form['introduction']['text'] = array(
     '#type' => 'markup',
-    '#markup' => t('<p>Welcome to the Holistic Grazing Planning Application.</p>
-      <h4>For the First Time</h4>
-      <p>To get started, you need to:
-        <ul>
-          <li>Define your ranch\'s paddocks. This is done on the "Areas" tab at the top of the page. This needs to be done once initially and anytime you decide to change the layout of paddocks on the ranch.
-          <li>Review and add Animal types <a href="' . $animal_types_url . '">HERE</a> that you will be working with.
-        </ul>
-      </p>
-      <h4>Making a Plan</h4>
-      <p>This is the "active" plan you are working with. The planning process follows the order of the tabs from left to right and top to bottom. You can revisit any tab as needed to review or change your inputs. Most of the tabs are focused on collecting data need to build you plan. Planning the paddock rotations is done on <a href="' . $rotation_url . '">Herds/Rotations</a> tab.</p>
-      <p>The Plan tab will bring you back here and the Settings tab allows you edit information about the plan.</p>
-      <p>Next Steps: Simple open the "Management Concerns" section below and enter data there and then work your way across the Paddocks and Herds tabs both have sub-menu steps that you should work left to right.</p>'),
+    '#markup' => '<p>' . t('Welcome to the Holistic Grazing Planning Application.') . '</p>' .
+    '<h4>' . t('For the First Time') . '</h4>' .
+    '<p>' . t('To get started, you need to:') .
+    '<ul>' .
+    '<li>' . t('Define your ranch\'s paddocks. This is done on the "Areas" tab at the top of the page. This needs to be done once initially and anytime you decide to change the layout of paddocks on the ranch.') . '</li>' .
+    '<li>' . t('Review and add Animal types ') .
+    '<a href="' . $animal_types_url . '">' . t('HERE') . '</a>' . t('that you will be working with.') . '</li>' .
+    '</ul>' .
+    '</p>' .
+    '<h4>' . t('Making a Plan') . '</h4>' .
+    '<p>' . t('This is the "active" plan you are working with. The planning process follows the order of the tabs from left to right and top to bottom. You can revisit any tab as needed to review or change your inputs. Most of the tabs are focused on collecting data needed to build your plan. Planning the paddock rotations is done on ') . '<a href="' . $rotation_url . '">' . t('Herds/Rotations') . '</a>' . t(' tab.') . '</p>' .
+    '<p>' . t('The Plan tab will bring you back here and the Settings tab allows you edit information about the plan.') . '</p>' .
+    '<p>' . t('Next Steps: Simple open the "Management Concerns" section below and enter data there and then work your way across the Paddocks and Herds tabs both have sub-menu steps that you should work left to right.') . '</p>',
   );
 
   $form['concerns'] = array(
