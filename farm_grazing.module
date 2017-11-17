@@ -499,30 +499,64 @@ function farm_grazing_entity_view($entity, $type, $view_mode, $langcode) {
     return;
   }
 
+  $entity->content['spacer_1'] = array(
+    '#prefix' => '<br><p>',
+    '#markup' => t('Click the sections below to open/close them.'),
+    '#suffix' => '</p><br>',
+    '#weight' => 100,
+  );
   // Add introductory text.
   $entity->content['introduction'] = array(
-    '#markup' => t('<h1>Getting Started</h1>
-      <p>Welcome to the Holistic Grazing Planning Application.</p>
-      <h2>For the First Time</h2>
+    '#type' => 'fieldset',
+    '#title' => t('Getting Started'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#weight' => 105,
+  );
+
+  // get the path to the herds rotations we use below
+  $current_path = base_path() . current_path();
+  $rotation_url = trim($current_path, "#") . '/herds/rotations';
+
+  $entity->content['introduction']['content'] = array(
+    '#type' => 'markup',
+    '#markup' => t('<p>Welcome to the Holistic Grazing Planning Application.</p>
+      <h4>For the First Time</h4>
       <p>To get started, you need to define your ranch\'s paddocks. This is done on the "Areas" tab at the top of the page. This needs to be done once initially and anytime you decide to change the layout of paddocks on the ranch.</p>
-      <h2>Making a Plan</h2>
-      <p>This is the "active" plan you are working with. The planning process follows the order of the tabs from left to right and top to bottom. You can revisit any tab as needed to review or change your inputs.</p>
-      <p>The View will bring you back here and the Edit tab allows you edit information about the plan.</p>
-      <p>Next Steps: Simple go to the next tab "Concerns" and work your way across the planning tabs. The Paddocks and Herds tabs both have sub-menu steps that you should work left to right.</p>'),
-    '#weight' => 100,
+      <h4>Making a Plan</h4>
+      <p>This is the "active" plan you are working with. The planning process follows the order of the tabs from left to right and top to bottom. You can revisit any tab as needed to review or change your inputs. Most of the tabs are focused on collecting data need to build you plan. Planning the paddock rotations is done on <a href="' . $rotation_url . '">Herds/Rotations</a> tab.</p>
+      <p>The Plan tab will bring you back here and the Settings tab allows you edit information about the plan.</p>
+      <p>Next Steps: Simple open the "Management Concerns" section below and enter data there and then work your way across the Paddocks and Herds tabs both have sub-menu steps that you should work left to right.</p>'),
   );
 
   // Add concerns form.
   module_load_include('inc', 'farm_grazing', 'farm_grazing.concerns');
-  $entity->content['concerns'] = drupal_get_form('farm_grazing_plan_concerns_form', $entity);
-  $entity->content['concerns']['#weight'] = 101;
+  $entity->content['concerns'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Management Concerns'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#weight' => 110,
+  );
+  $entity->content['concerns']['content'] = drupal_get_form('farm_grazing_plan_concerns_form', $entity);
 
+//  $entity->content['spacer_2'] = array(
+//    '#markup' => '<br><br>',
+//    '#weight' => 115,
+//  );
   // Add "Implement the plan" content.
   $entity->content['implement'] = array(
-    '#markup' => '<h1>' . t('Implement the plan') . '</h1>' .
-      '<h2>' .t('Recheck your plan') . '</h2>' .
+    '#type' => 'fieldset',
+    '#title' => t('Implementing the plan'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#weight' => 120,
+  );
+  $entity->content['implement']['content'] = array(
+    '#type' => 'markup',
+    '#markup' => '<h4>' .t('Recheck your plan') . '</h4>' .
       '<p>' . t('Review your plan regularly, print out reports, check that the plan is on track and make adjustments as needed.') . '</p>' .
-      '<h2>' . t('Monitor Your Paddocks') . '</h2>' .
+      '<h4>' . t('Monitor Your Paddocks') . '</h4>' .
       '<p>' . t('Monitor the growth and recovery of your paddocks. Also assess the quality of the paddock you are moving the herd to and record it as a monitor event here.') . '</p>' .
       '<ul>' .
       '<li><a href="' . base_path() . 'farm/assets/groups">' . t('Herd movements') . '</a></li>' .
@@ -560,12 +594,11 @@ function farm_grazing_entity_view($entity, $type, $view_mode, $langcode) {
       '<li>' . t('Soil moisture') . '</li>' .
       '</ul>' .
       '</ul>' .
-      '<h2>' . t('How to Replan if Needed') . '</h2>' .
+      '<h4>' . t('How to Replan if Needed') . '</h4>' .
       '<p>' . t('You can make changes to your plan at any time. Actual events obviously can not be changed, but you can replan future events. There are two approaches to replanning.') . '<ol>' .
       '<li>' . t('is to just update the current plan for minor changes') . '</li>' .
       '<li>' . t('another is to create a new plan, for major changes, based on the remaining days and abandon the old plan for now.') . '</li>' .
       '<p>' . t('The advantage to making a new plan is that you can keep the original plan around for archival purposes and look at it in the future to re-assess assumptions or conditions that changed and forced the replan. On the new plan, you might need to sell stock to reduce the requirements for intake if you are in a drought or had a fire that burnt through some padocks or add more paddocks that you had not planned to use in the original plan. If you only need to make minor changes then use your existing plan, otherwise start a new plan.') . '</p>',
-    '#weight' => 102,
   );
 }
 
@@ -615,7 +648,7 @@ function farm_grazing_help($path, $arg) {
         '</p><p>' . t('The planning factors are an important part of building your plan. You can edit these by clicking the "Edit" tab at any time. Read the description under the form field for "Planning factors".') . '</p>';
     case 'farm/plan/%':
     case 'farm/plan/%/default':
-      return '<p>'. t('To build your plan follow the tabs "Concerns", "Paddocks", "Herds" and "Implement" and follow the sub-menus from left to right. This will walk you through the Holistic Grazing process to generate a plan. As things change you can revisit any of these tabs to make changes to your plan.') . '</p>';
+      return '<p>'. t('Open/Close each of the sections below, "Getting Started", "Management Concerns", and Implementing the plan", by clicking on the section title.') . '</p>';
     case 'farm/plan/%/paddocks':
     case 'farm/plan/%/paddocks/default':
       return '<p>' . t('Define your paddocks in the') . ' <a href="' . base_path() . 'farm/areas">Areas</a> '. t('tab above. Select which paddocks you want available for use in this plan here and then use tabs "Exclusions", "Productivity", "Recovery" and "Summary" to add additional information about your paddocks.') . '</p>';

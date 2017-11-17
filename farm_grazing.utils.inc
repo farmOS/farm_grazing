@@ -602,14 +602,13 @@ function summarize_grazing_group_detailed_info(&$data) {
 }
 
 /**
- * farm_grazing_validate_herd($herd_id)
+ * farm_grazing_validate_herd($herd_id, $plan_id, &$data)
  *
  * when a herd is attached to a grazing plan or otherwise modified
  * this function checks that all components of the herd have required
  * properties and initial observations.
  *
- * it should return null if ok, otherwise a document enumerating the
- * problems with links to where the user can fix them.
+ * @returns $errors - the number of errors encountered
  *
  */
 function farm_grazing_validate_herd($herd_id, $plan_id, &$data) {

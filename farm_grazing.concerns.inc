@@ -35,12 +35,13 @@ function farm_grazing_plan_concerns_form($form, &$form_state, $plan_obj) {
   );
 
   $form['section_1']['text'] =  array(
-    '#markup' => '<h2>Management concerns</h2>' .
+    '#markup' => // '<h2>Management concerns</h2>' .
       '<p>' . t('In this section, think about various factors that influence your calendar for the plan. Consider:') . '</p>' .
       '<ul>' .
           '<li>' . t('Livestock events like birthing, breeding, weaning, etc and when these are planned.') .
           '<li>' . t('Management events such as vacations, family or community events that need to be planned around.') .
           '<li>' . t('Other specific events like hunting seasons, parasites, or flooding that might influence the sequence of paddock moves.') .
+          '<li>' . t('Enter these concerns below. You will want to add to this and review it as you are doing your planning and planning the herd rotations.') .
       '</ul>');
 
   $form['section_2']['factors'] = array(
