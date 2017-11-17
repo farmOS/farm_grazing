@@ -43,7 +43,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     '#markup' => t('<p>' .
       t('A herd is defined as a group of animals that will be rotated between paddocks together regardless of the make up of animals in the herd.') .
       '</p><p>' .
-      t('You can define animals ') . '<a href="' . base_path() . 'farm/asset/add/animal?destination=farm/assets/animals" target="_new">' . t('HERE') . '</a> ' . t('and assign them to a group. See the Help for more information.') .
+      t('You can define animals ') . l(t('HERE'), 'farm/asset/add/animal') . t('and assign them to a group. See the Help for more information.') .
       '</p>' .
       ''),
   );
@@ -140,7 +140,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#markup' => $departure_date,
       ),
       'remove' => array(
-        '#markup' => l(t('Remove'), base_path() . 'farm/grazing/plan/' . $plan . '/herd/' . $record->herd_id . '/edit', array('query' => array('destination' => current_path()))),
+        '#markup' => l(t('Remove'), 'farm/grazing/plan/' . $plan . '/herd/' . $record->herd_id . '/edit', array('query' => array('destination' => current_path()))),
       )
     );
   }

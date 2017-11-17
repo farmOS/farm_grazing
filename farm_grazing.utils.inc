@@ -618,14 +618,18 @@ function farm_grazing_validate_herd($herd_id, $plan_id, &$data) {
 
   foreach ($data as &$animal) {
 
+    // Build some animal arguments for use in translateables.
+    $animal_args = array(
+      '@animal_edit' => url('farm/asset/' . $animal['id'] . '/edit'),
+      '@animal_name' => $animal['name'],
+    );
+
     // Things to validate
     //  farm_grazing_animal_type property exists and is valid
     $type = $animal['type'];
     if (empty($type)) {
-      drupal_set_message(t('Animal') . '(<a href="' . base_path() . 'farm/asset/
-' . $animal['id'] . '/edit">' .
-      $animal['name'] .
-      '</a>)' .t(' needs its Animal Type property set.'), 'error');
+      $message = t('Animal "<a href="@animal_edit">@animal_name</a>" needs its Animal Type property set.', $animal_args);
+      drupal_set_message($message, 'error');
       $errors++;
     }
 
@@ -651,11 +655,8 @@ function farm_grazing_validate_herd($herd_id, $plan_id, &$data) {
     //  has weight
     $weight = $animal['weight'];
     if (empty($weight)) {
-      drupal_set_message(t('Animal') . '(<a href="' . base_path() . 'farm/asset/
-' . $animal['id'] . '">' .
-        $animal['name'] .
-        '</a>)' .t(' needs an Observation -> Quantity -> weight set.'), 'error')
-;
+      $message = t('Animal "<a href="@animal_edit">@animal_name</a>" needs an Observation -> Quantity -> weight set.', $animal_args);
+      drupal_set_message($message, 'error');
       $errors++;
     }
 
