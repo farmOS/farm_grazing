@@ -1,11 +1,12 @@
 <?php
 
-include_once "farm_grazing.utils.inc";
-
 /**
  * History page callback.
  */
 function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {
+
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
 
   // get list of paddocks in plan or all paddocks
   // looking back 1, 3, 5, 7, 9, all years

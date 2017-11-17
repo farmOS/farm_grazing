@@ -1,11 +1,12 @@
 <?php
 
-include_once "farm_grazing.utils.inc";
-
 /**
  * Paddock recovery page callback.
  */
 function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
+
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
 
   // Set the page title.
   drupal_set_title(t('Determine recovery periods'));

@@ -1,11 +1,12 @@
 <?php
 
-include_once "farm_grazing.utils.inc";
-
 /**
  * Paddock summary page callback
  */
 function farm_grazing_plan_summary_page($plan_obj) {
+
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
 
   // get the plan id from the plan object
   $plan = $plan_obj->id;

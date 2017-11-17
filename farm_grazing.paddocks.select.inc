@@ -1,11 +1,13 @@
 <?php
 
-include_once "farm_grazing.utils.inc";
-
 /**
  * Generate form with table of paddocks callback
  */
 function farm_grazing_select_paddocks_form($form, &$form_state, $plan_obj) {
+
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
+
   drupal_set_title(t('Select Paddocks'));
   $form['text'] = array(
     '#markup' => t('Select which paddocks you want available for use in this plan.'),
@@ -69,6 +71,9 @@ function farm_grazing_select_paddocks_form($form, &$form_state, $plan_obj) {
  * Process the select paddocks form on submit
  */
 function farm_grazing_select_paddocks_form_submit($form, &$form_state) {
+
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
 
   $plan = $form_state['values']['plan'];
 

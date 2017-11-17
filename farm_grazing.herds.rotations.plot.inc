@@ -1,7 +1,5 @@
 <?php
 
-include_once "farm_grazing.utils.inc";
-
 /**
  * Generate an image that plots a paddock rotation visualization.
  *
@@ -15,6 +13,10 @@ include_once "farm_grazing.utils.inc";
  * @returns an image showing rotation in calendar or calendar header image
  */
 function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) {
+
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
+
   // for debug output
   //$fp = fopen('php://stderr', 'a');
 
@@ -181,6 +183,10 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
  *   for the exclusion start date and end date or zero if before plan start
  */
 function get_paddock_exclusions($plan_id, $paddock_id) {
+
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
+
   // load the plan dates
   list($p_start, $p_end) = getFarmPlanDatesFromId($plan_id, 'Y-m-d');
 
@@ -228,6 +234,10 @@ function get_paddock_exclusions($plan_id, $paddock_id) {
  *   );
  */
 function get_paddock_recovery($plan_id, $paddock_id, $end_date) {
+
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
+
   // load the plan dates
   list($p_start, $p_end) = getFarmPlanDatesFromId($plan_id, 'Y-m-d');
   list($yr, $mon, $day) = explode('-', $end_date);

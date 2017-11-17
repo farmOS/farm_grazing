@@ -1,7 +1,5 @@
 <?php
 
-include_once "farm_grazing.utils.inc";
-
 /**
  * Paddock exclusions list, add, edit, delete form.
  */

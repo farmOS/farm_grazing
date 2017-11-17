@@ -1,11 +1,12 @@
 <?php
 
-include_once "farm_grazing.utils.inc";
-
 /**
  * Herd page callback.
  */
 function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
+
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
 
   // Page layout
   //   button to add a herd to plan
@@ -394,6 +395,9 @@ function farm_grazing_plan_herds_form_submit($form, &$form_state) {
  *
  */
 function farm_grazing_plan_herds_form_validate($form, &$form_state) {
+
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
 
   // debug output
   //$fp = fopen('php://stderr', 'a');

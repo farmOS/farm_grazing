@@ -1,11 +1,12 @@
 <?php
 
-include_once "farm_grazing.utils.inc";
-
 /**
  * Periods page callback.
  */
 function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
+
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
 
   $plan = $plan_obj->id;
   $wrapper = entity_metadata_wrapper('farm_plan', $plan);
@@ -326,6 +327,10 @@ function theme_farm_grazing_plan_rotations_form($variables) {
  * Rotations form submit.
  */
 function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
+
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
+
   // debug output
   //$fp = fopen('php://stderr', 'a');
   //fputs($fp, print_r($form_state['values'], true));
@@ -428,6 +433,9 @@ function farm_grazing_plan_rotation_add_validate($form, &$form_state) {
  * Rotation add submit function.
  */
 function farm_grazing_plan_rotation_add_submit($form, &$form_state) {
+
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
 
   $plan_id = $form_state['values']['plan'];
   $herd_id = $form_state['values']['add']['herd_id'];
