@@ -190,8 +190,6 @@ function farm_grazing_exclusions_edit_form($form, &$form_state, $exclusion_id) {
   $term = taxonomy_term_load($exclusion->paddock_id);
 
   // Format the start and end dates.
-  $format = 'Y-m-d';
-  $format = 'd-m-Y';
   $format = 'M j Y';
   $start_date = date('Y-m-d H:i:s', $exclusion->start_date);
   $end_date = date('Y-m-d H:i:s', $exclusion->end_date);

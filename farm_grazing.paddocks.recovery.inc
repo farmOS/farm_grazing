@@ -91,7 +91,6 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
   $date = $start_date;
   $minmin = 999999999;
   $maxmax = -999999999;
-  $rows = array();
   for ($i = 0; $i <= $num_months; $i++) {
     $key = $date->format('Ym');
     if (isset($minmax[$key])) {

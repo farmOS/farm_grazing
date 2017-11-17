@@ -573,7 +573,6 @@ function get_grazing_group_detailed_info($asset_id, &$data) {
  *  $summary = summarize_grazing_group_detailed_info($data);
  */
 function summarize_grazing_group_detailed_info(&$data) {
-  $summary = array();
   $sum_sau = 0;
   $sum_dmi = 0;
   $head_count = 0;
@@ -646,7 +645,6 @@ function farm_grazing_validate_herd($herd_id, $plan_id, &$data) {
     }
 
     //  if farm_grazing_planned_departure property is null set to plan end date
-    $departure = $animal['departure'];
     if (empty($animal['departure'])) {
       $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
       $ts = $wrapper->field_farm_date_range->value2->value();

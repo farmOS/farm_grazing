@@ -149,7 +149,6 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     $paddocks = $query->fetchAll();
     $rowcnt = $query->rowCount();
 
-    $rows = array();
     $arrival = getHerdEarliestArrival($rec->herd_id, $plan);
     $start_date = date_create_from_format('Y-m-d', $arrival);
     $i = 1;

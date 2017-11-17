@@ -14,15 +14,11 @@ function farm_grazing_plan_summary_page($plan_obj) {
 
   $num_rotations = $wrapper->field_expected_rotations->value();
   $grazing_growing_season = $wrapper->field_grazing_growing_season->value();
-  $farm_grazing_factors = $wrapper->field_farm_grazing_factors->value();
-  $days_bulk_feeding = $wrapper->field_days_bulk_feeding->value();
   $days_of_drought_reserve = $wrapper->field_days_of_drought_reserve->value();
 
   $start_ts = $wrapper->field_farm_date_range->value->value();
   $end_ts = $wrapper->field_farm_date_range->value2->value();
   $plan_days = floor(($end_ts - $start_ts) / 3600 / 24);
-
-  $expected_days_non_growth = $plan_days - $days_of_drought_reserve + $days_bulk_feeding;
 
   if ($grazing_growing_season) {
 
