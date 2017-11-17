@@ -136,14 +136,6 @@ function farm_grazing_plan_dashboard_form($form, &$form_state, $plan_obj) {
     );
   }
 
-  // TODO - Need to add management events and integrate with calendar
-  /*
-  $form['section_4']['text'] = array(
-    '#markup' => '<h2>' . t('Management Events') . '</h2>' .
-      '<p>' . t('Enter management events into the Calendar -- TODO') . '</p>',
-  );
-  */
-
   $form['concerns']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save Changes'),
