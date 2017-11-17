@@ -38,7 +38,7 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
   // get the number of paddocks in the plan
   $num_paddocks = getPaddockCountForPlan($plan);
 
-  $form['#tree'] = true;
+  $form['#tree'] = TRUE;
 
   $disabled = FALSE;
   // non-growing season here.

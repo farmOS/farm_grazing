@@ -365,7 +365,7 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
       return;
     }
     // build data as we are going to need it
-    $paddocks = getGrazingDaysForPlanId($plan_id, $d1, $d2, true);
+    $paddocks = getGrazingDaysForPlanId($plan_id, $d1, $d2, TRUE);
     $data = array();
     foreach ($paddocks as $p) {
       $data[$p[5]] = $p;

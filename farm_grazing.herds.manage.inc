@@ -32,7 +32,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   // Set the page title.
   drupal_set_title(t('Manage Herds for Plan'));
 
-  $form['#tree'] = true;
+  $form['#tree'] = TRUE;
 
   $form['plan'] = array(
     '#type' => 'value',

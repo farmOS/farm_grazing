@@ -92,7 +92,7 @@ function getHerdEarliestArrival($herd_id, $plan_id) {
 function getPaddockGrazingDays($duration, $paddock_id, $plan_id, $herd_id, &$cache, $mode = 0) {
   if ($cache == NULL) {
     // build the cache as we are going to need it
-    $paddocks = getGrazingDaysForPlanId($plan_id, $d1, $d2, true);
+    $paddocks = getGrazingDaysForPlanId($plan_id, $d1, $d2, TRUE);
     $cache = array();
     foreach ($paddocks as $p) {
       $cache[$p[5]] = $p;
@@ -576,8 +576,8 @@ function summarize_grazing_group_detailed_info(&$data) {
   $sum_sau = 0;
   $sum_dmi = 0;
   $head_count = 0;
-  $min_arrival = false;
-  $max_departure = false;
+  $min_arrival = FALSE;
+  $max_departure = FALSE;
 
   // summarize the data
   foreach ($data as $rec) {
@@ -586,10 +586,10 @@ function summarize_grazing_group_detailed_info(&$data) {
     $head_count = $head_count + $rec['head_count'];
 
     // date strings MUST be for as 'Y-m-d' ie: YYYY-MM-DD
-    if ($min_arrival === false or $rec['arrival'] < $min_arrival) {
+    if ($min_arrival === FALSE or $rec['arrival'] < $min_arrival) {
       $min_arrival = $rec['arrival'];
     }
-    if ($max_departure === false or $rec['departure'] > $max_departure) {
+    if ($max_departure === FALSE or $rec['departure'] > $max_departure) {
       $max_departure = $rec['departure'];
     }
   }

@@ -39,7 +39,7 @@ function farm_grazing_plan_summary_page($plan_obj) {
 
     $chk_min_recovery = -1;
     $chk_max_recovery = -1;
-    $paddocks = getGrazingDaysForPlanId($plan, $chk_min_recovery, $chk_max_recovery, false);
+    $paddocks = getGrazingDaysForPlanId($plan, $chk_min_recovery, $chk_max_recovery, FALSE);
 
     $table['rows'] = $paddocks;
 

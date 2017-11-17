@@ -14,7 +14,7 @@ function farm_grazing_plan_productivity_form($form, &$form_state, $plan_obj) {
   // get the plan id from the plan object
   $plan = $plan_obj->id;
 
-  $form['#tree'] = true;
+  $form['#tree'] = TRUE;
 
   // Return markup
   $form['text'] = array(
