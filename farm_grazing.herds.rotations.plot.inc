@@ -71,7 +71,6 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
   if (!$header) {
     $exclusions = get_paddock_exclusions($plan, $paddock_id);
     $recovery = get_paddock_recovery($plan, $paddock_id, $end_date);
-    $social = get_social_events($plan);
   }
 
   // Create a demo image.
@@ -82,15 +81,6 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
   imagefill($im, 0, 0, $white);
 
   if (!$header) {
-    // add social events
-    $purple = imagecolorallocate($im, 255, 0, 255);
-    foreach ($social as $event) {
-      $x1 = $event['sday'] * $day_width;
-      $y1 = 0;
-      $x2 = $event['eday'] * $day_width;
-      $y2 = $height;
-      imagefilledrectangle($im, $x1, $y1, $x2, $y2, $purple);
-    }
 
     // add exclusion periods
     $red = imagecolorallocate($im, 255, 0, 0);
@@ -263,20 +253,4 @@ function get_paddock_recovery($plan_id, $paddock_id, $end_date) {
   );
 
   return $results;
-}
-
-/**
- * get_social_events($plan_id)
- *
- *   $social = array(
- *     array(
- *       'sday' => (soc_start - plan_start) as days,
- *       'eday' => (soc_end   - plan_start) as days,
- *     ),
- *     ...
- *   );
- */
-function get_social_events($plan_id) {
-  // TODO update get_social_events() to include social events. query and return results
-  return array();
 }
