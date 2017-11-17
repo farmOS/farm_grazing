@@ -6,6 +6,57 @@
  */
 
 /**
+ * Implements hook_install().
+ */
+function farm_grazing_install() {
+
+  // Create an initial set of animal types.
+  $animal_types = array(
+    array(
+      'name' => 'Beef cattle, lactating',
+      'dmi_factor' => 2.25,
+    ),
+    array(
+      'name' => 'Beef cattle, growing and finishing, slaughter stock',
+      'dmi_factor' => 2.3,
+    ),
+    array(
+      'name' => 'Dairy steers',
+      'dmi_factor' => 2.3,
+    ),
+    array(
+      'name' => 'Dairy heifers',
+      'dmi_factor' => 2.5,
+    ),
+    array(
+      'name' => 'Dairy cows, dry (small or large breed)',
+      'dmi_factor' => 1.8,
+    ),
+    array(
+      'name' => 'Goats, weaned, slaughter or replacement stock',
+      'dmi_factor' => 2.25,
+    ),
+    array(
+      'name' => 'Goats, brood or lactating',
+      'dmi_factor' => 4.0,
+    ),
+    array(
+      'name' => 'Sheep, weaned, slaughter or replacement stock',
+      'dmi_factor' => 3.3,
+    ),
+    array(
+      'name' => 'Sheep, brood or lactating',
+      'dmi_factor' => 3.65,
+    ),
+  );
+  foreach ($animal_types as $type) {
+    db_insert('farm_grazing_animal_types')
+      ->fields($type)
+      -> execute();
+  }
+}
+
+/**
  * Implements hook_uninstall().
  */
 function farm_grazing_uninstall() {
