@@ -163,12 +163,12 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
 
   $form['summary']['min_grazing'] = array(
     '#prefix' => '<p>' . t('Est. Min. Grazing Period: '),
-    '#markup' => round($minmin/($num_paddocks-$herd_cnt), 1),
+    '#markup' => $min_grazing,
     '#suffix' => '</p>',
   );
   $form['summary']['max_grazing'] = array(
     '#prefix' => '<p>' . t('Est. Max. Grazing Period: '),
-    '#markup' => round($maxmax/($num_paddocks-$herd_cnt), 1),
+    '#markup' => $max_grazing,
     '#suffix' => '</p>',
   );
 
