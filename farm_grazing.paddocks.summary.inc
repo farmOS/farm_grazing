@@ -6,7 +6,7 @@ include_once "farm_grazing.utils.inc";
  * Paddock summary page callback
  */
 function farm_grazing_plan_summary_page($plan_obj) {
-  
+
   // get the plan id from the plan object
   $plan = $plan_obj->id;
   $wrapper = entity_metadata_wrapper('farm_plan', $plan);
@@ -19,7 +19,7 @@ function farm_grazing_plan_summary_page($plan_obj) {
 
   $start_ts = $wrapper->field_farm_date_range->value->value();
   $end_ts = $wrapper->field_farm_date_range->value2->value();
-  $plan_days = floor(($end_ts-$start_ts)/3600/24);
+  $plan_days = floor(($end_ts - $start_ts) / 3600 / 24);
 
   $expected_days_non_growth = $plan_days - $days_of_drought_reserve + $days_bulk_feeding;
 
@@ -39,7 +39,6 @@ function farm_grazing_plan_summary_page($plan_obj) {
       'rows' => array(),
       'empty' => t('No paddocks found.'),
     );
-
 
     $chk_min_recovery = -1;
     $chk_max_recovery = -1;
@@ -101,17 +100,16 @@ function farm_grazing_plan_summary_page($plan_obj) {
     $herd_size = getHerdSizeInSau($plan);
     $num_paddocks = getPaddockCountForPlan($plan);
     $tot_ads = empty($paddocks) ? 0 : $paddocks[$num_paddocks][3];
-    $avg_ads = $tot_ads/$num_paddocks;
+    $avg_ads = $tot_ads / $num_paddocks;
     $tot_grazing_days = $plan_days;
     $est_carrying_capacity = $tot_ads / $tot_grazing_days;
     $recovery_period = $tot_grazing_days / $num_rotations;
     $grazing_period = $recovery_period / $num_paddocks;
-    $drought_reserve_grazing_period = $days_of_drought_reserve /$num_paddocks;
+    $drought_reserve_grazing_period = $days_of_drought_reserve / $num_paddocks;
 
     if ($herd_size > $est_carrying_capacity) {
       drupal_set_message(t('Herd size is TOO BIG!'), 'error');
     }
-
 
     // markup
     $form['text'] = array(
@@ -184,7 +182,5 @@ function farm_grazing_plan_summary_page($plan_obj) {
 
   }
 
-
   return $form;
 }
-

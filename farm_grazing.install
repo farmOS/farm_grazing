@@ -52,7 +52,7 @@ function farm_grazing_install() {
   foreach ($animal_types as $type) {
     db_insert('farm_grazing_animal_types')
       ->fields($type)
-      -> execute();
+      ->execute();
   }
 }
 
@@ -320,5 +320,3 @@ function farm_grazing_schema() {
 
   return $schema;
 }
-
-

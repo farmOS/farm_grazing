@@ -55,7 +55,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
 
   $records = $query->fetchAll();
 
-  foreach($records as $record) {
+  foreach ($records as $record) {
     $herd_options[$record->id] = $record->name;
   }
 
@@ -141,7 +141,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
       ),
       'remove' => array(
         '#markup' => l(t('Remove'), 'farm/grazing/plan/' . $plan . '/herd/' . $record->herd_id . '/edit', array('query' => array('destination' => current_path()))),
-      )
+      ),
     );
   }
 
@@ -186,7 +186,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#maxlength' => 30,
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['sau'] = array(
-        '#markup' => round($rec['weight']/1000.0, 2),
+        '#markup' => round($rec['weight'] / 1000.0, 2),
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['dmi'] = array(
         '#markup' => round($rec['head_count'] * $rec['weight'] * $rec['dmi_factor'], 2),
@@ -207,7 +207,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#date_label_position' => 'none',
         '#default_value' => $rec['departure'],
       );
-    }   
+    }
   }
 
   $form['actions'] = array(
@@ -242,7 +242,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
 
   // generate the header text
   $helper = array();
-  for( $i = 0; $i <= $num_months; $i++ ) {
+  for ($i = 0; $i <= $num_months; $i++) {
     $key = $date->format('Ym');
     $helper[$key] = $i;
 
@@ -259,11 +259,11 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   foreach ($herd_details as $this_herd) {
     // initial row for this herd
     $row = array();
-    for( $i = 0; $i <= $num_plan_months; $i++ ) {
+    for ($i = 0; $i <= $num_plan_months; $i++) {
       $row[] = 0;
     }
     foreach ($this_herd['herd_data'] as $rec) {
-      $sau = $rec['head_count']*$rec['weight']/1000.0;
+      $sau = $rec['head_count'] * $rec['weight'] / 1000.0;
       $start_date = date_create_from_format('Y-m-d', $rec['arrival']);
       $end_date = date_create_from_format('Y-m-d', $rec['departure']);
 
@@ -279,7 +279,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
       $date->setDate($y, $m, 1);
 
       // sum up the sau by month
-      for( $i = 0; $i <= $num_months; $i++ ) {
+      for ($i = 0; $i <= $num_months; $i++) {
         $key = $date->format('Ym');
         if (isset($helper[$key])) {
           $row[$helper[$key]] = $row[$helper[$key]] + $sau;
@@ -297,11 +297,11 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   // sum the columns in each row to get totals
   $peak_sau = 0;
   $totals = array(t('Total SAU'));
-  for( $i = 0; $i <= $num_plan_months; $i++ ) {
+  for ($i = 0; $i <= $num_plan_months; $i++) {
     $sum = 0;
     foreach ($rows as $row) {
-      if (isset($row[$i+1])) {
-        $sum = $sum + $row[$i+1];
+      if (isset($row[$i + 1])) {
+        $sum = $sum + $row[$i + 1];
       }
     }
     $totals[] = $sum;
@@ -309,7 +309,10 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
       $peak_sau = $sum;
     }
   }
-  array_push($totals, -1); // push a dummay herd_id field
+
+  // Push a dummy herd_id field.
+  array_push($totals, -1);
+
   $rows[] = $totals;
 
   // Add table SAU by Plan Month for each herd
@@ -333,7 +336,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
 
   $paddocks_in_plan = get_selected_paddock_quality_for_plan($plan);
   $cell_size = 0;
-  foreach($paddocks_in_plan as $paddock_id => $quality) {
+  foreach ($paddocks_in_plan as $paddock_id => $quality) {
     $cell_size = $cell_size + farm_area_calculate_area($paddock_id);
   }
 
@@ -351,7 +354,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     $rate = '-';
   }
   else {
-    $rate = round($cell_size/$peak_sau, 1);
+    $rate = round($cell_size / $peak_sau, 1);
   }
   $form['section_4_stocking_rate'] = array(
     '#markup' => '<p>' . t('Stocking Rate: ') . $rate . '</p>',
@@ -433,8 +436,8 @@ function farm_grazing_plan_herd_edit_form($form, &$form_state, $plan_obj, $herd_
 
   $form['edit']['text'] = array(
     '#markup' => '<h2>' . t('Confirm that you want to remove ') .
-      '<b>' . $herd_name . '</b>' .
-      t(' from plan ') . '<b>' . $plan_name . '</b>.</h2>',
+    '<b>' . $herd_name . '</b>' .
+    t(' from plan ') . '<b>' . $plan_name . '</b>.</h2>',
   );
   $form['edit']['cancel'] = array(
     '#type' => 'submit',
@@ -529,7 +532,6 @@ function theme_farm_grazing_plan_herds_form(&$vars) {
   ));
 
   // render tables for herd details
-
   foreach (element_children($form['herd_details']) as $herd_id) {
     // render table titles
     $output .= drupal_render($form['herd_details'][$herd_id]['title']);
@@ -586,7 +588,7 @@ function theme_farm_grazing_plan_herds_form(&$vars) {
   foreach (element_children($form['section_3']['herds']) as $herd_id) {
     // assemble the table rows
     $data = array();
-  
+
     foreach (element_children($form['section_3']['herds'][$herd_id]) as $hdr) {
       $item =& $form['section_3']['herds'][$herd_id][$hdr];
 
@@ -601,7 +603,7 @@ function theme_farm_grazing_plan_herds_form(&$vars) {
 
       $data[] = drupal_render($item);
     }
-    $rows[] = array( 'data' => $data );
+    $rows[] = array('data' => $data);
     $first = FALSE;
   }
 

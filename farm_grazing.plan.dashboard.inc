@@ -18,8 +18,7 @@ function farm_grazing_plan_dashboard_form($form, &$form_state, $plan_obj) {
   $start_ts = $wrapper->field_farm_date_range->value->value();
   $end_ts = $wrapper->field_farm_date_range->value2->value();
 
-  $expected_days_non_growth = floor(($end_ts-$start_ts)/3600/24);
-
+  $expected_days_non_growth = floor(($end_ts - $start_ts) / 3600 / 24);
 
   //dpm('grazing_growing_season: ' . $grazing_growing_season);
   //kpr($farm_grazing_factors);
@@ -34,11 +33,11 @@ function farm_grazing_plan_dashboard_form($form, &$form_state, $plan_obj) {
     '#value' => $plan,
   );
 
-  if (! $grazing_growing_season) {
-      $form['non_growing'] = array(
-        '#type' => 'value',
-        '#value' => ! $grazing_growing_season,
-      );
+  if (!$grazing_growing_season) {
+    $form['non_growing'] = array(
+      '#type' => 'value',
+      '#value' => !$grazing_growing_season,
+    );
   }
 
   $form['spacer_1'] = array(
@@ -86,21 +85,23 @@ function farm_grazing_plan_dashboard_form($form, &$form_state, $plan_obj) {
     '#weight' => 110,
   );
 
-  $form['concerns']['section_1']['text'] =  array(
-    '#markup' => // '<h2>Management concerns</h2>' .
-      '<p>' . t('In this section, think about various factors that influence your calendar for the plan. Consider:') . '</p>' .
-      '<ul>' .
-          '<li>' . t('Livestock events like birthing, breeding, weaning, etc and when these are planned.') .
-          '<li>' . t('Management events such as vacations, family or community events that need to be planned around.') .
-          '<li>' . t('Other specific events like hunting seasons, parasites, or flooding that might influence the sequence of paddock moves.') .
-          '<li>' . t('Enter these concerns below. You will want to add to this and review it as you are doing your planning and planning the herd rotations.') .
-      '</ul>');
+  $form['concerns']['section_1']['text'] = array(
+  // '<h2>Management concerns</h2>' .
+    '#markup' =>
+    '<p>' . t('In this section, think about various factors that influence your calendar for the plan. Consider:') . '</p>' .
+    '<ul>' .
+    '<li>' . t('Livestock events like birthing, breeding, weaning, etc and when these are planned.') .
+    '<li>' . t('Management events such as vacations, family or community events that need to be planned around.') .
+    '<li>' . t('Other specific events like hunting seasons, parasites, or flooding that might influence the sequence of paddock moves.') .
+    '<li>' . t('Enter these concerns below. You will want to add to this and review it as you are doing your planning and planning the herd rotations.') .
+    '</ul>',
+  );
 
   $form['concerns']['section_2']['factors'] = array(
-      '#title' => t('Planning factors'),
-      '#type' => 'textarea',
-      '#description' => t('Enter your planning factors here'),
-      '#default_value' => $farm_grazing_factors['value'],
+    '#title' => t('Planning factors'),
+    '#type' => 'textarea',
+    '#description' => t('Enter your planning factors here'),
+    '#default_value' => $farm_grazing_factors['value'],
   );
 
   $form['concerns']['factors_format'] = array(
@@ -108,7 +109,7 @@ function farm_grazing_plan_dashboard_form($form, &$form_state, $plan_obj) {
     '#value' => $farm_grazing_factors['format'],
   );
 
-  if (! $grazing_growing_season) {
+  if (!$grazing_growing_season) {
     $form['concerns']['non_growing'] = array(
       '#type' => 'fieldset',
       '#title' => t('Non-growing plan variables'),
@@ -143,7 +144,6 @@ function farm_grazing_plan_dashboard_form($form, &$form_state, $plan_obj) {
   }
 
   // TODO - Need to add management events and integrate with calendar
-
   /*
   $form['section_4']['text'] = array(
     '#markup' => '<h2>' . t('Management Events') . '</h2>' .
@@ -168,52 +168,52 @@ function farm_grazing_plan_dashboard_form($form, &$form_state, $plan_obj) {
   );
   $form['implement']['content'] = array(
     '#type' => 'markup',
-    '#markup' => '<h4>' .t('Recheck your plan') . '</h4>' .
-      '<p>' . t('Review your plan regularly, print out reports, check that the plan is on track and make adjustments as needed.') . '</p>' .
-      '<h4>' . t('Monitor Your Paddocks') . '</h4>' .
-      '<p>' . t('Monitor the growth and recovery of your paddocks. Also assess the quality of the paddock you are moving the herd to and record it as a monitor event here.') . '</p>' .
-      '<ul>' .
-      '<li><a href="' . base_path() . 'farm/assets/groups">' . t('Herd movement ') . '</a></li>' .
-      '<ul>' .
-      '<li>' . t('Click Herd movements link above') . '</li>' .
-      '<li>' . t('Select a herd to move') . '</li>' .
-      '<li>' . t('Click Add activity') . '</li>' .
-      '<li>' . t('Click Movements') . '</li>' .
-      '<li>' . t('Select paddock for "Movement to"') . '</li>' .
-      '<li>' . t('Click "Save Log"') . '</li>' .
-      '</ul>' .
-      '<li><a href="' . base_path() . 'farm/area">' . t('Observations on paddock leaving') . '</a></li>' .
-      '<ul><ul>' .
-      '<li>' . t('Select paddock you are making an observation of') . '</li>' .
-      '<li>' . t('Click "Add Observation"') . '</li>' .
-      '<li>' . t('Use "General" for errors or general text comments') . '</li>'
-.
-      '<li>' . t('Use "Quantity"->"Add another item" to add quantity observations') . '</li>' .
-      '</ul></ul>' .
-      '<ul>' .
-      '<li>' . t('Residual feed left on the paddock') . '</li>' .
-      '<li>' . t('The current growth rate on the paddock') . '</li>' .
-      '<li>' . t('Was a serious error made on the paddock') . '</li>' .
-      '<li>' . t('Soil moisture') . '</li>' .
-      '</ul>' .
-      '<li><a href="' . base_path() . 'farm/area">' . t('Observations on paddock entering') . '</a></li>' .
-      '<ul><ul>' .
-      '<li>' . t('Select paddock you are making an observation of') . '</li>' .
-      '<li>' . t('Click "Add Observation"') . '</li>' .
-      '<li>' . t('Use "General" for errors or general text comments') . '</li>' .
-      '<li>' . t('Use "Quantity"->"Add another item" to add quantity observations') . '</li>' .
-      '</ul></ul>' .
-      '<ul>' .
-      '<li>' . t('Quality of paddock') . '</li>' .
-      '<li>' . t('Estimate of feed on paddock') . '</li>' .
-      '<li>' . t('Soil moisture') . '</li>' .
-      '</ul>' .
-      '</ul>' .
-      '<h4>' . t('How to Replan if Needed') . '</h4>' .
-      '<p>' . t('You can make changes to your plan at any time. Actual events obviously can not be changed, but you can replan future events. There are two approaches to replanning.') . '<ol>' .
-      '<li>' . t('is to just update the current plan for minor changes') . '</li>' .
-      '<li>' . t('another is to create a new plan, for major changes, based on the remaining days and abandon the old plan for now.') . '</li>' .
-      '<p>' . t('The advantage to making a new plan is that you can keep the original plan around for archival purposes and look at it in the future to re-assess assumptions or conditions that changed and forced the replan. On the new plan, you might need to sell stock to reduce the requirements for intake if you are in a drought or had a fire that burnt through some padocks or add more paddocks that you had not planned to use in the original plan. If you only need to make minor changes then use your existing plan, otherwise start a new plan.') . '</p>',
+    '#markup' => '<h4>' . t('Recheck your plan') . '</h4>' .
+    '<p>' . t('Review your plan regularly, print out reports, check that the plan is on track and make adjustments as needed.') . '</p>' .
+    '<h4>' . t('Monitor Your Paddocks') . '</h4>' .
+    '<p>' . t('Monitor the growth and recovery of your paddocks. Also assess the quality of the paddock you are moving the herd to and record it as a monitor event here.') . '</p>' .
+    '<ul>' .
+    '<li><a href="' . base_path() . 'farm/assets/groups">' . t('Herd movement ') . '</a></li>' .
+    '<ul>' .
+    '<li>' . t('Click Herd movements link above') . '</li>' .
+    '<li>' . t('Select a herd to move') . '</li>' .
+    '<li>' . t('Click Add activity') . '</li>' .
+    '<li>' . t('Click Movements') . '</li>' .
+    '<li>' . t('Select paddock for "Movement to"') . '</li>' .
+    '<li>' . t('Click "Save Log"') . '</li>' .
+    '</ul>' .
+    '<li><a href="' . base_path() . 'farm/area">' . t('Observations on paddock leaving') . '</a></li>' .
+    '<ul><ul>' .
+    '<li>' . t('Select paddock you are making an observation of') . '</li>' .
+    '<li>' . t('Click "Add Observation"') . '</li>' .
+    '<li>' . t('Use "General" for errors or general text comments') . '</li>'
+    .
+    '<li>' . t('Use "Quantity"->"Add another item" to add quantity observations') . '</li>' .
+    '</ul></ul>' .
+    '<ul>' .
+    '<li>' . t('Residual feed left on the paddock') . '</li>' .
+    '<li>' . t('The current growth rate on the paddock') . '</li>' .
+    '<li>' . t('Was a serious error made on the paddock') . '</li>' .
+    '<li>' . t('Soil moisture') . '</li>' .
+    '</ul>' .
+    '<li><a href="' . base_path() . 'farm/area">' . t('Observations on paddock entering') . '</a></li>' .
+    '<ul><ul>' .
+    '<li>' . t('Select paddock you are making an observation of') . '</li>' .
+    '<li>' . t('Click "Add Observation"') . '</li>' .
+    '<li>' . t('Use "General" for errors or general text comments') . '</li>' .
+    '<li>' . t('Use "Quantity"->"Add another item" to add quantity observations') . '</li>' .
+    '</ul></ul>' .
+    '<ul>' .
+    '<li>' . t('Quality of paddock') . '</li>' .
+    '<li>' . t('Estimate of feed on paddock') . '</li>' .
+    '<li>' . t('Soil moisture') . '</li>' .
+    '</ul>' .
+    '</ul>' .
+    '<h4>' . t('How to Replan if Needed') . '</h4>' .
+    '<p>' . t('You can make changes to your plan at any time. Actual events obviously can not be changed, but you can replan future events. There are two approaches to replanning.') . '<ol>' .
+    '<li>' . t('is to just update the current plan for minor changes') . '</li>' .
+    '<li>' . t('another is to create a new plan, for major changes, based on the remaining days and abandon the old plan for now.') . '</li>' .
+    '<p>' . t('The advantage to making a new plan is that you can keep the original plan around for archival purposes and look at it in the future to re-assess assumptions or conditions that changed and forced the replan. On the new plan, you might need to sell stock to reduce the requirements for intake if you are in a drought or had a fire that burnt through some padocks or add more paddocks that you had not planned to use in the original plan. If you only need to make minor changes then use your existing plan, otherwise start a new plan.') . '</p>',
   );
 
   return $form;
@@ -249,7 +249,6 @@ function theme_farm_grazing_plan_dashboard_form($variables) {
   return $output;
 }
 
-
 /**
  * farm_grazing_plan_dashboard_form_validate
  *
@@ -268,15 +267,15 @@ function farm_grazing_plan_dashboard_form_validate($form, &$form_state) {
     return;
   }
 
-  if (! is_numeric($form_state['input']['days_bulk_feeding']) or
+  if (!is_numeric($form_state['input']['days_bulk_feeding']) or
       $form_state['input']['days_bulk_feeding'] < 0) {
     form_set_error('days_bulk_feeding', t('Days bulk feeding must be numeric >= 0'));
   }
-  if (! is_numeric($form_state['input']['days_of_drought_reserve']) or
+  if (!is_numeric($form_state['input']['days_of_drought_reserve']) or
       $form_state['input']['days_of_drought_reserve'] < 0) {
     form_set_error('days_of_drought_reserve', t('Days of drought reserve required must be numeric >= 0'));
   }
-  if (! is_numeric($form_state['input']['expected_rotations']) or
+  if (!is_numeric($form_state['input']['expected_rotations']) or
       $form_state['input']['expected_rotations'] < 0) {
     form_set_error('expected_rotations', t('Number of planned rotations must be numeric >= 0'));
   }

@@ -23,7 +23,6 @@ function farm_grazing_select_paddocks_form($form, &$form_state, $plan_obj) {
     }
 
     //$term = taxonomy_term_load($paddock->tid);
-
     $data[$paddock->tid] = array(
       $paddock->name,
       farm_area_calculate_area($paddock->tid),
@@ -40,8 +39,8 @@ function farm_grazing_select_paddocks_form($form, &$form_state, $plan_obj) {
   }
 
   $header = array(
-      t('Name'),
-      t('Area'),
+    t('Name'),
+    t('Area'),
   );
 
   $form['checkboxes'] = array(
@@ -86,15 +85,15 @@ function farm_grazing_select_paddocks_form_submit($form, &$form_state) {
       continue;
     }
     db_insert('farm_grazing_plan_paddock')
-    ->fields(array(
-      'paddock_id' => $key,
-      'plan_id' => $plan,
-    ))
-    ->execute();
+      ->fields(array(
+        'paddock_id' => $key,
+        'plan_id' => $plan,
+      ))
+      ->execute();
   }
 
   // next delete records that exist but are no longer selected
-  foreach($old_selected as $key) {
+  foreach ($old_selected as $key) {
     // if an existing db record is in the incoming selections
     // we have nothing to do
     // otherwise we should delete it
@@ -107,4 +106,3 @@ function farm_grazing_select_paddocks_form_submit($form, &$form_state) {
       ->execute();
   }
 }
-

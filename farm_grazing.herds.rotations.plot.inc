@@ -6,10 +6,12 @@ include_once "farm_grazing.utils.inc";
  * Generate an image that plots a paddock rotation visualization.
  *
  * Parameters from URL
+ *
  * @param plan_obj   - drupal plan object
  * @param paddock_id - int, paddock id for this plan
  * @param start_date - string YYYY-MM-DD, start of paddock grazing
  * @param end_date   - string YYYY-MM-DD, end of paddock grazing
+ *
  * @returns an image showing rotation in calendar or calendar header image
  */
 function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) {
@@ -29,9 +31,9 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
   // if paddock_id, start_date and end_date == 0 then generate the header image
   // If any of the arguments are empty, bail with a 404 not found.
   if (isset($plan) &&
-      isset($paddock_id) && $paddock_id==0 &&
-      isset($start_date) && $start_date==0 &&
-      isset($end_date)   && $end_date==0) {
+      isset($paddock_id) && $paddock_id == 0 &&
+      isset($start_date) && $start_date == 0 &&
+      isset($end_date)   && $end_date == 0) {
     // generate header image
     $header = 1;
   }
@@ -41,8 +43,8 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
   }
 
   // set image width and height
-  $width =  550;
-  $height =  16;
+  $width = 550;
+  $height = 16;
 
   // get the start date month and year
   $plan_start = new DateTime();
@@ -71,7 +73,7 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
   $day_width = round($width / ($plan_days + 1));
   $width = $plan_days * $day_width;
 
-  if (! $header) {
+  if (!$header) {
     $exclusions = get_paddock_exclusions($plan, $paddock_id);
     $recovery = get_paddock_recovery($plan, $paddock_id, $end_date);
     $social = get_social_events($plan);
@@ -84,7 +86,7 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
   $white = imagecolorallocate($im, 255, 255, 255);
   imagefill($im, 0, 0, $white);
 
-  if (! $header) {
+  if (!$header) {
     // add social events
     $purple = imagecolorallocate($im, 255, 0, 255);
     foreach ($social as $event) {
@@ -101,7 +103,7 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
       $x1 = $event['sday'] * $day_width;
       $y1 = 3;
       $x2 = $event['eday'] * $day_width;
-      $y2 = $height-3;
+      $y2 = $height - 3;
       imagefilledrectangle($im, $x1, $y1, $x2, $y2, $red);
     }
 
@@ -111,7 +113,7 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
       $x1 = $event['sday'] * $day_width;
       $y1 = 5;
       $x2 = $event['eday'] * $day_width;
-      $y2 = $height-5;
+      $y2 = $height - 5;
       imagefilledrectangle($im, $x1, $y1, $x2, $y2, $orange);
     }
 
@@ -120,7 +122,7 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
     $x1 = $days_to_start * $day_width;
     $y1 = 6;
     $x2 = $days_to_end * $day_width;
-    $y2 = $height-6;
+    $y2 = $height - 6;
     imagefilledrectangle($im, $x1, $y1, $x2, $y2, $green);
   }
 
@@ -128,22 +130,25 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
 
   // draw the month boundaries
   $months = array(t('Jan'), t('Feb'), t('Mar'), t('Apr'), t('May'), t('Jun'),
-    t('Jul'), t('Aug'), t('Sep'), t('Oct'), t('Nov'), t('Dec'));
+    t('Jul'), t('Aug'), t('Sep'), t('Oct'), t('Nov'), t('Dec'),
+  );
 
   $days = daysAvailableByMonth($plan_start, $plan_end, $plan_start, $plan_end);
 
   list($y, $m, $d) = explode('-', $plan_start);
   $sum = 0;
   foreach ($days as $num) {
-    if ($num == 0) continue;
+    if ($num == 0) {
+      continue;
+    }
     $sum += $num;
     $x1 = $sum * $day_width;
     $y1 = 0;
     $x2 = $x1;
     $y2 = $height;
-    imageline($im,  $x1, $y1, $x2, $y2, $black);
+    imageline($im, $x1, $y1, $x2, $y2, $black);
     if ($header) {
-      imagestring($im, 2, $x1+10, $y1+3, $months[$m%12], $black);
+      imagestring($im, 2, $x1 + 10, $y1 + 3, $months[$m % 12], $black);
     }
     $m++;
   }
@@ -171,6 +176,7 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
  *
  * @param plan_id int
  * @param paddock_id int
+ *
  * @return array where sday and eday are the number of days from start of plan
  *   for the exclusion start date and end date or zero if before plan start
  */
@@ -230,12 +236,12 @@ function get_paddock_recovery($plan_id, $paddock_id, $end_date) {
   $grazing_growing_season = $wrapper->field_grazing_growing_season->value();
 
   if ($grazing_growing_season) {
-    $recovery = db_query('SELECT (min_recovery+max_recovery)/2.0 AS avg_recovery FROM {farm_grazing_plan_recovery} WHERE plan_id=:plan_id AND month=:month', array(':plan_id' => $plan_id, ':month' => $yr.$mon))->fetchField();
+    $recovery = db_query('SELECT (min_recovery+max_recovery)/2.0 AS avg_recovery FROM {farm_grazing_plan_recovery} WHERE plan_id=:plan_id AND month=:month', array(':plan_id' => $plan_id, ':month' => $yr . $mon))->fetchField();
   }
   else {
     $start_ts = $wrapper->field_farm_date_range->value->value();
     $end_ts = $wrapper->field_farm_date_range->value2->value();
-    $plan_days = floor(($end_ts-$start_ts)/3600/24);
+    $plan_days = floor(($end_ts - $start_ts) / 3600 / 24);
 
     $expected_rotations = $wrapper->field_expected_rotations->value();
     $recovery = $plan_days / $expected_rotations;
@@ -272,4 +278,3 @@ function get_social_events($plan_id) {
   // TODO update get_social_events() to include social events. query and return results
   return array();
 }
-

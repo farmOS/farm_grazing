@@ -6,7 +6,7 @@ include_once "farm_grazing.utils.inc";
  * Set paddock productivity form callback
  */
 function farm_grazing_plan_productivity_form($form, &$form_state, $plan_obj) {
-  
+
   // Set the page title
   drupal_set_title(t('Rate Paddock Productivity'));
 
@@ -113,12 +113,11 @@ function farm_grazing_plan_productivity_form_validate($form, &$form_state) {
   //fputs($fp, print_r($form_state['input'], true));
 
   foreach ($form_state['input']['paddocks'] as $id => $val) {
-    if (! is_numeric($val['quality']) or $val['quality'] < 0.0) {
+    if (!is_numeric($val['quality']) or $val['quality'] < 0.0) {
       form_set_error('quality', t('Forage Quality must be numeric >= 0.0'));
     }
   }
 }
-
 
 /**
  * Process the paddock productivity form on submit
@@ -166,7 +165,5 @@ function theme_farm_grazing_paddocks_productivity(&$vars) {
     'header' => $header,
     'rows' => $rows,
     'submit' => render($form['submit']),
-    )
-  );
+  ));
 }
-

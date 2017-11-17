@@ -31,7 +31,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
   $herd_records = $query->fetchAll();
 
   // Get a list of all paddocks associated with this plan.
-  $query = db_query('SELECT p.*, t.name FROM {farm_grazing_plan_paddock} p LEFT JOIN taxonomy_term_data t ON p.paddock_id=t.tid WHERE plan_id=:plan_id ORDER BY t.name', array(':plan_id'=>$plan));
+  $query = db_query('SELECT p.*, t.name FROM {farm_grazing_plan_paddock} p LEFT JOIN taxonomy_term_data t ON p.paddock_id=t.tid WHERE plan_id=:plan_id ORDER BY t.name', array(':plan_id' => $plan));
   $paddock_records = $query->fetchAll();
 
   // Create an array of herd options for the select list.
@@ -117,7 +117,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     // get non-growing season grazing days and cache it here
     $ng_pad = getNonGrowingSummaryForPlanId($plan, 1);
     $ng_grazing = array();
-    for ($i=0; $i<count($ng_pad)-2; $i++) {
+    for ($i = 0; $i < count($ng_pad) - 2; $i++) {
       $ng_grazing[$ng_pad[$i][11]] = $ng_pad[$i][4];
     }
     //kpr($ng_pad);
@@ -170,7 +170,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
         ),
         'grazing_days' => array(
           '#type' => 'textfield',
-          '#default_value' => round($grazing_days,1),
+          '#default_value' => round($grazing_days, 1),
           '#size' => 10,
           '#maxlength' => 10,
         ),
@@ -185,9 +185,9 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
           '#disabled' => TRUE,
         ),
         'image' => array(
-          '#markup' => '<img src="' . base_path() . 'farm/grazing/plan/' .  $plan .
-            '/plot/' . $pad->paddock_id . '/' . $start_str . '/' . $end_str .
-            '">',
+          '#markup' => '<img src="' . base_path() . 'farm/grazing/plan/' . $plan .
+          '/plot/' . $pad->paddock_id . '/' . $start_str . '/' . $end_str .
+          '">',
         ),
         'log_id' => array(
           '#type' => 'value',
@@ -204,13 +204,12 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
           ),
         ),
       );
-      if (! $grazing_growing_season) {
+      if (!$grazing_growing_season) {
         $form['herds'][$rec->herd_id]['rotations'][$pad->id]['grazing_days']['#disabled'] = TRUE;
       }
       $start_date = $end_date;
       $i++;
     }
-
   } // end foreach herd
 
   // Now we add our submit button, for submitting the form results.
@@ -296,7 +295,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
       t('Grazing Days'),
       t('Start Date'),
       t('End Date'),
-      '<img src="' . base_path() . 'farm/grazing/plan/'.$plan.'/plot/0/0/0">',
+      '<img src="' . base_path() . 'farm/grazing/plan/' . $plan . '/plot/0/0/0">',
       t('Movement Log'),
       t('Movement Done'),
       t('Remove'),
@@ -401,7 +400,7 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
         ->fields(array(
           'duration' => $days,
           'start_date' => $start_date,
-          ))
+        ))
         ->condition('id', $rec->id)
         ->execute();
 
@@ -547,7 +546,8 @@ function farm_grazing_plan_rotation_delete_form_submit($form, &$form_state) {
   $rec_delete = $result->fetchAssoc();
   $plan_id = $rec_delete['plan_id'];
   $herd_id = $rec_delete['herd_id'];
-  $duration = $rec_delete['duration'] * 24 * 3600; // in seconds
+  // In seconds.
+  $duration = $rec_delete['duration'] * 24 * 3600;
   $start_date = $rec_delete['start_date'];
 
   // Delete the rotation record.
@@ -561,7 +561,7 @@ function farm_grazing_plan_rotation_delete_form_submit($form, &$form_state) {
     //   set the start_date = start_date - duration
     //   update database
     db_update('farm_grazing_rotations')
-      ->expression('start_date', 'start_date - :duration', array( ':duration' => $duration))
+      ->expression('start_date', 'start_date - :duration', array(':duration' => $duration))
       ->condition('id', $rec->id)
       ->execute();
 

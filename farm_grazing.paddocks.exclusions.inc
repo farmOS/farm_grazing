@@ -153,6 +153,7 @@ function farm_grazing_exclusions_form_submit($form, &$form_state) {
       // Update existing record
       drupal_write_record('farm_grazing_paddock_exclusions', $record, 'id');
       break;
+
     case 'edit-delete':
       // Delete an existing record
       db_delete('farm_grazing_paddock_exclusions')
@@ -167,7 +168,7 @@ function farm_grazing_exclusions_form_submit($form, &$form_state) {
  * Edit/Delete exclusion form callback
  */
 function farm_grazing_exclusions_edit_form($form, &$form_state, $exclusion_id) {
-  
+
   // Set page Title
   drupal_set_title(t('Edit or Delete Exclusion'));
 
@@ -249,6 +250,4 @@ function farm_grazing_exclusions_edit_form($form, &$form_state, $exclusion_id) {
 
   // Return the form.
   return $form;
-
 }
-

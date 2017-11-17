@@ -5,7 +5,7 @@ include_once "farm_grazing.utils.inc";
 /**
  * History page callback.
  */
-function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
+function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {
 
   // get list of paddocks in plan or all paddocks
   // looking back 1, 3, 5, 7, 9, all years
@@ -127,7 +127,7 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
 
       // create array to hold our data
       //    [name, 12 months, total, last grazed]
-      $row = array($paddock->name,0,0,0,0,0,0,0,0,0,0,0,0,0,'');
+      $row = array($paddock->name, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '');
 
       $date_last_grazed = 0;
 
@@ -158,7 +158,6 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj=null) {
 
           // Calculate the number of days that the asset was in the paddock
           // for each month during the specified time span.
-
           // threshold is the number of days overlap in the month
           // for the month to be counted.
           $threshold = 15;
@@ -221,4 +220,3 @@ function farm_grazing_plan_history_form_submit($form, &$form_state) {
 function farm_grazing_plan_history_form_ajax($form, $form_state) {
   return $form['section_table'];
 }
-
