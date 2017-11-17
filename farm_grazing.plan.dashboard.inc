@@ -289,8 +289,8 @@ function farm_grazing_plan_dashboard_form_validate($form, &$form_state) {
  */
 function farm_grazing_plan_dashboard_form_submit($form, &$form_state) {
   // debug output
-  $fp = fopen('php://stderr', 'a');
-  fputs($fp, print_r($form_state['values'], true));
+  //$fp = fopen('php://stderr', 'a');
+  //fputs($fp, print_r($form_state['values'], true));
 
   $wrapper = entity_metadata_wrapper('farm_plan', $form_state['values']['plan']);
 
