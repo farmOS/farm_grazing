@@ -114,9 +114,6 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
       'summary' => $summary,
     );
 
-    //$format = 'Y-m-d';
-    //$arrival_date = date($format, $herd['arrival']);
-    //$departure_date = date($format, $herd['departure']);
     $arrival_date = $summary['arrival'];
     $departure_date = $summary['departure'];
 
@@ -147,9 +144,6 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   }
 
   // --------- Add table of herd details for each herd -----------------
-
-  // ['herd_details'][herd_id]['title']
-  // ['herd_details'][herd_id]['animals'][asset_id][fields]
 
   $animal_types = farm_grazing_animal_types();
   $type_options = array();
@@ -239,7 +233,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   $num_months = $diff->y * 12 + $diff->m;
   $date = $start_date;
 
-  $header = array('Herd');  // don't t() this, it gets done in theme_
+  $header = array('Herd');
 
   // generate the header text
   $helper = array();
@@ -372,10 +366,6 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
  */
 function farm_grazing_plan_herds_form_submit($form, &$form_state) {
 
-  // debug output
-  //$fp = fopen('php://stderr', 'a');
-  //fputs($fp, print_r($form_state['values'], true));
-
   $plan_id = $form_state['values']['plan'];
   $herd_id = $form_state['values']['add']['herd_id'];
 
@@ -398,11 +388,6 @@ function farm_grazing_plan_herds_form_validate($form, &$form_state) {
 
   // Load utility functions.
   module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
-
-  // debug output
-  //$fp = fopen('php://stderr', 'a');
-  //fputs($fp, print_r($form_state['values'], true));
-  //fputs($fp, print_r($form_state['input'], true));
 
   $plan_id = $form_state['values']['plan'];
   $herd_id = $form_state['input']['add']['herd_id'];
@@ -465,10 +450,6 @@ function farm_grazing_plan_herd_edit_form($form, &$form_state, $plan_obj, $herd_
  */
 function farm_grazing_herd_edit_form_submit($form, &$form_state) {
 
-  // debug output
-  //$fp = fopen('php://stderr', 'a');
-  //fputs($fp, print_r($form_state, true));
-
   $plan_id = $form_state['values']['plan_id'];
   $herd_id = $form_state['values']['herd_id'];
 
@@ -491,11 +472,6 @@ function farm_grazing_herd_edit_form_submit($form, &$form_state) {
  */
 function theme_farm_grazing_plan_herds_form(&$vars) {
   $form = $vars['form'];
-
-  // debug to see if theme_* is getting called
-  //$fp = fopen('php://stderr', 'a');
-  //fputs($fp, "Hello\n");
-
 
   $output = drupal_render($form['plan']);
   $output .= drupal_render($form['text']);

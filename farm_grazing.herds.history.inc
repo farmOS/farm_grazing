@@ -69,7 +69,6 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {
   $form['select']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Update Page'),
-    //'#submit' => array('farm_grazing_plan_history_form'),
     '#ajax' => array(
       'wrapper' => 'farm-grazing-history',
       'callback' => 'farm_grazing_plan_history_form_ajax',
@@ -120,9 +119,6 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {
       $paddocks = taxonomy_term_load_multiple($paddock_ids);
     }
 
-    // debug output
-    //$fp = fopen('php://stderr', 'a');
-
     // Iterate through the paddocks.
     foreach ($paddocks as $paddock) {
 
@@ -163,17 +159,6 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {
           // for the month to be counted.
           $threshold = 15;
           countMonths($arrival, $departure, $row, $threshold);
-
-          // debug output
-          //fputs($fp, print_r(array(
-          //  'asset_id' => $asset_id,
-          //  'paddock' => $paddock->name,
-          //  'event_name' => $movement['arrive']->name,
-          //  'arrival' => $arrival,
-          //  'departure' => $departure,
-          //  'log_depart' => $movement['depart']->timestamp,
-          //  ), true)
-          //);
 
           // get date last grazed
           if ($departure > $date_last_grazed) {

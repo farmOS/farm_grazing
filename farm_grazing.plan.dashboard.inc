@@ -20,13 +20,6 @@ function farm_grazing_plan_dashboard_form($form, &$form_state, $plan_obj) {
 
   $expected_days_non_growth = floor(($end_ts - $start_ts) / 3600 / 24);
 
-  //dpm('grazing_growing_season: ' . $grazing_growing_season);
-  //kpr($farm_grazing_factors);
-  //dpm('farm_grazing_factors: ' . $farm_grazing_factors['value']);
-  //dpm('days_bulk_feeding: ' . $days_bulk_feeding);
-  //dpm('days_of_drought_reserve: ' . $days_of_drought_reserve);
-  //dpm('expected_days_non_growth: ' . $expected_days_non_growth);
-  //dpm('expected_rotations: ' . $expected_rotations);
 
   $form['plan'] = array(
     '#type' => 'value',
@@ -225,14 +218,9 @@ function farm_grazing_plan_dashboard_form($form, &$form_state, $plan_obj) {
  * theme handler for farm_grazing_plan_dashboard_form
  */
 function theme_farm_grazing_plan_dashboard_form($variables) {
-  // debug output
-  //$fp = fopen('php://stderr', 'a');
-  //fputs($fp, print_r($variables, true));
-
   $form = &$variables['form'];
   $plan = $form['plan']['#value'];
-  //$growing_season = $form['growing_season']['#value'];
-
+  // $growing_season = $form['growing_season']['#value'];.
   $output = drupal_render($form['plan']);
   $output .= drupal_render($form['spacer_1']);
   $output .= drupal_render($form['introduction']);
@@ -255,10 +243,6 @@ function theme_farm_grazing_plan_dashboard_form($variables) {
  * validate handler for farm_grazing_plan_dashboard_form
  */
 function farm_grazing_plan_dashboard_form_validate($form, &$form_state) {
-  // debug output
-  //$fp = fopen('php://stderr', 'a');
-  //fputs($fp, print_r($form_state['input'], true));
-
   // Load the plan object into an EntityMetadataWrapper.
   $wrapper = entity_metadata_wrapper('farm_plan', $form_state['values']['plan']);
 
@@ -287,10 +271,6 @@ function farm_grazing_plan_dashboard_form_validate($form, &$form_state) {
  * submit handler for farm_grazing_plan_dashboard_form
  */
 function farm_grazing_plan_dashboard_form_submit($form, &$form_state) {
-  // debug output
-  //$fp = fopen('php://stderr', 'a');
-  //fputs($fp, print_r($form_state['values'], true));
-
   $wrapper = entity_metadata_wrapper('farm_plan', $form_state['values']['plan']);
 
   if (isset($form_state['values']['factors'])) {

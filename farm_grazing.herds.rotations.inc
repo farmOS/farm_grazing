@@ -121,8 +121,6 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     for ($i = 0; $i < count($ng_pad) - 2; $i++) {
       $ng_grazing[$ng_pad[$i][11]] = $ng_pad[$i][4];
     }
-    //kpr($ng_pad);
-    //kpr($ng_grazing);
   }
 
   // build sections for each herds associated with this plan
@@ -219,16 +217,11 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save Changes'));
 
-  //kpr($form);
-
   // Return markup.
   return $form;
 }
 
 function theme_farm_grazing_plan_rotations_form($variables) {
-  // debug output
-  //$fp = fopen('php://stderr', 'a');
-  //fputs($fp, print_r($variables, true));
 
   $form =& $variables['form'];
 
@@ -329,10 +322,6 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
 
   // Load utility functions.
   module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
-
-  // debug output
-  //$fp = fopen('php://stderr', 'a');
-  //fputs($fp, print_r($form_state['values'], true));
 
   $plan_id = $form_state['values']['plan'];
   $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
@@ -467,7 +456,7 @@ function farm_grazing_plan_rotation_add_submit($form, &$form_state) {
     // Create movement log.
     $log = farm_movement_create($herd, array($paddock), $start_date, 'farm_activity', FALSE);
 
-    //db_insert('farm_grazing_herd_paddocks')
+    // db_insert('farm_grazing_herd_paddocks')
     db_insert('farm_grazing_rotations')
       ->fields(array(
         'paddock_id' => $paddock_id,

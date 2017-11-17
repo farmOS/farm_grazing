@@ -109,10 +109,6 @@ function farm_grazing_plan_productivity_form($form, &$form_state, $plan_obj) {
  */
 function farm_grazing_plan_productivity_form_validate($form, &$form_state) {
 
-  // debug output
-  //$fp = fopen('php://stderr', 'a');
-  //fputs($fp, print_r($form_state['input'], true));
-
   foreach ($form_state['input']['paddocks'] as $id => $val) {
     if (!is_numeric($val['quality']) or $val['quality'] < 0.0) {
       form_set_error('quality', t('Forage Quality must be numeric >= 0.0'));
@@ -124,10 +120,6 @@ function farm_grazing_plan_productivity_form_validate($form, &$form_state) {
  * Process the paddock productivity form on submit
  */
 function farm_grazing_plan_productivity_form_submit($form, &$form_state) {
-
-  // debug output
-  //$fp = fopen('php://stderr', 'a');
-  //fputs($fp, print_r($form_state['values'], true));
 
   $plan = $form_state['values']['plan'];
 
@@ -146,8 +138,6 @@ function farm_grazing_plan_productivity_form_submit($form, &$form_state) {
  * Implements hook_theme for farm_grazing_paddocks_productivity
  */
 function theme_farm_grazing_paddocks_productivity(&$vars) {
-
-  //kpr($vars);
 
   $form = $vars['form'];
 

@@ -118,10 +118,6 @@ function farm_grazing_exclusions_form($form, &$form_state, $plan_obj) {
  */
 function farm_grazing_exclusions_form_submit($form, &$form_state) {
 
-  // debug output
-  //$fp = fopen('php://stderr', 'a');
-  //fputs($fp, print_r($form_state, true));
-
   // if user clicked Cancel, get out of here
   if ($form_state['clicked_button']['#id'] == 'edit-cancel') {
     return;

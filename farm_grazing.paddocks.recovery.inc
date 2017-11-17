@@ -204,10 +204,6 @@ function getPlanRecovery($plan) {
  */
 function farm_grazing_plan_recovery_form_validate($form, &$form_state) {
 
-  // debug output
-  //$fp = fopen('php://stderr', 'a');
-  //fputs($fp, print_r($form_state['input'], true));
-
   foreach ($form_state['input']['months'] as $id => $val) {
     if (!is_numeric($val['min']) or $val['min'] < 0.0) {
       form_set_error('min_recovery', t('Min. Recovery Days must be numeric >= 0'));
@@ -225,10 +221,6 @@ function farm_grazing_plan_recovery_form_validate($form, &$form_state) {
  * Process the paddock recovery form on submit
  */
 function farm_grazing_plan_recovery_form_submit($form, &$form_state) {
-
-  // debug output
-  //$fp = fopen('php://stderr', 'a');
-  //fputs($fp, print_r($form_state['values'], true));
 
   $plan = $form_state['values']['plan'];
 
@@ -250,8 +242,6 @@ function farm_grazing_plan_recovery_form_submit($form, &$form_state) {
  * Implements hook_theme for farm_grazing_paddocks_recovery
  */
 function theme_farm_grazing_paddocks_recovery(&$vars) {
-
-  //kpr($vars);
 
   $form = $vars['form'];
 

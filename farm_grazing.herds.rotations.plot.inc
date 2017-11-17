@@ -17,9 +17,6 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
   // Load utility functions.
   module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
 
-  // for debug output
-  //$fp = fopen('php://stderr', 'a');
-
   $wrapper = entity_metadata_wrapper('farm_plan', $plan_obj->id);
   $start_ts = $wrapper->field_farm_date_range->value->value();
   $end_ts = $wrapper->field_farm_date_range->value2->value();
@@ -60,10 +57,6 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
 
   // get number of days in plan
   $plan_days = get_days_between_dates($plan_start, $plan_end);
-
-  //$plan_days2 = floor(($end_ts-$start_ts)/3600/24);
-
-  //fputs($fp, "plan_days=$plan_days, plan_days2=$plan_days2\n");
 
   // get number of days from start of plan to start_date
   $days_to_start = get_days_between_dates($plan_start, $start_date);
@@ -156,7 +149,6 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
   }
 
   // output the image, 2nd param is filename, NULL sends to stdout
-  //imagepng($im, '/var/www/html/junk.png', 0, NULL);
   imagepng($im);
   imagedestroy($im);
 
