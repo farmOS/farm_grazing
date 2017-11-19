@@ -62,7 +62,7 @@ function farm_grazing_plan_dashboard_form($form, &$form_state, $plan_obj) {
     '<ul>' .
     '<li>' . t('Define your ranch\'s paddocks. This is done on the "Areas" tab at the top of the page. This needs to be done once initially and anytime you decide to change the layout of paddocks on the ranch.') . '</li>' .
     '<li>' . t('Review and add Animal types ') .
-    '<a href="' . $animal_types_url . '">' . t('HERE') . '</a>' . t('that you will be working with.') . '</li>' .
+    '<a href="' . $animal_types_url . '">' . t('HERE') . '</a>' . t(' that you will be working with.') . '</li>' .
     '</ul>' .
     '</p>' .
     '<h4>' . t('Making a Plan') . '</h4>' .
