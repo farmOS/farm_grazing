@@ -8,23 +8,6 @@
 include_once 'farm_grazing.features.inc';
 
 /**
- * Implements hook_element_info_alter()
- * @TODO need to limit removing description to only table items
- */
-function farm_grazing_element_info_alter(&$type) {
-  if (isset($type['date_popup'])) {
-    $type['date_popup']['#process'][] = 'farm_grazing_date_popup_process';
-  }
-}
-
-function farm_grazing_date_popup_process($element, $form_state, $complete_form) {
-  unset($element['date']['#description']);
-  unset($element['time']['#description']);
-
-  return $element;
-}
-
-/**
  * Implements hook_farm_ui_entities().
  */
 function farm_grazing_farm_ui_entities() {

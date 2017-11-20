@@ -484,6 +484,10 @@ function farm_grazing_plan_herd_remove_form_submit($form, &$form_state) {
 function theme_farm_grazing_plan_herds_form(&$vars) {
   $form = $vars['form'];
 
+  // Add some CSS to hide the date descriptions.
+  $css = '.form-type-date-popup .help-block {display:none;}';
+  drupal_add_css($css, array('type' => 'inline'));
+
   $output = drupal_render($form['plan']);
   $output .= drupal_render($form['text']);
   $output .= drupal_render($form['add']);
