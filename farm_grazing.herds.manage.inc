@@ -72,14 +72,13 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     '#title' => t('Herd'),
     '#description' => t('Select the herd you want to add.'),
     '#options' => $herd_options,
-    '#required' => TRUE,
   );
   $form['add']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Add Herd to Plan'),
     '#id' => 'add-herd',
-    '#submit' => array('farm_grazing_plan_herds_form_submit'),
-    '#validate' => array('farm_grazing_plan_herds_form_validate'),
+    '#validate' => array('farm_grazing_plan_herds_add_validate'),
+    '#submit' => array('farm_grazing_plan_herds_add_submit'),
   );
 
   $query = db_query('SELECT * FROM {farm_grazing_herds} WHERE plan_id=:plan_id', array(':plan_id' => $plan));
@@ -372,16 +371,19 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
 }
 
 /**
- * Validation handler for the herds form.
+ * Validation handler for adding a herd to a plan.
  */
-function farm_grazing_plan_herds_form_validate($form, &$form_state) {
+function farm_grazing_plan_herds_add_validate($form, &$form_state) {
 
-  // Load utility functions.
+  // If a herd ID is not provided, flag an error.
+  if (empty($form_state['values']['add']['herd_id'])) {
+    form_set_error('add][herd_id', t('Please select a herd to add to the plan.'));
+  }
+
+  // Validate the herd.
   module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
-
   $plan_id = $form_state['values']['plan'];
   $herd_id = $form_state['input']['add']['herd_id'];
-
   $data = array();
   if (farm_grazing_validate_herd($herd_id, $plan_id, $data)) {
     form_set_error('herd_id', t('Please fix the issues listed before adding this herd to the plan.'));
@@ -389,13 +391,13 @@ function farm_grazing_plan_herds_form_validate($form, &$form_state) {
 }
 
 /**
- * Submit handler for the herds form.
+ * Submit handler for adding a herd to a plan.
  */
-function farm_grazing_plan_herds_form_submit($form, &$form_state) {
+function farm_grazing_plan_herds_add_submit($form, &$form_state) {
 
+  // Add the herd to the plan.
   $plan_id = $form_state['values']['plan'];
   $herd_id = $form_state['values']['add']['herd_id'];
-
   db_merge('farm_grazing_herds')
     ->key(array(
       'plan_id' => $plan_id,
