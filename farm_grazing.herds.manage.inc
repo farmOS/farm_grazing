@@ -413,63 +413,57 @@ function farm_grazing_plan_herds_form_submit($form, &$form_state) {
  */
 function farm_grazing_plan_herd_remove_form($form, &$form_state, $plan_obj, $herd_id) {
 
-  // get plan name
-  $plan_name = $plan_obj->name;
-
-  // get herd name
+  // Load the herd
   $herd = farm_asset_load($herd_id);
-  $herd_name = $herd->name;
 
+  // If the herd or plan are empty, show page not found.
+  if (empty($plan_obj) || empty($herd)) {
+    drupal_not_found();
+    drupal_exit();
+  }
+
+  // Store the plan ID and herd ID for use in the submit function.
   $form['plan_id'] = array(
     '#type' => 'value',
     '#value' => $plan_obj->id,
   );
-
   $form['herd_id'] = array(
     '#type' => 'value',
     '#value' => $herd->id,
   );
 
-  $form['edit']['text'] = array(
-    '#markup' => '<h2>' . t('Confirm that you want to remove ') .
-    '<b>' . $herd_name . '</b>' .
-    t(' from plan ') . '<b>' . $plan_name . '</b>.</h2>',
-  );
-  $form['edit']['cancel'] = array(
-    '#type' => 'submit',
-    '#value' => t('Cancel'),
-    '#submit' => array('farm_grazing_herd_edit_form_submit'),
-  );
-  $form['edit']['delete'] = array(
-    '#type' => 'submit',
-    '#value' => t('Remove Herd from Plan'),
-    '#submit' => array('farm_grazing_herd_edit_form_submit'),
-  );
+  // Build a return path.
+  $path = drupal_get_destination();
+  if ($path['destination'] == current_path()) {
+    $plan_uri = entity_uri('farm_plan', $plan_obj);
+    $path = $plan_uri['path'] . '/';
+  }
 
-  // Return the form.
-  return $form;
+  // Build and return a confirmation form.
+  return confirm_form($form,
+    t('Are you sure you want to remove herd %herd_name from the %plan_name?', array('%herd_name' => $herd->name, '%plan_name' => $plan_obj->name)),
+    $path,
+    t('You can add it back later if you change your mind.'),
+    t('Remove it!'),
+    t('Cancel')
+  );
 }
 
 /**
  * Submit handler for the herd removal form.
  */
-function farm_grazing_herd_remove_form_submit($form, &$form_state) {
+function farm_grazing_plan_herd_remove_form_submit($form, &$form_state) {
 
-  $plan_id = $form_state['values']['plan_id'];
-  $herd_id = $form_state['values']['herd_id'];
-
-  // if user clicked Cancel, get out of here
-  if ($form_state['clicked_button']['#id'] == 'edit-cancel') {
+  // If a plan ID and herd ID are not available, bail.
+  if (empty($form_state['values']['plan_id']) || empty($form_state['values']['herd_id'])) {
     return;
   }
 
-  if ($form_state['clicked_button']['#id'] == 'edit-delete') {
-    db_delete('farm_grazing_herds')
-      ->condition('plan_id', $plan_id)
-      ->condition('herd_id', $herd_id)
-      ->execute();
-  }
-
+  // Delete the record from the {farm_grazing_herds} table.
+  db_delete('farm_grazing_herds')
+    ->condition('plan_id', $form_state['values']['plan_id'])
+    ->condition('herd_id', $form_state['values']['herd_id'])
+    ->execute();
 }
 
 /**
