@@ -208,7 +208,7 @@ function getPlanRecovery($plan) {
  */
 function farm_grazing_plan_recovery_form_validate($form, &$form_state) {
 
-  foreach ($form_state['input']['months'] as $id => $val) {
+  foreach ($form_state['values']['months'] as $id => $val) {
     if (!is_numeric($val['min']) or $val['min'] < 0.0) {
       form_set_error('min_recovery', t('Min. Recovery Days must be numeric >= 0'));
     }

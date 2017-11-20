@@ -244,16 +244,16 @@ function farm_grazing_plan_dashboard_form_validate($form, &$form_state) {
     return;
   }
 
-  if (!is_numeric($form_state['input']['days_bulk_feeding']) or
-      $form_state['input']['days_bulk_feeding'] < 0) {
+  if (!is_numeric($form_state['values']['days_bulk_feeding']) or
+      $form_state['values']['days_bulk_feeding'] < 0) {
     form_set_error('days_bulk_feeding', t('Days bulk feeding must be numeric >= 0'));
   }
-  if (!is_numeric($form_state['input']['days_of_drought_reserve']) or
-      $form_state['input']['days_of_drought_reserve'] < 0) {
+  if (!is_numeric($form_state['values']['days_of_drought_reserve']) or
+      $form_state['values']['days_of_drought_reserve'] < 0) {
     form_set_error('days_of_drought_reserve', t('Days of drought reserve required must be numeric >= 0'));
   }
-  if (!is_numeric($form_state['input']['expected_rotations']) or
-      $form_state['input']['expected_rotations'] < 0) {
+  if (!is_numeric($form_state['values']['expected_rotations']) or
+      $form_state['values']['expected_rotations'] < 0) {
     form_set_error('expected_rotations', t('Number of planned rotations must be numeric >= 0'));
   }
 }
