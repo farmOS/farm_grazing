@@ -76,7 +76,6 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   $form['add']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Add Herd to Plan'),
-    '#id' => 'add-herd',
     '#validate' => array('farm_grazing_plan_herds_add_validate'),
     '#submit' => array('farm_grazing_plan_herds_add_submit'),
   );
@@ -221,7 +220,6 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   );
   $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#id' => 'save-changes',
     '#value' => t('Save Changes'),
   );
 

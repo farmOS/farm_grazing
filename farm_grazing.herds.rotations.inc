@@ -109,7 +109,6 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     );
     $form['reset_grazing_days']['submit'] = array(
       '#type' => 'submit',
-      '#id' => 'reset-submit',
       '#value' => t('Update Grazing Days'),
       '#submit' => array('farm_grazing_plan_rotations_form_submit'),
     );
