@@ -85,7 +85,7 @@ function farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $start_date, $end_da
   $days_to_end = get_days_between_dates($plan_start, $end_date);
 
   // get day width in pixels and adjust image width
-  $day_width = round($width / ($plan_days + 1));
+  $day_width = $width / ($plan_days + 1);
   $width = $plan_days * $day_width;
 
   if (!$header) {
@@ -100,7 +100,7 @@ function farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $start_date, $end_da
     ' width="' . $width . '" height="' . $height . '"' .
     ' viewBox="0 0 ' . $width . ' ' . $height . '">';
 
-  // svg needs css
+  // svg needs css, added these to farm_grazing.herds.rotations.inc
   // svg {position:absolute; background:white;}
   // td svg, th svg {position:relative; width:100%; height:100%; margin:0 auto}
 

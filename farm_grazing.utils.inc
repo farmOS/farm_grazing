@@ -454,8 +454,8 @@ function farm_grazing_get_days_between_dates($date1, $date2) {
   $date1 = strtotime($date1);
   $date2 = strtotime($date2);
 
-  $minutes = floor(($date2 - $date1) / 60);
-  $days = floor($minutes / 60 / 24);
+  $minutes = ($date2 - $date1) / 60;
+  $days = $minutes / 60 / 24;
 
   return $days;
 }
