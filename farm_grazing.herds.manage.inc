@@ -144,7 +144,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   // --------- Add table of herd details for each herd -----------------
 
   $animal_types = farm_grazing_animal_types();
-  $type_options = array();
+  $type_options = array('' => '');
   foreach ($animal_types as $animal_type) {
     $type_options[$animal_type['type_id']] = $animal_type['name'];
   }
@@ -166,7 +166,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#title_display' => 'invisible',
         '#type' => 'select',
         '#options' => $type_options,
-        '#default_value' => getAnimalTypeName($rec['type']),
+        '#default_value' => !empty($rec['type']) ? $rec['type'] : '',
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['head_count'] = array(
         '#title' => t('Head count'),
