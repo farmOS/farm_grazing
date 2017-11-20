@@ -164,17 +164,23 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#markup' => $rec['name'],
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['type'] = array(
+        '#title' => t('Animal type'),
+        '#title_display' => 'invisible',
         '#type' => 'select',
         '#options' => $type_options,
         '#default_value' => getAnimalTypeName($rec['type']),
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['head_count'] = array(
+        '#title' => t('Head count'),
+        '#title_display' => 'invisible',
         '#type' => 'textfield',
         '#default_value' => $rec['head_count'],
         '#size' => 30,
         '#maxlength' => 30,
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['weight'] = array(
+        '#title' => t('Average weight'),
+        '#title_display' => 'invisible',
         '#type' => 'textfield',
         '#default_value' => $rec['weight'],
         '#size' => 30,
@@ -187,6 +193,8 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#markup' => round($rec['head_count'] * $rec['weight'] * $rec['dmi_factor'], 2),
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['arrival'] = array(
+        '#title' => t('Planned arrival'),
+        '#title_display' => 'invisible',
         '#type' => 'date_popup',
         '#date_format' => 'M j Y',
         '#date_type' => DATE_FORMAT_UNIX,
@@ -195,6 +203,8 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#default_value' => $rec['arrival'],
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['departure'] = array(
+        '#title' => t('Planned departure'),
+        '#title_display' => 'invisible',
         '#type' => 'date_popup',
         '#date_format' => 'M j Y',
         '#date_type' => DATE_FORMAT_UNIX,

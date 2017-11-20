@@ -51,6 +51,8 @@ function farm_grazing_plan_productivity_form($form, &$form_state, $plan_obj) {
     );
     $form['paddocks'][$paddock_id]['quality'] = array(
       '#type' => 'textfield',
+      '#title' => t('Quality'),
+      '#title_display' => 'invisible',
       '#default_value' => $quality,
       '#size' => 30,
       '#maxlength' => 30,

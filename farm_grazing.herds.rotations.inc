@@ -168,17 +168,23 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
         ),
         'grazing_days' => array(
           '#type' => 'textfield',
+          '#title' => t('Grazing days'),
+          '#title_display' => 'invisible',
           '#default_value' => round($grazing_days, 1),
           '#size' => 10,
           '#maxlength' => 10,
         ),
         'start_date' => array(
           '#type' => 'textfield',
+          '#title' => t('Start date'),
+          '#title_display' => 'invisible',
           '#default_value' => $start_str,
           '#disabled' => TRUE,
         ),
         'end_date' => array(
           '#type' => 'textfield',
+          '#title' => t('End date'),
+          '#title_display' => 'invisible',
           '#default_value' => $end_str,
           '#disabled' => TRUE,
         ),
