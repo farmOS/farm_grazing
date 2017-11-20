@@ -318,15 +318,42 @@ function theme_farm_grazing_plan_rotations_form($variables) {
       }
 
       $header = array(
-        t('Paddock'),
-        t('Grazing Days'),
-        t('Start Date'),
-        t('End Date'),
-        '<img src="' . base_path() . 'farm/grazing/plan/' . $plan . '/plot/0/0/0">',
-        t('Movement Log'),
-        t('Movement Done'),
-        t('Remove'),
-        t('Sort weight'),
+        array(
+          'data' => t('Paddock'),
+          'class' => array('col-xs-1'),
+        ),
+        array(
+          'data' => t('Grazing Days'),
+          'class' => array('col-xs-1'),
+        ),
+        array(
+          'data' => t('Start Date'),
+          'class' => array('col-xs-1'),
+        ),
+        array(
+          'data' => t('End Date'),
+          'class' => array('col-xs-1'),
+        ),
+        array(
+          'data' => '<img src="' . base_path() . 'farm/grazing/plan/' . $plan . '/plot/0/0/0">',
+          'class' => array('col-xs-4'),
+        ),
+        array(
+          'data' => t('Movement Log'),
+          'class' => array('col-xs-1'),
+        ),
+        array(
+          'data' => t('Movement Done'),
+          'class' => array('col-xs-1'),
+        ),
+        array(
+          'data' => t('Remove'),
+          'class' => array('col-xs-1'),
+        ),
+        array(
+          'data' => t('Sort weight'),
+          'class' => array('col-xs-1'),
+        ),
       );
 
       $table_id = 'herd_' . $herd_id . '_rotations';
