@@ -223,8 +223,6 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     '#type' => 'submit',
     '#id' => 'save-changes',
     '#value' => t('Save Changes'),
-    '#submit' => array('farm_grazing_plan_herds_form_submit'),
-    '#validate' => array('farm_grazing_plan_herds_form_validate'),
   );
 
   // -- add SAU by Month table -------------------------------
@@ -408,6 +406,20 @@ function farm_grazing_plan_herds_add_submit($form, &$form_state) {
       'herd_id' => $herd_id,
     ))
     ->execute();
+}
+
+/**
+ * Validation handler for saving the herd information.
+ */
+function farm_grazing_plan_herds_form_validate($form, &$form_state) {
+
+}
+
+/**
+ * Submit handler for saving the herd information.
+ */
+function farm_grazing_plan_herds_form_submit($form, &$form_state) {
+
 }
 
 /**
