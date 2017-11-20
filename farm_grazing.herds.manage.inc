@@ -177,6 +177,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#default_value' => $rec['head_count'],
         '#size' => 30,
         '#maxlength' => 30,
+        '#element_validate' => array('element_validate_number'),
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['weight'] = array(
         '#title' => t('Average weight'),
@@ -185,6 +186,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#default_value' => $rec['weight'],
         '#size' => 30,
         '#maxlength' => 30,
+        '#element_validate' => array('element_validate_number'),
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['sau'] = array(
         '#markup' => round($rec['weight'] / 1000.0, 2),
