@@ -138,7 +138,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#markup' => $departure_date,
       ),
       'remove' => array(
-        '#markup' => l(t('Remove'), 'farm/grazing/plan/' . $plan . '/herd/' . $record->herd_id . '/edit', array('query' => array('destination' => current_path()))),
+        '#markup' => l(t('Remove'), 'farm/plan/' . $plan . '/herds/' . $record->herd_id . '/remove', array('query' => array('destination' => current_path()))),
       ),
     );
   }
@@ -409,11 +409,9 @@ function farm_grazing_plan_herds_form_submit($form, &$form_state) {
 }
 
 /**
- * farm_grazing_plan_herd_edit_form()
- *
- * Remove the requested herd from the plan
+ * Form for removing a herd from the plan.
  */
-function farm_grazing_plan_herd_edit_form($form, &$form_state, $plan_obj, $herd_id) {
+function farm_grazing_plan_herd_remove_form($form, &$form_state, $plan_obj, $herd_id) {
 
   // get plan name
   $plan_name = $plan_obj->name;
@@ -453,11 +451,9 @@ function farm_grazing_plan_herd_edit_form($form, &$form_state, $plan_obj, $herd_
 }
 
 /**
- * farm_grazing_herd_form_submit
- *
- * Handle farm_grazing_plan_herd_edit_form() submit processing
+ * Submit handler for the herd removal form.
  */
-function farm_grazing_herd_edit_form_submit($form, &$form_state) {
+function farm_grazing_herd_remove_form_submit($form, &$form_state) {
 
   $plan_id = $form_state['values']['plan_id'];
   $herd_id = $form_state['values']['herd_id'];

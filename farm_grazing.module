@@ -186,11 +186,11 @@ function farm_grazing_menu() {
     'weight' => 10,
   );
 
-  $items['farm/grazing/plan/%farm_plan/herd/%/edit'] = array(
+  $items['farm/plan/%farm_plan/herds/%/remove'] = array(
     'title' => 'Remove Herd From Plan',
     'description' => 'This herd will be removed from the plan',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('farm_grazing_plan_herd_edit_form', 3, 5),
+    'page arguments' => array('farm_grazing_plan_herd_remove_form', 2, 4),
     'access arguments' => array('edit any grazing plans'),
     'file' => 'farm_grazing.herds.manage.inc',
     'type' => MENU_CALLBACK,
