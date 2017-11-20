@@ -360,9 +360,24 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
 }
 
 /**
- * farm_grazing_plan_herds_form_submit()
- *
- * Add a herd to a plan
+ * Validation handler for the herds form.
+ */
+function farm_grazing_plan_herds_form_validate($form, &$form_state) {
+
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
+
+  $plan_id = $form_state['values']['plan'];
+  $herd_id = $form_state['input']['add']['herd_id'];
+
+  $data = array();
+  if (farm_grazing_validate_herd($herd_id, $plan_id, $data)) {
+    form_set_error('herd_id', t('Please fix the issues listed before adding this herd to the plan.'));
+  }
+}
+
+/**
+ * Submit handler for the herds form.
  */
 function farm_grazing_plan_herds_form_submit($form, &$form_state) {
 
@@ -379,24 +394,6 @@ function farm_grazing_plan_herds_form_submit($form, &$form_state) {
       'herd_id' => $herd_id,
     ))
     ->execute();
-}
-
-/**
- *
- */
-function farm_grazing_plan_herds_form_validate($form, &$form_state) {
-
-  // Load utility functions.
-  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
-
-  $plan_id = $form_state['values']['plan'];
-  $herd_id = $form_state['input']['add']['herd_id'];
-
-  $data = array();
-  if (farm_grazing_validate_herd($herd_id, $plan_id, $data)) {
-    form_set_error('herd_id', t('Please fix the issues listed before adding this herd to the plan.'));
-  }
-
 }
 
 /**
