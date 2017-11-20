@@ -1,7 +1,5 @@
 <?php
 
-include_once "farm_grazing.utils.inc";
-
 /**
  * Management concerns form callback.
  */
