@@ -474,6 +474,44 @@ function farm_grazing_asset_form_submit(array $form, array &$form_state) {
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function farm_grazing_form_log_form_alter(&$form, &$form_state, $form_id) {
+
+  // Add our grazing validation function to log forms.
+  $form['#validate'][] = 'farm_grazing_log_form_validate';
+}
+
+/**
+ * Validation function for log forms.
+ */
+function farm_grazing_log_form_validate(&$form, &$form_state) {
+
+  // If a log ID doesn't exist, bail.
+  if (empty($form_state['values']['log']->id)) {
+    return;
+  }
+
+  // Check to see if this log is managed by a grazing plan.
+  $managed = db_query('SELECT COUNT(*) FROM {farm_grazing_rotations} WHERE log_id = :log_id', array(':log_id' => $form_state['values']['log']->id))->fetchField();
+
+  // If the log isn't managed, we don't care about it.
+  if (empty($managed)) {
+    return;
+  }
+
+  // If the log doesn't have a movement location, we don't care about it.
+  if (empty($form['field_farm_movement'][LANGUAGE_NONE][0]['field_farm_move_to'][LANGUAGE_NONE]['#default_value'][0])) {
+    return;
+  }
+
+  // Prevent the movement field from being changed.
+  if ($form['field_farm_movement'][LANGUAGE_NONE][0]['field_farm_move_to'][LANGUAGE_NONE]['#default_value'][0] != $form_state['values']['field_farm_movement'][LANGUAGE_NONE][0]['field_farm_move_to'][LANGUAGE_NONE][0]['tid']) {
+    form_set_error('field_farm_movement', t('You cannot change the location of this movement log, because it is managed by one or more <a href="@grazing_plans">grazing plans</a>.', array('@grazing_plans' => url('farm/plans/grazing'))));
+  }
+}
+
+/**
  * Implements hook_entity_view().
  */
 function farm_grazing_entity_view($entity, $type, $view_mode, $langcode) {
