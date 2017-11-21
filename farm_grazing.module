@@ -649,13 +649,15 @@ function farm_grazing_help($path, $arg) {
  */
 function farm_grazing_entity_update($entity, $type) {
 
-  // Only act on farm asset entities.
-  if ($type != 'farm_asset') {
-    return;
+  // Audit asset updates.
+  if ($type == 'farm_asset') {
+    farm_grazing_plan_asset_update($entity);
   }
 
-  // Delegate out to our audit function.
-  farm_grazing_plan_asset_update($entity);
+  // Audit log updates.
+  elseif ($type == 'log') {
+    farm_grazing_plan_log_update($entity);
+  }
 }
 
 /**
@@ -663,13 +665,10 @@ function farm_grazing_entity_update($entity, $type) {
  */
 function farm_grazing_entity_delete($entity, $type) {
 
-  // Only act on group or animal assets.
-  if ($type != 'farm_asset') {
-    return;
+  // Audit asset deletion.
+  if ($type == 'farm_asset') {
+    farm_grazing_plan_asset_update($entity);
   }
-
-  // Delegate out to our audit function.
-  farm_grazing_plan_asset_update($entity);
 }
 
 /**
@@ -694,4 +693,31 @@ function farm_grazing_plan_asset_update($asset) {
    * But for now... just show a message.
    */
   drupal_set_message(t('If this asset is part of a grazing plan, you should check to see if your change affects that plan.'), 'warning');
+}
+
+/**
+ * Perform checks to see if a log is part of a plan, and if updating it will
+ * affect that plan.
+ *
+ * @param $log
+ *   The log that was updated.
+ */
+function farm_grazing_plan_log_update($log) {
+
+  // Only proceed if this log is linked to a grazing plan.
+  $plan_id = db_query('SELECT plan_id FROM {farm_grazing_rotations} WHERE log_id = :log_id', array(':log_id' => $log->id))->fetchField();
+  if (empty($plan_id)) {
+    return;
+  }
+
+  // If the timestamp of the log is changing, we need to update other logs and
+  // rotations in the plan.
+  if (!empty($log->original->timestamp) && $log->original->timestamp != $log->timestamp) {
+
+    /**
+     * @todo
+     * Update future rotations + logs, show a message telling the user this
+     * happened.
+     */
+  }
 }
