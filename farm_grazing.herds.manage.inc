@@ -411,6 +411,42 @@ function farm_grazing_plan_herds_add_submit($form, &$form_state) {
  */
 function farm_grazing_plan_herds_form_validate($form, &$form_state) {
 
+  // If there are no herd details, bail.
+  if (empty($form_state['values']['herd_details'])) {
+    return;
+  }
+
+  // Iterate through the herds.
+  foreach ($form_state['values']['herd_details'] as $herd_id => $herd_details) {
+
+    // If there are no animals in the herd, skip it.
+    if (empty($herd_details['animals'])) {
+      continue;
+    }
+
+    // Iterate through the animals.
+    foreach ($herd_details['animals'] as $animal_id => $animal_details) {
+
+      // Get the original $form array for this animal.
+      $animal_form = $form['herd_details'][$herd_id]['animals'][$animal_id];
+
+      // If certain fields are modified, make sure they are not left blank.
+      $required_fields = array(
+        'type' => t('Animal type'),
+        'head_count' => t('Head count'),
+        'weight' => t('Weight'),
+        'arrival' => t('Planned arrival'),
+        'departure' => t('Planned departure'),
+      );
+      foreach ($required_fields as $field => $label) {
+        if ($animal_form[$field]['#default_value'] != $animal_details[$field]) {
+          if (empty($animal_details[$field])) {
+            form_set_error('herd_details][' . $herd_id . '][animals][' . $animal_id . '][' . $field, $label . ' ' . t('is required.'));
+          }
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -418,6 +454,80 @@ function farm_grazing_plan_herds_form_validate($form, &$form_state) {
  */
 function farm_grazing_plan_herds_form_submit($form, &$form_state) {
 
+  // If there are no herd details, bail.
+  if (empty($form_state['values']['herd_details'])) {
+    return;
+  }
+
+  // Remember if values have been updated.
+  $updated = FALSE;
+
+  // Iterate through the herds.
+  foreach ($form_state['values']['herd_details'] as $herd_id => $herd_details) {
+
+    // If there are no animals in the herd, skip it.
+    if (empty($herd_details['animals'])) {
+      continue;
+    }
+
+    // Iterate through the animals.
+    foreach ($herd_details['animals'] as $animal_id => $animal_details) {
+
+      // Get the original $form array for this animal.
+      $animal_form = $form['herd_details'][$herd_id]['animals'][$animal_id];
+
+      // If the animal's type has changed...
+      if ($animal_form['type']['#default_value'] != $animal_details['type']) {
+
+        // Set the asset property value.
+        farm_asset_property_set($animal_id, 'farm_grazing_animal_type', $animal_details['type']);
+        $updated = TRUE;
+      }
+
+      // If the animal's head count has changed...
+      if ($animal_form['head_count']['#default_value'] != $animal_details['head_count']) {
+
+        // Create an inventory log.
+        $animal = farm_asset_load($animal_id);
+        if (!empty($animal)) {
+          farm_inventory_set($animal, $animal_details['head_count']);
+          $updated = TRUE;
+        }
+      }
+
+      // If the animal's weight has changed...
+      if ($animal_form['weight']['#default_value'] != $animal_details['weight']) {
+
+        // Create a weight log.
+        $animal = farm_asset_load($animal_id);
+        if (!empty($animal)) {
+          farm_livestock_weight_set($animal, $animal_details['weight'], 'lbs');
+          $updated = TRUE;
+        }
+      }
+
+      // If the animal's planned arrival has changed...
+      if ($animal_form['arrival']['#default_value'] != $animal_details['arrival']) {
+
+        // Set the asset property value.
+        farm_asset_property_set($animal_id, 'farm_grazing_planned_arrival', $animal_details['arrival']);
+        $updated = TRUE;
+      }
+
+      // If the animal's planned departure has changed...
+      if ($animal_form['departure']['#default_value'] != $animal_details['departure']) {
+
+        // Set the asset property value.
+        farm_asset_property_set($animal_id, 'farm_grazing_planned_departure', $animal_details['departure']);
+        $updated = TRUE;
+      }
+    }
+  }
+
+  // If any values were updated, show a message.
+  if ($updated) {
+    drupal_set_message(t('Animals were updated.'));
+  }
 }
 
 /**
