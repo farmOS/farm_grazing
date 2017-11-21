@@ -39,7 +39,7 @@ function farm_grazing_plan_summary_page($plan_obj) {
 
     $chk_min_recovery = -1;
     $chk_max_recovery = -1;
-    $paddocks = getGrazingDaysForPlanId($plan, $chk_min_recovery, $chk_max_recovery, FALSE);
+    $paddocks = getGrazingDaysForPlanId($plan, $chk_min_recovery, $chk_max_recovery, FALSE, TRUE);
 
     $table['rows'] = $paddocks;
 
@@ -90,7 +90,7 @@ function farm_grazing_plan_summary_page($plan_obj) {
       'empty' => t('No paddocks found.'),
     );
 
-    $paddocks = getNonGrowingSummaryForPlanId($plan);
+    $paddocks = getNonGrowingSummaryForPlanId($plan, FALSE, TRUE);
 
     $table['rows'] = $paddocks;
 

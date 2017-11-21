@@ -47,7 +47,7 @@ function farm_grazing_plan_productivity_form($form, &$form_state, $plan_obj) {
   foreach ($selected as $paddock_id => $quality) {
     $term = taxonomy_term_load($paddock_id);
     $form['paddocks'][$paddock_id]['name'] = array(
-      '#markup' => $term->name,
+      '#markup' => l($term->name, url('taxonomy/term/' . $paddock_id, array('query' => array('destination' => current_path())))),
     );
     $form['paddocks'][$paddock_id]['quality'] = array(
       '#type' => 'textfield',

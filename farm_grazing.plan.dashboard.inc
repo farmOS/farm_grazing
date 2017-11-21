@@ -157,11 +157,10 @@ function farm_grazing_plan_dashboard_form($form, &$form_state, $plan_obj) {
     '#markup' => '<h4>' . t('Recheck your plan') . '</h4>' .
     '<p>' . t('Review your plan regularly, print out reports, check that the plan is on track and make adjustments as needed.') . '</p>' .
     '<h4>' . t('Monitor Your Paddocks') . '</h4>' .
-    '<p>' . t('Monitor the growth and recovery of your paddocks. Also assess the quality of the paddock you are moving the herd to and record it as a monitor event here.') . '</p>' .
+    '<p>' . t('Monitor the growth and recovery of your paddocks. Also assess the quality of the paddock you are moving the herd to and record it as a monitor event here. All the paddock moves in the active plans are shown on the ') . l(t('Dashboard Task List'), '/') . t(' and you can check them off when they are completed, but you should also make observations about the paddock you are moving out of and into.') .  '</p>' .
     '<ul>' .
-    '<li><a href="' . base_path() . 'farm/assets/groups">' . t('Herd movement ') . '</a></li>' .
+    '<li><a href="' . current_path() . '/herds">' . t('Herds Tab for detailed movement records') . '</a></li>' .
     '<ul>' .
-    '<li>' . t('Click Herd movements link above') . '</li>' .
     '<li>' . t('Select a herd to move') . '</li>' .
     '<li>' . t('Click Add activity') . '</li>' .
     '<li>' . t('Click Movements') . '</li>' .

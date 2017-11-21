@@ -547,48 +547,58 @@ function farm_grazing_help($path, $arg) {
       return '<p>' . t('Define your paddocks in the') . ' <a href="' . base_path() . 'farm/areas">Areas</a> ' . t('tab above. Select which paddocks you want available for use in this plan here and then use tabs "Exclusions", "Productivity", "Recovery" and "Summary" to add additional information about your paddocks.') . '</p>';
 
     case 'farm/plan/%/paddocks/exclusions':
-      return '<p>' . t('Enter dates when a paddock can not under any circumstances have a herd on it and select type "Livestock". Also enter dates for paddocks that need special attention and select type "Special". Such paddocks could include a sacrificial paddock where you plan to run some animals on continuous graze, bare, eroding ground that needs healing, areas you want to rest for brush cover for wildlife, areas where you need to remove forage for fire protection, paddocks you plan to strip graze. Review the list of planning factors.') . '</p>' .
-      '<p>' . t('Click on the paddock name to edit or delete it.') . '</p>';
+      return '<p>' . t('Enter dates when a paddock can not under any circumstances have a herd on it. Also enter dates for paddocks that need special attention and note that in the reason. Such paddocks could include a sacrificial paddock where you plan to run some animals on continuous graze, bare, eroding ground that needs healing, areas you want to rest for brush cover for wildlife, areas where you need to remove forage for fire protection, paddocks you plan to strip graze. Review the list of planning factors.') . '</p>';
 
     case 'farm/plan/%/paddocks/productivity':
-      return '<p>' . t('For Forage Quality, you should enter ADA/H for each paddock, or rate it 1-10.') . '</p><p>' . t('Est. Relative Quality is the estimated animals days for the paddock based on Forage Quality if you entered a value in ADA/H, but if you entered a rating, then the number will be a relative ranking of the amount of forage each paddock can give relative to the other paddocks.') . '</p>';
+      return '<p>' . t('For Forage Quality, you should enter ADA/H for each paddock, or rate it 1-10.') .
+      '</p><p>' . t('Est. Relative Quality is the estimated animals days for the paddock based on Forage Quality if you entered a value in ADA/H, but if you entered a rating, then the number will be a relative ranking of the amount of forage each paddock can give relative to the other paddocks.') . '</p>';
 
     case 'farm/plan/%/paddocks/recovery':
-      return '<p>' . t('Enter your minimum and maximum recovery periods (in days) for each planned month. Unless you have a great many paddocks per herd and can safely choose a single recovery period, you will have to determine the expected plant recovery period under fast growth conditions and the expected plant recovery period under slow growth conditions.') . '</p><p>' . t('If you have not defined any herds yet, we assume one herd. This page will automatically adjust for multiple herds once you define them, so check back once you have defined herds.') . '</p>';
+      return '<p>' . t('Enter your minimum and maximum recovery periods (in days) for each planned month. Unless you have a great many paddocks per herd and can safely choose a single recovery period, you will have to determine the expected plant recovery period under fast growth conditions and the expected plant recovery period under slow growth conditions.') .
+      '</p><p>' . t('If you have not defined any herds yet, we assume one herd. This page will automatically adjust for multiple herds once you define them, so check back once you have defined herds.') . '</p>';
 
     case 'farm/plan/%/paddocks/summary':
       return '<p>' . t('Use the Check Min/Max Recovery Period below and if any recovery period is much too short, you must add days to the minimum grazing periods in other paddocks that can absorb them. Follow the same procedure for maximum grazing periods, though the problems will probably be less critical if you can\'t make complete adjustments.') . '</p>';
 
     case 'farm/plan/%/herds':
     case 'farm/plan/%/herds/default':
-      return '<p>' . t('A herd is defined as a group of animals that will be rotated between paddock to together regardless of the make up of animals in the herd.') . '</p><p>' . t('Most smaller ranches will only have a single herd as you will need more paddocks to support multiple herds and allow for adequate recovery periods of the paddocks.') . '</p><p>' . t('If you are new to this planning method or you have a smaller ranch, try to keep your plan simple to start with and built it based on a single herd.') . '</p><p>' . t('You can define animals ') . '<a href="' . base_path() . 'farm/asset/add/animal?destination=farm/assets/animals" target="_new">' . t('HERE') . '</a> ' . t('and assign them to a group. You will need to enter all of the following fields:') . '<ul>' .
+      return '<p>' . t('A herd is defined as a group of animals that will be rotated between paddock to together regardless of the make up of animals in the herd.') .
+      '</p><p>' . t('Most smaller ranches will only have a single herd as you will need more paddocks to support multiple herds and allow for adequate recovery periods of the paddocks.') .
+      '</p><p>' . t('If you are new to this planning method or you have a smaller ranch, try to keep your plan simple to start with and built it based on a single herd.') .
+      '</p><p>' . t('You can define animals ') . '<a href="' . base_path() . 'farm/asset/add/animal?destination=farm/assets/animals" target="_new">' . t('HERE') . '</a> ' . t(' and assign them to a group. You will need to enter all of the following fields:') . '<ul>' .
       '<li>' . t('Name') . '</li>' .
       '<li>' . t('Species/breed') . '</li>' .
       '<li>' . t('Description (optional)') . '</li>' .
       '<li>' . t('Location (optional)') . '</li>' .
       '<li>' . t('Weight') . '</li>' .
-      '<li>' . t('Inventory (Head count)') . '</li>' .
+      '<li>' . t('Grazing') . '</li>' .
+      '<ul>' .
+      '<li>' . t('Animal type - ') . l(t('Manage animal types'), 'admin/config/farm/grazing_animal_types', array('query' => array('destination' => current_path()))) . '</li>' .
+      '<li>' . t('Planned arrival date') . '</li>' .
+      '<li>' . t('Planned departure date') . '</li>' .
+      '</ul>' .
       '<li>' . t('Group membership (Herd name)') . '</li>' .
       '<ul>' .
       '<li>' . t('Select an existing group (Herd)') . '</li>' .
       '<li>' . t('or Create a new group (Herd)') . '</li>' .
       '</ul>' .
-      '<li>' . t('Grazing') . '</li>' .
-      '<ul>' .
-      '<li>' . t('Animal type') . '</li>' .
-      '<li>' . t('Planned arrival date') . '</li>' .
-      '<li>' . t('Planned departure date') . '</li>' .
+      '<li>' . t('Inventory (Head count)') . '</li>' .
       '</ul>' .
-      '</ul></p>';
+      '</p>';
 
     case 'farm/plan/%/herds/paddocks':
       return '<p>' . t('Add or remove paddocks from each herd in your plan. In the next two steps you will review the historical grazing patterns and then order the paddock rotations for each herd.') . '</p>';
 
     case 'farm/plan/%/herds/history':
-      return '<p>' . t('Skip this step if this is your first grazing plan. Otherwise, check paddock by paddock over previous grazing charts for evidence of inappropriate heavy use of individual paddocks, repeated early or late season use of particular paddocks, or of paddocks that failed to receive adequate recovery time in the recent past. If paddocks were marked as heavily grazed, especially early or late in the season last year, exclude them in the early and late growing season this year to avoid repetition.') . '</p><p>' . t('This table counts the frequency of historical use in the given months. Ideally one would like to have these numbers consistent across the months in the plan over the long term. In the short term avoid reuse at start or end of the growing season. Also if a paddock has been used a lot in a given month then avoid using that month also.') . '</p>';
+      return '<p>' . t('Skip this step if this is your first grazing plan. Otherwise, check paddock by paddock over previous grazing charts for evidence of inappropriate heavy use of individual paddocks, repeated early or late season use of particular paddocks, or of paddocks that failed to receive adequate recovery time in the recent past. If paddocks were marked as heavily grazed, especially early or late in the season last year, exclude them in the early and late growing season this year to avoid repetition.') .
+      '</p><p>' . t('This table counts the frequency of historical use in the given months. Ideally one would like to have these numbers consistent across the months in the plan over the long term. In the short term avoid reuse at start or end of the growing season. Also if a paddock has been used a lot in a given month then avoid using that month also.') .
+      '</p>';
 
     case 'farm/plan/%/herds/rotations':
-      return '<p>' . t('You can reorder the paddocks by grabbing the row and dragging it up or down in the table or enter numerical values in the row weights column. The calendar has the various planning events shown on it. The green is where that paddock will get grazed. You avoid trying to graze the paddock where you have an exclusion marked in red. Move it up/down to avoid the exclusion.') . '</p><p>' . t('You should also look back at the Herds/History tab to avoid bad patterns like repetitive grazing of the the same paddock at the start or end of a season or is getting more heavily used than others.') . '</p><p>' . t('Purple sections are where there are management events and orange areas indicate average paddock recovery time frames.');
+      return '<p>' . t('You can reorder the paddocks by grabbing the row and dragging it up or down in the table or enter numerical values in the row weights column. The calendar has the various planning events shown on it. The green is where that paddock will get grazed. You avoid trying to graze the paddock where you have an exclusion marked in red. Move it up/down to avoid the exclusion.') .
+      '</p><p>' . t('You should also look back at the Herds/History tab to avoid bad patterns like repetitive grazing of the the same paddock at the start or end of a season or is getting more heavily used than others.') .
+      '</p><p>' . t('Purple sections are where there are management events and orange areas indicate average paddock recovery time frames.') .
+      '</p>';
 
     case 'farm/plan/%/implement':
     case 'farm/plan/%/implement/default':

@@ -142,7 +142,7 @@ function getPaddockGrazingDays($duration, $paddock_id, $plan_id, $herd_id, &$cac
 /**
  *
  */
-function getGrazingDaysForPlanId($plan_id, &$chk_min_recovery, &$chk_max_recovery, $include_ids = true) {
+function getGrazingDaysForPlanId($plan_id, &$chk_min_recovery, &$chk_max_recovery, $include_ids = true, $add_links = false) {
 
   // get the plan id
   $plan = $plan_id;
@@ -179,8 +179,12 @@ function getGrazingDaysForPlanId($plan_id, &$chk_min_recovery, &$chk_max_recover
     $term = taxonomy_term_load($record->paddock_id);
     $area = farm_area_calculate_area($record->paddock_id);
     $quality = $record->quality;
+    $name = $term->name;
+    if ($add_links) {
+      $name = l($name, url('taxonomy/term/' . $record->paddock_id));
+    }
     $data = array(
-      $term->name,
+      $name,
       round($area, 1),
       round($area * $quality, 1),
       $area * $quality * $avg_min_graz,
@@ -704,11 +708,11 @@ function getHerdSizeInSau($plan_id) {
 }
 
 /**
- * getNonGrowingSummaryForPlanId($plan_id, $add_ids=0)
+ * getNonGrowingSummaryForPlanId($plan_id, $add_ids = FALSE, $add_links = FALSE)
  *
  * Compute statistics for paddocks in non-growing season plan
  */
-function getNonGrowingSummaryForPlanId($plan_id, $add_ids=0) {
+function getNonGrowingSummaryForPlanId($plan_id, $add_ids = FALSE, $add_links = FALSE) {
 
   // get herds size if defined
   $herd_size = getHerdSizeInSau($plan_id);
@@ -739,6 +743,9 @@ function getNonGrowingSummaryForPlanId($plan_id, $add_ids=0) {
     $name = taxonomy_term_load($record->paddock_id)->name;
     $area = farm_area_calculate_area($record->paddock_id);
     $ada = $record->quality;
+    if ($add_links) {
+      $name = l($name, url('taxonomy/term/' . $record->paddock_id));
+    }
     $row = array(
       $name,                // paddock
       $area,                // 8, area (needs to be round)

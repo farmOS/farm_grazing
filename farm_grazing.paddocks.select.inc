@@ -26,7 +26,7 @@ function farm_grazing_select_paddocks_form($form, &$form_state, $plan_obj) {
 
     //$term = taxonomy_term_load($paddock->tid);
     $data[$paddock->tid] = array(
-      $paddock->name,
+      l($paddock->name, url('taxonomy/term/' . $paddock->tid), array('query' => array('destination' => current_path()))),
       farm_area_calculate_area($paddock->tid),
     );
   }

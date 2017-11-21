@@ -44,7 +44,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     '#markup' => t('<p>' .
       t('A herd is defined as a group of animals that will be rotated between paddocks together regardless of the make up of animals in the herd.') .
       '</p><p>' .
-      t('You can define animals ') . l(t('HERE'), 'farm/asset/add/animal') . t('and assign them to a group. See the Help for more information.') .
+      t('You can define animals ') . l(t('HERE'), ' farm/asset/add/animal') . t(' and assign them to a group. See the Help for more information.') .
       '</p>' .
       ''),
   );
@@ -118,7 +118,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     // build the section 1 summary table
     $form['section_1']['herds'][$record->herd_id] = array(
       'name' => array(
-        '#markup' => $group->name,
+        '#markup' => l($group->name, 'farm/asset/' . $record->herd_id, array('query' => array('destination' => current_path()))),
       ),
       'head_count' => array(
         '#markup' => $summary['head_count'],
@@ -159,7 +159,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
 
     foreach ($this_herd['herd_data'] as $rec) {
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['name'] = array(
-        '#markup' => $rec['name'],
+        '#markup' => l($rec['name'], 'farm/asset/' . $rec['id'], array('query' => array('destination' => current_path()))),
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['type'] = array(
         '#title' => t('Animal type'),

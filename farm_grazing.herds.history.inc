@@ -120,11 +120,14 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {
     }
 
     // Iterate through the paddocks.
+    $i = 0;
     foreach ($paddocks as $paddock) {
 
       // create array to hold our data
       //    [name, 12 months, total, last grazed]
-      $row = array($paddock->name, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '');
+      $name = l($paddock->name, url('taxonomy/term/' . $paddock_ids[$i]));
+      $i++;
+      $row = array($name, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '');
 
       $date_last_grazed = 0;
 

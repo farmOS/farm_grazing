@@ -26,6 +26,7 @@ function farm_grazing_exclusions_form($form, &$form_state, $plan_obj) {
       t('Exc. Start'),
       t('Exc. End'),
       t('Reason'),
+      t('Edit/Remove'),
     ),
     'rows' => array(),
     'empty' => t('No exclusions found.'),
@@ -45,10 +46,11 @@ function farm_grazing_exclusions_form($form, &$form_state, $plan_obj) {
 
     // Assemble the row.
     $table['rows'][] = array(
-      l($record->name, 'farm/grazing/exclusions/' . $record->id . '/edit', array('query' => array('destination' => 'farm/plan/' . $plan . '/paddocks/exclusions'))),
+      l($record->name, url('taxonomy/term/' . $record->paddock_id), array('query' => array('destination' => 'farm/plan/' . $plan . '/paddocks/exclusions'))),
       $start_date,
       $end_date,
       $record->reason,
+      l(t('Edit/Remove'), 'farm/grazing/exclusions/' . $record->id . '/edit', array ('query' => array('destination' => 'farm/plan/' . $plan . '/paddocks/exclusions'))),
     );
   }
   $form['table'] = array(
