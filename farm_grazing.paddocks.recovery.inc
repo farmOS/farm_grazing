@@ -118,6 +118,8 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
     );
     $form['months'][$key]['min'] = array(
       '#type' => 'textfield',
+      '#title' => t('Min'),
+      '#title_display' => 'invisible',
       '#default_value' => $min,
       '#size' => 30,
       '#maxlength' => 30,
@@ -125,6 +127,8 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
     );
     $form['months'][$key]['max'] = array(
       '#type' => 'textfield',
+      '#title' => t('Max'),
+      '#title_display' => 'invisible',
       '#default_value' => $max,
       '#size' => 30,
       '#maxlength' => 30,
@@ -204,7 +208,7 @@ function getPlanRecovery($plan) {
  */
 function farm_grazing_plan_recovery_form_validate($form, &$form_state) {
 
-  foreach ($form_state['input']['months'] as $id => $val) {
+  foreach ($form_state['values']['months'] as $id => $val) {
     if (!is_numeric($val['min']) or $val['min'] < 0.0) {
       form_set_error('min_recovery', t('Min. Recovery Days must be numeric >= 0'));
     }

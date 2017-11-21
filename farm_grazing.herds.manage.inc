@@ -72,14 +72,12 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     '#title' => t('Herd'),
     '#description' => t('Select the herd you want to add.'),
     '#options' => $herd_options,
-    '#required' => TRUE,
   );
   $form['add']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Add Herd to Plan'),
-    '#id' => 'add-herd',
-    '#submit' => array('farm_grazing_plan_herds_form_submit'),
-    '#validate' => array('farm_grazing_plan_herds_form_validate'),
+    '#validate' => array('farm_grazing_plan_herds_add_validate'),
+    '#submit' => array('farm_grazing_plan_herds_add_submit'),
   );
 
   $query = db_query('SELECT * FROM {farm_grazing_herds} WHERE plan_id=:plan_id', array(':plan_id' => $plan));
@@ -138,7 +136,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#markup' => $departure_date,
       ),
       'remove' => array(
-        '#markup' => l(t('Remove'), 'farm/grazing/plan/' . $plan . '/herd/' . $record->herd_id . '/edit', array('query' => array('destination' => current_path()))),
+        '#markup' => l(t('Remove'), 'farm/plan/' . $plan . '/herds/' . $record->herd_id . '/remove', array('query' => array('destination' => current_path()))),
       ),
     );
   }
@@ -146,7 +144,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   // --------- Add table of herd details for each herd -----------------
 
   $animal_types = farm_grazing_animal_types();
-  $type_options = array();
+  $type_options = array('' => '');
   foreach ($animal_types as $animal_type) {
     $type_options[$animal_type['type_id']] = $animal_type['name'];
   }
@@ -164,21 +162,29 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#markup' => $rec['name'],
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['type'] = array(
+        '#title' => t('Animal type'),
+        '#title_display' => 'invisible',
         '#type' => 'select',
         '#options' => $type_options,
-        '#default_value' => getAnimalTypeName($rec['type']),
+        '#default_value' => !empty($rec['type']) ? $rec['type'] : '',
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['head_count'] = array(
+        '#title' => t('Head count'),
+        '#title_display' => 'invisible',
         '#type' => 'textfield',
         '#default_value' => $rec['head_count'],
         '#size' => 30,
         '#maxlength' => 30,
+        '#element_validate' => array('element_validate_number'),
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['weight'] = array(
+        '#title' => t('Average weight'),
+        '#title_display' => 'invisible',
         '#type' => 'textfield',
         '#default_value' => $rec['weight'],
         '#size' => 30,
         '#maxlength' => 30,
+        '#element_validate' => array('element_validate_number'),
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['sau'] = array(
         '#markup' => round($rec['weight'] / 1000.0, 2),
@@ -187,6 +193,8 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#markup' => round($rec['head_count'] * $rec['weight'] * $rec['dmi_factor'], 2),
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['arrival'] = array(
+        '#title' => t('Planned arrival'),
+        '#title_display' => 'invisible',
         '#type' => 'date_popup',
         '#date_format' => 'M j Y',
         '#date_type' => DATE_FORMAT_UNIX,
@@ -195,6 +203,8 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#default_value' => $rec['arrival'],
       );
       $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['departure'] = array(
+        '#title' => t('Planned departure'),
+        '#title_display' => 'invisible',
         '#type' => 'date_popup',
         '#date_format' => 'M j Y',
         '#date_type' => DATE_FORMAT_UNIX,
@@ -210,10 +220,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   );
   $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#id' => 'save-changes',
     '#value' => t('Save Changes'),
-    '#submit' => array('farm_grazing_plan_herds_form_submit'),
-    '#validate' => array('farm_grazing_plan_herds_form_validate'),
   );
 
   // -- add SAU by Month table -------------------------------
@@ -360,15 +367,33 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
 }
 
 /**
- * farm_grazing_plan_herds_form_submit()
- *
- * Add a herd to a plan
+ * Validation handler for adding a herd to a plan.
  */
-function farm_grazing_plan_herds_form_submit($form, &$form_state) {
+function farm_grazing_plan_herds_add_validate($form, &$form_state) {
 
+  // If a herd ID is not provided, flag an error.
+  if (empty($form_state['values']['add']['herd_id'])) {
+    form_set_error('add][herd_id', t('Please select a herd to add to the plan.'));
+  }
+
+  // Validate the herd.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
   $plan_id = $form_state['values']['plan'];
   $herd_id = $form_state['values']['add']['herd_id'];
+  $data = array();
+  if (farm_grazing_validate_herd($herd_id, $plan_id, $data)) {
+    form_set_error('herd_id', t('Please fix the issues listed before adding this herd to the plan.'));
+  }
+}
 
+/**
+ * Submit handler for adding a herd to a plan.
+ */
+function farm_grazing_plan_herds_add_submit($form, &$form_state) {
+
+  // Add the herd to the plan.
+  $plan_id = $form_state['values']['plan'];
+  $herd_id = $form_state['values']['add']['herd_id'];
   db_merge('farm_grazing_herds')
     ->key(array(
       'plan_id' => $plan_id,
@@ -382,89 +407,185 @@ function farm_grazing_plan_herds_form_submit($form, &$form_state) {
 }
 
 /**
- *
+ * Validation handler for saving the herd information.
  */
 function farm_grazing_plan_herds_form_validate($form, &$form_state) {
 
-  // Load utility functions.
-  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
-
-  $plan_id = $form_state['values']['plan'];
-  $herd_id = $form_state['input']['add']['herd_id'];
-
-  $data = array();
-  if (farm_grazing_validate_herd($herd_id, $plan_id, $data)) {
-    form_set_error('herd_id', t('Please fix the issues listed before adding this herd to the plan.'));
+  // If there are no herd details, bail.
+  if (empty($form_state['values']['herd_details'])) {
+    return;
   }
 
+  // Iterate through the herds.
+  foreach ($form_state['values']['herd_details'] as $herd_id => $herd_details) {
+
+    // If there are no animals in the herd, skip it.
+    if (empty($herd_details['animals'])) {
+      continue;
+    }
+
+    // Iterate through the animals.
+    foreach ($herd_details['animals'] as $animal_id => $animal_details) {
+
+      // Get the original $form array for this animal.
+      $animal_form = $form['herd_details'][$herd_id]['animals'][$animal_id];
+
+      // If certain fields are modified, make sure they are not left blank.
+      $required_fields = array(
+        'type' => t('Animal type'),
+        'head_count' => t('Head count'),
+        'weight' => t('Weight'),
+        'arrival' => t('Planned arrival'),
+        'departure' => t('Planned departure'),
+      );
+      foreach ($required_fields as $field => $label) {
+        if ($animal_form[$field]['#default_value'] != $animal_details[$field]) {
+          if (empty($animal_details[$field])) {
+            form_set_error('herd_details][' . $herd_id . '][animals][' . $animal_id . '][' . $field, $label . ' ' . t('is required.'));
+          }
+        }
+      }
+    }
+  }
 }
 
 /**
- * farm_grazing_plan_herd_edit_form()
- *
- * Remove the requested herd from the plan
+ * Submit handler for saving the herd information.
  */
-function farm_grazing_plan_herd_edit_form($form, &$form_state, $plan_obj, $herd_id) {
+function farm_grazing_plan_herds_form_submit($form, &$form_state) {
 
-  // get plan name
-  $plan_name = $plan_obj->name;
+  // If there are no herd details, bail.
+  if (empty($form_state['values']['herd_details'])) {
+    return;
+  }
 
-  // get herd name
+  // Remember if values have been updated.
+  $updated = FALSE;
+
+  // Iterate through the herds.
+  foreach ($form_state['values']['herd_details'] as $herd_id => $herd_details) {
+
+    // If there are no animals in the herd, skip it.
+    if (empty($herd_details['animals'])) {
+      continue;
+    }
+
+    // Iterate through the animals.
+    foreach ($herd_details['animals'] as $animal_id => $animal_details) {
+
+      // Get the original $form array for this animal.
+      $animal_form = $form['herd_details'][$herd_id]['animals'][$animal_id];
+
+      // If the animal's type has changed...
+      if ($animal_form['type']['#default_value'] != $animal_details['type']) {
+
+        // Set the asset property value.
+        farm_asset_property_set($animal_id, 'farm_grazing_animal_type', $animal_details['type']);
+        $updated = TRUE;
+      }
+
+      // If the animal's head count has changed...
+      if ($animal_form['head_count']['#default_value'] != $animal_details['head_count']) {
+
+        // Create an inventory log.
+        $animal = farm_asset_load($animal_id);
+        if (!empty($animal)) {
+          farm_inventory_set($animal, $animal_details['head_count']);
+          $updated = TRUE;
+        }
+      }
+
+      // If the animal's weight has changed...
+      if ($animal_form['weight']['#default_value'] != $animal_details['weight']) {
+
+        // Create a weight log.
+        $animal = farm_asset_load($animal_id);
+        if (!empty($animal)) {
+          farm_livestock_weight_set($animal, $animal_details['weight'], 'lbs');
+          $updated = TRUE;
+        }
+      }
+
+      // If the animal's planned arrival has changed...
+      if ($animal_form['arrival']['#default_value'] != $animal_details['arrival']) {
+
+        // Set the asset property value.
+        farm_asset_property_set($animal_id, 'farm_grazing_planned_arrival', $animal_details['arrival']);
+        $updated = TRUE;
+      }
+
+      // If the animal's planned departure has changed...
+      if ($animal_form['departure']['#default_value'] != $animal_details['departure']) {
+
+        // Set the asset property value.
+        farm_asset_property_set($animal_id, 'farm_grazing_planned_departure', $animal_details['departure']);
+        $updated = TRUE;
+      }
+    }
+  }
+
+  // If any values were updated, show a message.
+  if ($updated) {
+    drupal_set_message(t('Animals were updated.'));
+  }
+}
+
+/**
+ * Form for removing a herd from the plan.
+ */
+function farm_grazing_plan_herd_remove_form($form, &$form_state, $plan_obj, $herd_id) {
+
+  // Load the herd
   $herd = farm_asset_load($herd_id);
-  $herd_name = $herd->name;
 
+  // If the herd or plan are empty, show page not found.
+  if (empty($plan_obj) || empty($herd)) {
+    drupal_not_found();
+    drupal_exit();
+  }
+
+  // Store the plan ID and herd ID for use in the submit function.
   $form['plan_id'] = array(
     '#type' => 'value',
     '#value' => $plan_obj->id,
   );
-
   $form['herd_id'] = array(
     '#type' => 'value',
     '#value' => $herd->id,
   );
 
-  $form['edit']['text'] = array(
-    '#markup' => '<h2>' . t('Confirm that you want to remove ') .
-    '<b>' . $herd_name . '</b>' .
-    t(' from plan ') . '<b>' . $plan_name . '</b>.</h2>',
-  );
-  $form['edit']['cancel'] = array(
-    '#type' => 'submit',
-    '#value' => t('Cancel'),
-    '#submit' => array('farm_grazing_herd_edit_form_submit'),
-  );
-  $form['edit']['delete'] = array(
-    '#type' => 'submit',
-    '#value' => t('Remove Herd from Plan'),
-    '#submit' => array('farm_grazing_herd_edit_form_submit'),
-  );
+  // Build a return path.
+  $path = drupal_get_destination();
+  if ($path['destination'] == current_path()) {
+    $plan_uri = entity_uri('farm_plan', $plan_obj);
+    $path = $plan_uri['path'] . '/';
+  }
 
-  // Return the form.
-  return $form;
+  // Build and return a confirmation form.
+  return confirm_form($form,
+    t('Are you sure you want to remove herd %herd_name from the %plan_name?', array('%herd_name' => $herd->name, '%plan_name' => $plan_obj->name)),
+    $path,
+    t('You can add it back later if you change your mind.'),
+    t('Remove it!'),
+    t('Cancel')
+  );
 }
 
 /**
- * farm_grazing_herd_form_submit
- *
- * Handle farm_grazing_plan_herd_edit_form() submit processing
+ * Submit handler for the herd removal form.
  */
-function farm_grazing_herd_edit_form_submit($form, &$form_state) {
+function farm_grazing_plan_herd_remove_form_submit($form, &$form_state) {
 
-  $plan_id = $form_state['values']['plan_id'];
-  $herd_id = $form_state['values']['herd_id'];
-
-  // if user clicked Cancel, get out of here
-  if ($form_state['clicked_button']['#id'] == 'edit-cancel') {
+  // If a plan ID and herd ID are not available, bail.
+  if (empty($form_state['values']['plan_id']) || empty($form_state['values']['herd_id'])) {
     return;
   }
 
-  if ($form_state['clicked_button']['#id'] == 'edit-delete') {
-    db_delete('farm_grazing_herds')
-      ->condition('plan_id', $plan_id)
-      ->condition('herd_id', $herd_id)
-      ->execute();
-  }
-
+  // Delete the record from the {farm_grazing_herds} table.
+  db_delete('farm_grazing_herds')
+    ->condition('plan_id', $form_state['values']['plan_id'])
+    ->condition('herd_id', $form_state['values']['herd_id'])
+    ->execute();
 }
 
 /**
@@ -472,6 +593,10 @@ function farm_grazing_herd_edit_form_submit($form, &$form_state) {
  */
 function theme_farm_grazing_plan_herds_form(&$vars) {
   $form = $vars['form'];
+
+  // Add some CSS to hide the date descriptions.
+  $css = '.form-type-date-popup .help-block {display:none;}';
+  drupal_add_css($css, array('type' => 'inline'));
 
   $output = drupal_render($form['plan']);
   $output .= drupal_render($form['text']);

@@ -36,6 +36,8 @@ function farm_grazing_config_animal_types_form($form, &$form_state) {
 
     // Animal type name.
     $form['types'][$id]['name'] = array(
+      '#title' => t('Animal type name'),
+      '#title_display' => 'invisible',
       '#type' => 'textfield',
       '#default_value' => $type['name'],
       '#required' => TRUE,
@@ -44,6 +46,8 @@ function farm_grazing_config_animal_types_form($form, &$form_state) {
 
     // DMI factor.
     $form['types'][$id]['dmi_factor'] = array(
+      '#title' => t('DMI factor'),
+      '#title_display' => 'invisible',
       '#type' => 'textfield',
       '#default_value' => $type['dmi_factor'],
       '#required' => TRUE,

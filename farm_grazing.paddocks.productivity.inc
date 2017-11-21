@@ -51,6 +51,8 @@ function farm_grazing_plan_productivity_form($form, &$form_state, $plan_obj) {
     );
     $form['paddocks'][$paddock_id]['quality'] = array(
       '#type' => 'textfield',
+      '#title' => t('Quality'),
+      '#title_display' => 'invisible',
       '#default_value' => $quality,
       '#size' => 30,
       '#maxlength' => 30,
@@ -109,7 +111,7 @@ function farm_grazing_plan_productivity_form($form, &$form_state, $plan_obj) {
  */
 function farm_grazing_plan_productivity_form_validate($form, &$form_state) {
 
-  foreach ($form_state['input']['paddocks'] as $id => $val) {
+  foreach ($form_state['values']['paddocks'] as $id => $val) {
     if (!is_numeric($val['quality']) or $val['quality'] < 0.0) {
       form_set_error('quality', t('Forage Quality must be numeric >= 0.0'));
     }
