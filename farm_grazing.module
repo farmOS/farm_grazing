@@ -661,17 +661,6 @@ function farm_grazing_entity_update($entity, $type) {
 }
 
 /**
- * Implements hook_entity_update().
- */
-function farm_grazing_entity_delete($entity, $type) {
-
-  // Audit asset deletion.
-  if ($type == 'farm_asset') {
-    farm_grazing_plan_asset_update($entity);
-  }
-}
-
-/**
  * Perform checks to see if a group/animal asset is part of a plan, and if
  * updating/deleting it will affect that plan.
  *
