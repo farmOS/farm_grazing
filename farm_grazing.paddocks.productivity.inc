@@ -69,8 +69,12 @@ function farm_grazing_plan_productivity_form($form, &$form_state, $plan_obj) {
     $num++;
   }
 
-  $pad_avg = $pad_avg / $num;
-  $tot_avg = $tot_sum / $num;
+  // Calculate the averages (only if $num is greater than one to prevent
+  // division by zero or one).
+  if ($num > 1) {
+    $pad_avg = $pad_avg / $num;
+    $tot_avg = $tot_sum / $num;
+  }
 
   $form['summary']['paddock_cnt'] = array(
     '#prefix' => '<p>' . t('Paddock count: '),
