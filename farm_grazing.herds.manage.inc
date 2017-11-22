@@ -44,7 +44,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     '#markup' => t('<p>' .
       t('A herd is defined as a group of animals that will be rotated between paddocks together regardless of the make up of animals in the herd.') .
       '</p><p>' .
-      t('You can define animals ') . l(t('HERE'), ' farm/asset/add/animal') . t(' and assign them to a group. See the Help for more information.') .
+      t('You can define animals <a href="@add_animal">HERE</a> and assign them to a group. See the Help for more information.', array('@add_animal' => url('farm/asset/add/animal'))) .
       '</p>' .
       ''),
   );
