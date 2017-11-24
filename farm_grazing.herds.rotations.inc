@@ -238,80 +238,84 @@ function theme_farm_grazing_plan_rotations_form($variables) {
   $output .= drupal_render($form['add']);
   $output .= drupal_render($form['reset_grazing_days']);
 
-  foreach (element_children($form['herds']) as $herd_id) {
-    // render the tables title
-    $output .= drupal_render($form['herds'][$herd_id]['title']);
+  if (!empty($form['herds'])) {
+    foreach (element_children($form['herds']) as $herd_id) {
+      // render the tables title
+      $output .= drupal_render($form['herds'][$herd_id]['title']);
 
-    // assemble the table rows
-    $rows = array();
-    foreach (element_children($form['herds'][$herd_id]['rotations']) as $rid) {
-      $item =& $form['herds'][$herd_id]['rotations'][$rid];
+      // assemble the table rows
+      $rows = array();
+      if (!empty($form['herds'][$herd_id]['rotations'])) {
+        foreach (element_children($form['herds'][$herd_id]['rotations']) as $rid) {
+          $item =& $form['herds'][$herd_id]['rotations'][$rid];
 
-      // Build movement log columns (link and done checkbox)
-      $log_link = '';
-      $log_done = '';
-      if (!empty($item['log_id']['#value'])) {
-        $log = log_load($item['log_id']['#value']);
-        $uri = entity_uri('log', $log);
-        $log_link = l(t('View log'), $uri['path']);
-        if (!empty($log->done)) {
-          $log_done = '✔';
+          // Build movement log columns (link and done checkbox)
+          $log_link = '';
+          $log_done = '';
+          if (!empty($item['log_id']['#value'])) {
+            $log = log_load($item['log_id']['#value']);
+            $uri = entity_uri('log', $log);
+            $log_link = l(t('View log'), $uri['path']);
+            if (!empty($log->done)) {
+              $log_done = '✔';
+            }
+          }
+
+          // Build a link to remove the rotation.
+          $remove_link = l(t('Remove'), 'farm/plan/' . $plan . '/herds/rotations/' . $rid . '/delete', array('query' => array('destination' => current_path())));
+
+          $class = array('draggable');
+          $weight = drupal_render($item['weight']);
+          if ($log_done == '✔') {
+            $class = array();
+            $remove_link = '';
+            $item['grazing_days']['#disabled'] = TRUE;
+            $weight = '';
+          }
+
+          // Assemble the row.
+          $rows[] = array(
+            'data' => array(
+              drupal_render($item['name']),
+              drupal_render($item['grazing_days']),
+              drupal_render($item['start_date']),
+              drupal_render($item['end_date']),
+              drupal_render($item['image']),
+              $log_link,
+              $log_done,
+              $remove_link,
+              $weight,
+            ),
+            'class' => $class,
+          );
         }
       }
 
-      // Build a link to remove the rotation.
-      $remove_link = l(t('Remove'), 'farm/plan/' . $plan . '/herds/rotations/' . $rid . '/delete', array('query' => array('destination' => current_path())));
-
-      $class = array('draggable');
-      $weight = drupal_render($item['weight']);
-      if ($log_done == '✔') {
-        $class = array();
-        $remove_link = '';
-        $item['grazing_days']['#disabled'] = TRUE;
-        $weight = '';
-      }
-
-      // Assemble the row.
-      $rows[] = array(
-        'data' => array(
-          drupal_render($item['name']),
-          drupal_render($item['grazing_days']),
-          drupal_render($item['start_date']),
-          drupal_render($item['end_date']),
-          drupal_render($item['image']),
-          $log_link,
-          $log_done,
-          $remove_link,
-          $weight,
-        ),
-        'class' => $class,
+      $header = array(
+        t('Paddock'),
+        t('Grazing Days'),
+        t('Start Date'),
+        t('End Date'),
+        '<img src="' . base_path() . 'farm/grazing/plan/' . $plan . '/plot/0/0/0">',
+        t('Movement Log'),
+        t('Movement Done'),
+        t('Remove'),
+        t('Sort weight'),
       );
+
+      $table_id = 'herd_' . $herd_id . '_rotations';
+
+      // render the table into the the output
+      $output .= theme('table', array(
+        'header' => $header,
+        'rows' => $rows,
+        'attributes' => array('id' => $table_id),
+      ));
+
+      // setup the table for drag and drop
+      $weight_class = 'herd_' . $herd_id . '_weight';
+      drupal_add_tabledrag($table_id, 'order', 'sibling', $weight_class);
     }
-
-    $header = array(
-      t('Paddock'),
-      t('Grazing Days'),
-      t('Start Date'),
-      t('End Date'),
-      '<img src="' . base_path() . 'farm/grazing/plan/' . $plan . '/plot/0/0/0">',
-      t('Movement Log'),
-      t('Movement Done'),
-      t('Remove'),
-      t('Sort weight'),
-    );
-
-    $table_id = 'herd_' . $herd_id . '_rotations';
-
-    // render the table into the the output
-    $output .= theme('table', array(
-      'header' => $header,
-      'rows' => $rows,
-      'attributes' => array('id' => $table_id),
-    ));
-
-    // setup the table for drag and drop
-    $weight_class = 'herd_' . $herd_id . '_weight';
-    drupal_add_tabledrag($table_id, 'order', 'sibling', $weight_class);
   }
 
   // render any remaining elements
