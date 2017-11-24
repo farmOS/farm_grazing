@@ -539,8 +539,13 @@ function get_grazing_group_detailed_info($asset_id, &$data) {
     // get the group quantity for asset count
     $head_count = farm_inventory($asset);
 
-    $weight = farm_livestock_animal_weight($asset);
+    // Get the DMI factor.
     $dmi_factor = getAnimalTypeDmiFactor($type);
+
+    // Get the weight value and units, if they exist.
+    $weight = farm_livestock_animal_weight($asset);
+    $weight_value = !empty($weight['value']) ? $weight['value'] : '';
+    $weight_units = !empty($weight['units']) ? $weight['units'] : '';
 
     // add the record to the results
     $data[] = array(
@@ -550,8 +555,8 @@ function get_grazing_group_detailed_info($asset_id, &$data) {
       'arrival' => $arrival,
       'departure' => $departure,
       'head_count' => $head_count,
-      'weight' => $weight['value'],
-      'weight_units' => $weight['units'],
+      'weight' => $weight_value,
+      'weight_units' => $weight_units,
       'dmi_factor' => $dmi_factor,
     );
   }
