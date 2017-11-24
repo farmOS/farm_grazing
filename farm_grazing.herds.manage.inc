@@ -49,15 +49,23 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
       ''),
   );
 
-  // get a list of herds for select
-  $query = db_query("SELECT id, name FROM {farm_asset} WHERE type='group' AND active=1 ORDER BY name");
+  // Get a list of all herds in the plan.
+  $plan_herds = array();
+  $result = db_query('SELECT * FROM {farm_grazing_herds} WHERE plan_id=:plan_id', array(':plan_id' => $plan));
+  foreach ($result as $row) {
+    if (!empty($row->herd_id)) {
+      $plan_herds[$row->herd_id] = $row;
+    }
+  }
 
+  // Build a list of other herds to select from (excluding ones that are
+  // are already in the plan.
   $herd_options = array();
-
-  $records = $query->fetchAll();
-
-  foreach ($records as $record) {
-    $herd_options[$record->id] = $record->name;
+  $result = db_query("SELECT id, name FROM {farm_asset} WHERE type='group' AND active=1 ORDER BY name");
+  foreach ($result as $row) {
+    if (!empty($row->id) && !array_key_exists($row->id, $plan_herds)) {
+      $herd_options[$row->id] = $row->name;
+    }
   }
 
   // Form for adding a herd to a plan
@@ -80,8 +88,6 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     '#submit' => array('farm_grazing_plan_herds_add_submit'),
   );
 
-  $query = db_query('SELECT * FROM {farm_grazing_herds} WHERE plan_id=:plan_id', array(':plan_id' => $plan));
-
   // table for herd summary
   $form['section_1']['title'] = array(
     '#markup' => '<h4>' . t('Summary of Herds in Plan') . '</h4>',
@@ -90,23 +96,23 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   // collect information about herds here
   $herd_details = array();
 
-  $records = $query->fetchAll();
-  foreach ($records as $record) {
+  // Iterate through the herds in the plan.
+  foreach ($plan_herds as $herd) {
 
-    if (empty($record->herd_id)) {
+    if (empty($herd->herd_id)) {
       continue;
     }
 
     // load the asset so we have its name
-    $group = farm_asset_load($record->herd_id);
+    $group = farm_asset_load($herd->herd_id);
 
     $data = array();
-    $summary = getHerdDataAndSummary($record->herd_id, $plan, $data);
+    $summary = getHerdDataAndSummary($herd->herd_id, $plan, $data);
 
     // save all the herd info here, we'll use it later
     // to generate the tables we display
     $herd_details[] = array(
-      'herd_id' => $record->herd_id,
+      'herd_id' => $herd->herd_id,
       'herd_name' => $group->name,
       'herd_data' => $data,
       'summary' => $summary,
@@ -116,9 +122,9 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     $departure_date = $summary['departure'];
 
     // build the section 1 summary table
-    $form['section_1']['herds'][$record->herd_id] = array(
+    $form['section_1']['herds'][$herd->herd_id] = array(
       'name' => array(
-        '#markup' => l($group->name, 'farm/asset/' . $record->herd_id, array('query' => array('destination' => current_path()))),
+        '#markup' => l($group->name, 'farm/asset/' . $herd->herd_id, array('query' => array('destination' => current_path()))),
       ),
       'head_count' => array(
         '#markup' => $summary['head_count'],
@@ -136,7 +142,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#markup' => $departure_date,
       ),
       'remove' => array(
-        '#markup' => l(t('Remove'), 'farm/plan/' . $plan . '/herds/' . $record->herd_id . '/remove', array('query' => array('destination' => current_path()))),
+        '#markup' => l(t('Remove'), 'farm/plan/' . $plan . '/herds/' . $herd->herd_id . '/remove', array('query' => array('destination' => current_path()))),
       ),
     );
   }
