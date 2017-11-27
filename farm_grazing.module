@@ -272,6 +272,80 @@ function farm_grazing_plan_access($plan, $account = NULL) {
 }
 
 /**
+ * Implements hook_feeds_importer_default_alter().
+ */
+function farm_grazing_feeds_importer_default_alter($importers) {
+
+  // Add extra field mappings to animals for grazing properties.
+  $name = 'farm_asset_animal';
+  if (!empty($importers[$name])) {
+    $mappings = array(
+      array(
+        'source' => 'Grazing animal type',
+        'target' => 'farm_asset_property:farm_grazing_animal_type',
+        'unique' => FALSE,
+        'language' => 'und',
+      ),
+      array(
+        'source' => 'Planned arrival',
+        'target' => 'farm_asset_property:farm_grazing_planned_arrival',
+        'unique' => FALSE,
+        'language' => 'und',
+      ),
+      array(
+        'source' => 'Planned departure',
+        'target' => 'farm_asset_property:farm_grazing_planned_departure',
+        'unique' => FALSE,
+        'language' => 'und',
+      ),
+    );
+    $importer_mappings =& $importers[$name]->config['processor']['config']['mappings'];
+    $importer_mappings = array_merge($importer_mappings, $mappings);
+  }
+}
+
+/**
+ * Implements hook_feeds_tamper_default_alter().
+ */
+function farm_grazing_feeds_tamper_default_alter(&$feeds_tampers) {
+
+  // If farm_import is not installed, bail.
+  if (!module_exists('farm_import')) {
+    return;
+  }
+
+  // Check that animal type is an allowed value.
+  /**
+   * @todo
+   * Needs allowed_value plugin.
+   */
+//  $feeds_tamper = farm_import_feeds_tamper_plugin('farm_asset', 'animal', 'Grazing animal type', 'allowed_value');
+//  $feeds_tampers[$feeds_tamper->id] = $feeds_tamper;
+
+  // Convert planned arrival to a Unix timestamp.
+  $feeds_tamper = farm_import_feeds_tamper_plugin('farm_asset', 'animal', 'Planned arrival', 'strtotime');
+  $feeds_tamper->weight = 1;
+  $feeds_tampers[$feeds_tamper->id] = $feeds_tamper;
+
+  // Convert planned arrival back to a date formatted for the grazing module.
+  $feeds_tamper = farm_import_feeds_tamper_plugin('farm_asset', 'animal', 'Planned arrival', 'timetodate');
+  $feeds_tamper->settings['date_format'] = 'Y-m-d';
+  $feeds_tamper->weight = 2;
+  $feeds_tampers[$feeds_tamper->id] = $feeds_tamper;
+
+  // Convert planned departure to a Unix timestamp.
+  $feeds_tamper = farm_import_feeds_tamper_plugin('farm_asset', 'animal', 'Planned departure', 'strtotime');
+  $feeds_tamper->weight = 1;
+  $feeds_tampers[$feeds_tamper->id] = $feeds_tamper;
+
+  // Convert planned departure back to a date formatted for the grazing module.
+  $feeds_tamper = farm_import_feeds_tamper_plugin('farm_asset', 'animal', 'Planned departure', 'timetodate');
+  $feeds_tamper->settings['date_format'] = 'Y-m-d';
+  $feeds_tamper->weight = 2;
+  $feeds_tampers[$feeds_tamper->id] = $feeds_tamper;
+}
+
+/**
  * Load an array of grazing plan options.
  */
 function farm_grazing_plan_options() {
