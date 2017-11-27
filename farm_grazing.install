@@ -57,22 +57,6 @@ function farm_grazing_install() {
 }
 
 /**
- * Implements hook_uninstall().
- */
-function farm_grazing_uninstall() {
-
-  // Delete all asset properties managed by this module.
-  $properties = array(
-    'animal_type',
-    'planned_arrival',
-    'planned_departure',
-  );
-  foreach ($properties as $property) {
-    db_query('DELETE FROM {farm_asset_property} WHERE name = :name', array('name' => 'farm_grazing_' . $property));
-  }
-}
-
-/**
  * Implements hook_schema().
  */
 function farm_grazing_schema() {

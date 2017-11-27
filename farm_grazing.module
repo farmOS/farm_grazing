@@ -23,6 +23,18 @@ function farm_grazing_farm_ui_entities() {
 }
 
 /**
+ * Implements hook_farm_asset_property().
+ */
+function farm_grazing_farm_asset_property() {
+  $prefix = 'farm_grazing_';
+  return array(
+    $prefix . 'animal_type',
+    $prefix . 'planned_arrival',
+    $prefix . 'planned_departure',
+  );
+}
+
+/**
  * Implements hook_permission().
  */
 function farm_grazing_permission() {
