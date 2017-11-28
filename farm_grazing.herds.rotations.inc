@@ -27,18 +27,19 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
   // Validate the herds in the plan (silently). If error are detected, direct
   // the user back to the herd management page to correct them. Do not show
   // the rest of the rotations page.
+  $errors = 0;
   foreach ($herd_records as $record) {
     $data = array();
-    $errors = farm_grazing_validate_herd($record->herd_id, $record->plan_id, $data, TRUE);
-    if (!empty($errors)) {
-      $message = t('Some required data is missing from the herds/animals in this plan. Please correct these issues in the <a href="@herds_manage">Manage Herds</a> tab.', array('@herds_manage' => url('farm/plan/' . $plan . '/herds')));
-      return array(
-        'validation' => array(
-          '#type' => 'markup',
-          '#markup' => $message,
-        ),
-      );
-    }
+    $errors += farm_grazing_validate_herd($record->herd_id, $record->plan_id, $data, TRUE);
+  }
+  if (empty($herd_records) || !empty($errors)) {
+    $message = t('Some required data is missing from the herds/animals in this plan. Please correct these issues in the <a href="@herds_manage">Manage Herds</a> tab.', array('@herds_manage' => url('farm/plan/' . $plan . '/herds')));
+    return array(
+      'validation' => array(
+        '#type' => 'markup',
+        '#markup' => $message,
+      ),
+    );
   }
 
   $form['#tree'] = TRUE;
