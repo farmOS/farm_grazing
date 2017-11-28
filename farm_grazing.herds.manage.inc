@@ -8,6 +8,9 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   // Load utility functions.
   module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
 
+  // Add herd manage CSS.
+  drupal_add_css(drupal_get_path('module', 'farm_grazing') . '/css/herds.manage.css');
+
   // Page layout
   //   button to add a herd to plan
   //     validate that herd has weigh, planned arrival, planned departure
@@ -155,6 +158,10 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     $type_options[$animal_type['type_id']] = $animal_type['name'];
   }
 
+  // Track whether or not the animal type or weight are missing from any
+  // animals, because this will affect SAU and DMI calculations.
+  $missing_animal_data = array();
+
   foreach ($herd_details as $this_herd) {
 
     $form['herd_details'][$this_herd['herd_id']]['title'] = array(
@@ -164,17 +171,27 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     );
 
     foreach ($this_herd['herd_data'] as $rec) {
-      $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['name'] = array(
+
+      // Create an array for the animal fields, and a reference to it.
+      $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']] = array();
+      $animal_fields = &$form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']];
+
+      // Animal record name.
+      $animal_fields['name'] = array(
         '#markup' => l($rec['name'], 'farm/asset/' . $rec['id'], array('query' => array('destination' => current_path()))),
       );
-      $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['type'] = array(
+
+      // Animal type.
+      $animal_fields['type'] = array(
         '#title' => t('Animal type'),
         '#title_display' => 'invisible',
         '#type' => 'select',
         '#options' => $type_options,
         '#default_value' => !empty($rec['type']) ? $rec['type'] : '',
       );
-      $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['head_count'] = array(
+
+      // Head count.
+      $animal_fields['head_count'] = array(
         '#title' => t('Head count'),
         '#title_display' => 'invisible',
         '#type' => 'textfield',
@@ -183,7 +200,9 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#maxlength' => 30,
         '#element_validate' => array('element_validate_number'),
       );
-      $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['weight'] = array(
+
+      // Weight.
+      $animal_fields['weight'] = array(
         '#title' => t('Average weight'),
         '#title_display' => 'invisible',
         '#type' => 'textfield',
@@ -192,13 +211,19 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#maxlength' => 30,
         '#element_validate' => array('element_validate_number'),
       );
-      $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['sau'] = array(
+
+      // SAU.
+      $animal_fields['sau'] = array(
         '#markup' => round($rec['weight'] / 1000.0, 2),
       );
-      $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['dmi'] = array(
+
+      // DMI.
+      $animal_fields['dmi'] = array(
         '#markup' => round($rec['head_count'] * $rec['weight'] * $rec['dmi_factor'], 2),
       );
-      $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['arrival'] = array(
+
+      // Planned arrival.
+      $animal_fields['arrival'] = array(
         '#title' => t('Planned arrival'),
         '#title_display' => 'invisible',
         '#type' => 'date_popup',
@@ -208,7 +233,9 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#date_label_position' => 'none',
         '#default_value' => $rec['arrival'],
       );
-      $form['herd_details'][$this_herd['herd_id']]['animals'][$rec['id']]['departure'] = array(
+
+      // Planned departure.
+      $animal_fields['departure'] = array(
         '#title' => t('Planned departure'),
         '#title_display' => 'invisible',
         '#type' => 'date_popup',
@@ -218,6 +245,37 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#date_label_position' => 'none',
         '#default_value' => $rec['departure'],
       );
+
+      // If the animal type or weight is empty...
+      if (empty($rec['type']) || empty($rec['weight'])) {
+
+        // Remember that this herd is missing data.
+        $missing_animal_data[] = $this_herd['herd_id'];
+
+        // If animal type is empty, add an error class to the dropdown.
+        if (empty($rec['type'])) {
+          $animal_fields['type']['#attributes']['class'] = array('error');
+        }
+
+        // If weight is empty, add an error class to the weight field, the SAU,
+        // and the DMI.
+        if (empty($rec['weight'])) {
+          $animal_fields['weight']['#attributes']['class'] = array('error');
+          $animal_fields['sau']['#prefix'] = '<span class="error">';
+          $animal_fields['sau']['#suffix'] = '</span>';
+          $animal_fields['dmi']['#prefix'] = '<span class="error">';
+          $animal_fields['dmi']['#suffix'] = '</span>';
+        }
+      }
+    }
+
+    // If there was missing animal data, add an error class to the herd summary
+    // SAU and DMI.
+    if (in_array($this_herd['herd_id'], $missing_animal_data)) {
+      $form['section_1']['herds'][$this_herd['herd_id']]['herd_sau']['#prefix'] = '<span class="error">';
+      $form['section_1']['herds'][$this_herd['herd_id']]['herd_sau']['#suffix'] = '</span>';
+      $form['section_1']['herds'][$this_herd['herd_id']]['herd_dmi']['#prefix'] = '<span class="error">';
+      $form['section_1']['herds'][$this_herd['herd_id']]['herd_dmi']['#suffix'] = '</span>';
     }
   }
 
@@ -291,6 +349,11 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         $key = $date->format('Ym');
         if (isset($helper[$key])) {
           $row[$helper[$key]] = $row[$helper[$key]] + $sau;
+
+          // If there is missing data, add an error class.
+          if (!empty($missing_animal_data)) {
+            $row[$helper[$key]] = '<span class="error">' . $row[$helper[$key]] . '</span>';
+          }
         }
 
         // increment the month
@@ -312,10 +375,16 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         $sum = $sum + $row[$i + 1];
       }
     }
-    $totals[] = $sum;
     if ($sum > $peak_sau) {
       $peak_sau = $sum;
     }
+
+    // If there is missing data, add an error class.
+    if (!empty($missing_animal_data)) {
+      $sum = '<span class="error">' . $sum . '</span>';
+    }
+
+    $totals[] = $sum;
   }
 
   // Push a dummy herd_id field.
@@ -352,17 +421,31 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
   $form['section_4'] = array(
     '#markup' => '<h4>' . t('Stocking Rates') . '</h4>',
   );
+
+  // Total cell size.
+  $total_cell_size = round($cell_size, 1);
   $form['section_4_cell_size'] = array(
-    '#markup' => '<p>' . t('Total Cell Size: ') . round($cell_size, 1) . '</p>',
+    '#markup' => '<p>' . t('Total Cell Size: ') . $total_cell_size . '</p>',
   );
+
+  // Peak SAU (if there is missing data, add an error class).
+  $peak_sau_formatted = $peak_sau;
+  if (!empty($missing_animal_data)) {
+    $peak_sau_formatted = '<span class="error">' . $peak_sau_formatted . '</span>';
+  }
   $form['section_4_peak_sau'] = array(
-    '#markup' => '<p>' . t('Peak Monthly SAU: ') . $peak_sau . '</p>',
+    '#markup' => '<p>' . t('Peak Monthly SAU: ') . $peak_sau_formatted . '</p>',
   );
+
+  // Stocking rate (if there is missing data, add an error class).
   if ($peak_sau == 0) {
     $rate = '-';
   }
   else {
     $rate = round($cell_size / $peak_sau, 1);
+  }
+  if (!empty($missing_animal_data)) {
+    $rate = '<span class="error">' . $rate . '</span>';
   }
   $form['section_4_stocking_rate'] = array(
     '#markup' => '<p>' . t('Stocking Rate: ') . $rate . '</p>',
