@@ -626,11 +626,14 @@ function summarize_grazing_group_detailed_info(&$data) {
  *   The farm plan ID.
  * @param array &$data
  *   An array of data to pass into get_grazing_group_detailed_info().
+ * @param bool $silent
+ *   Whether or not to output error messages using drupal_set_message().
+ *   Defaults to FALSE (errors will show).
  *
  * @return int
  *   Returns the number of errors encountered.
  */
-function farm_grazing_validate_herd($herd_id, $plan_id, &$data) {
+function farm_grazing_validate_herd($herd_id, $plan_id, &$data, $silent = FALSE) {
   $errors = 0;
 
   get_grazing_group_detailed_info($herd_id, $data);
@@ -648,7 +651,9 @@ function farm_grazing_validate_herd($herd_id, $plan_id, &$data) {
     $type = $animal['type'];
     if (empty($type)) {
       $message = t('Animal "<a href="@animal_edit">@animal_name</a>" needs its Animal Type property set.', $animal_args);
-      drupal_set_message($message, 'error');
+      if (empty($silent)) {
+        drupal_set_message($message, 'error');
+      }
       $errors++;
     }
 
@@ -674,7 +679,9 @@ function farm_grazing_validate_herd($herd_id, $plan_id, &$data) {
     $weight = $animal['weight'];
     if (empty($weight)) {
       $message = t('Animal "<a href="@animal_edit">@animal_name</a>" needs an Observation -> Quantity -> weight set.', $animal_args);
-      drupal_set_message($message, 'error');
+      if (empty($silent)) {
+        drupal_set_message($message, 'error');
+      }
       $errors++;
     }
 
