@@ -678,7 +678,7 @@ function farm_grazing_validate_herd($herd_id, $plan_id, &$data, $silent = FALSE)
     //  has weight
     $weight = $animal['weight'];
     if (empty($weight)) {
-      $message = t('Animal "<a href="@animal_edit">@animal_name</a>" needs an Observation -> Quantity -> weight set.', $animal_args);
+      $message = t('Animal "<a href="@animal_edit">@animal_name</a>" does not have a weight measurement.', $animal_args);
       if (empty($silent)) {
         drupal_set_message($message, 'error');
       }
