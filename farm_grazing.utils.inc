@@ -614,13 +614,21 @@ function summarize_grazing_group_detailed_info(&$data) {
 }
 
 /**
- * farm_grazing_validate_herd($herd_id, $plan_id, &$data)
+ * Validate a herd in a plan.
  *
  * when a herd is attached to a grazing plan or otherwise modified
  * this function checks that all components of the herd have required
  * properties and initial observations.
  *
- * @returns $errors - the number of errors encountered
+ * @param int $herd_id
+ *   The herd (group asset) ID.
+ * @param int $plan_id
+ *   The farm plan ID.
+ * @param array &$data
+ *   An array of data to pass into get_grazing_group_detailed_info().
+ *
+ * @return int
+ *   Returns the number of errors encountered.
  */
 function farm_grazing_validate_herd($herd_id, $plan_id, &$data) {
   $errors = 0;
