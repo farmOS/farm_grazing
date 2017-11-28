@@ -16,6 +16,31 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
   // Set the page title.
   drupal_set_title(t('Create paddock rotations for each herd'));
 
+  // Get a list of all herds associated with this plan.
+  $query = db_query('SELECT h.*, a.name FROM {farm_grazing_herds} h JOIN {farm_asset} a ON h.herd_id=a.id WHERE plan_id=:plan_id ORDER BY a.name', array(':plan_id' => $plan));
+  $herd_records = $query->fetchAll();
+
+  // Get a list of all paddocks associated with this plan.
+  $query = db_query('SELECT p.*, t.name FROM {farm_grazing_plan_paddock} p LEFT JOIN taxonomy_term_data t ON p.paddock_id=t.tid WHERE plan_id=:plan_id ORDER BY t.name', array(':plan_id' => $plan));
+  $paddock_records = $query->fetchAll();
+
+  // Validate the herds in the plan (silently). If error are detected, direct
+  // the user back to the herd management page to correct them. Do not show
+  // the rest of the rotations page.
+  foreach ($herd_records as $record) {
+    $data = array();
+    $errors = farm_grazing_validate_herd($record->herd_id, $record->plan_id, $data, TRUE);
+    if (!empty($errors)) {
+      $message = t('Some required data is missing from the herds/animals in this plan. Please correct these issues in the <a href="@herds_manage">Manage Herds</a> tab.', array('@herds_manage' => url('farm/plan/' . $plan . '/herds')));
+      return array(
+        'validation' => array(
+          '#type' => 'markup',
+          '#markup' => $message,
+        ),
+      );
+    }
+  }
+
   $form['#tree'] = TRUE;
 
   $form['plan'] = array(
@@ -26,14 +51,6 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     '#markup' => t('
       <p>Drag and drop to reorder the paddocks for each herd. Avoid grazing during paddock exclusions or recovery periods.</p>'),
   );
-
-  // Get a list of all herds associated with this plan.
-  $query = db_query('SELECT h.*, a.name FROM {farm_grazing_herds} h JOIN {farm_asset} a ON h.herd_id=a.id WHERE plan_id=:plan_id ORDER BY a.name', array(':plan_id' => $plan));
-  $herd_records = $query->fetchAll();
-
-  // Get a list of all paddocks associated with this plan.
-  $query = db_query('SELECT p.*, t.name FROM {farm_grazing_plan_paddock} p LEFT JOIN taxonomy_term_data t ON p.paddock_id=t.tid WHERE plan_id=:plan_id ORDER BY t.name', array(':plan_id' => $plan));
-  $paddock_records = $query->fetchAll();
 
   // Create an array of herd options for the select list.
   $herd_options = array();
@@ -227,6 +244,11 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
 }
 
 function theme_farm_grazing_plan_rotations_form($variables) {
+
+  // If the validation error message is set, bail.
+  if (!empty($variables['form']['validation'])) {
+    return;
+  }
 
   $form =& $variables['form'];
 
