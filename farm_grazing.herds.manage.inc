@@ -464,15 +464,6 @@ function farm_grazing_plan_herds_add_validate($form, &$form_state) {
   if (empty($form_state['values']['add']['herd_id'])) {
     form_set_error('add][herd_id', t('Please select a herd to add to the plan.'));
   }
-
-  // Validate the herd.
-  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
-  $plan_id = $form_state['values']['plan'];
-  $herd_id = $form_state['values']['add']['herd_id'];
-  $data = array();
-  if (farm_grazing_validate_herd($herd_id, $plan_id, $data)) {
-    form_set_error('herd_id', t('Please fix the issues listed before adding this herd to the plan.'));
-  }
 }
 
 /**
