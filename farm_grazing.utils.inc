@@ -643,6 +643,10 @@ function farm_grazing_validate_herd($herd_id, $plan_id, &$data, $silent = FALSE)
 
   get_grazing_group_detailed_info($herd_id, $data);
 
+  // Keep track of missing data.
+  $missing_type = 0;
+  $missing_weight = 0;
+
   foreach ($data as &$animal) {
 
     // Build some animal arguments for use in translateables.
@@ -655,10 +659,7 @@ function farm_grazing_validate_herd($herd_id, $plan_id, &$data, $silent = FALSE)
     //  farm_grazing_animal_type property exists and is valid
     $type = $animal['type'];
     if (empty($type)) {
-      $message = t('Animal "<a href="@animal_edit">@animal_name</a>" needs its Animal Type property set.', $animal_args);
-      if (empty($silent)) {
-        drupal_set_message($message, 'error');
-      }
+      $missing_type++;
       $errors++;
     }
 
@@ -683,17 +684,30 @@ function farm_grazing_validate_herd($herd_id, $plan_id, &$data, $silent = FALSE)
     //  has weight
     $weight = $animal['weight'];
     if (empty($weight)) {
-      $message = t('Animal "<a href="@animal_edit">@animal_name</a>" does not have a weight measurement.', $animal_args);
-      if (empty($silent)) {
-        drupal_set_message($message, 'error');
-      }
+      $missing_weight++;
       $errors++;
     }
 
     //  TODO are all animals/groups are in some paddock
 
     //  TODO is asset attached to another active plan?
+  }
 
+  // Print errors (unless we should be silent).
+  if (empty($silent) && !empty($errors)) {
+
+    // General message.
+    drupal_set_message('Some required data is missing from the herds/animals in this plan. Please see the errors below and add any data that may be missing. Fields that are required will be highlighted in the form below, along with any values that are calculated from those fields.', 'error');
+
+    // Missing animal types.
+    if (!empty($missing_type)) {
+      drupal_set_message(t('@count animal(s) do not have an animal type.', array('@count' => $missing_weight)), 'error');
+    }
+
+    // Missing weight.
+    if (!empty($missing_weight)) {
+      drupal_set_message(t('@count animal(s) are missing weight measurements.', array('@count' => $missing_weight)), 'error');
+    }
   }
 
   return $errors;
