@@ -536,8 +536,13 @@ function get_grazing_group_detailed_info($asset_id, &$data) {
     $arrival = farm_asset_property_get($asset_id, 'farm_grazing_planned_arrival');
     $departure = farm_asset_property_get($asset_id, 'farm_grazing_planned_departure');
 
-    // get the group quantity for asset count
+    // Get the group quantity for asset count. If it is an empty string, this
+    // means that no inventory adjustments have been added, so we assume that
+    // this is an individual animal and give it a head count of 1.
     $head_count = farm_inventory($asset);
+    if ($head_count == '') {
+      $head_count = 1;
+    }
 
     // Get the DMI factor.
     $dmi_factor = getAnimalTypeDmiFactor($type);
