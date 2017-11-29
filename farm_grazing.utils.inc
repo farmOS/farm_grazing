@@ -483,7 +483,9 @@ function getAnimalTypeName($type) {
  * Return dmi_factor field from {farm_grazing_animal_types} table
  */
 function getAnimalTypeDmiFactor($type) {
-  return db_query('SELECT dmi_factor FROM {farm_grazing_animal_types} WHERE type_id=:tid', array(':tid' => $type))->fetchField();
+  $dmi_factor = db_query('SELECT dmi_factor FROM {farm_grazing_animal_types} WHERE type_id=:tid', array(':tid' => $type))->fetchField();
+  $dmi_factor = $dmi_factor / 100;
+  return $dmi_factor;
 }
 
 /**
@@ -596,7 +598,7 @@ function summarize_grazing_group_detailed_info(&$data) {
   // summarize the data
   foreach ($data as $rec) {
     $sum_sau = $sum_sau + $rec['head_count'] * $rec['weight'] / 1000.0;
-    $sum_dmi = $sum_dmi + $rec['head_count'] * $rec['weight'] * $rec['dmi_factor'] / 100.0;
+    $sum_dmi = $sum_dmi + $rec['head_count'] * $rec['weight'] * $rec['dmi_factor'];
     $head_count = $head_count + $rec['head_count'];
 
     // date strings MUST be for as 'Y-m-d' ie: YYYY-MM-DD
