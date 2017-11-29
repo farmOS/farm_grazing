@@ -270,19 +270,11 @@ function getFarmPlanDates($plan_obj, $format = NULL) {
   $start_ts = $wrapper->field_farm_date_range->value->value();
   $end_ts = $wrapper->field_farm_date_range->value2->value();
 
-  // get the start date
-  $start_date = new DateTime();
-  $start_date->setTimestamp($start_ts);
-
-  // get the start date
-  $end_date = new DateTime();
-  $end_date->setTimestamp($end_ts);
-
   if ($format == NULL) {
-    return array($start_date, $end_date);
+    return array($start_ts, $end_ts);
   }
   else {
-    return array($start_date->format($format), $end_date->format($format));
+    return array(date($format, $start_ts), date($format, $end_ts));
   }
 }
 
@@ -366,14 +358,10 @@ function daysAvailableByMonth($startDate1, $endDate1, $startDate2, $endDate2) {
  * @param $threshold    int, number of days in a month to count the month
  */
 function countMonths($start_date, $end_date, &$months, $threshold = 15) {
-  // convert timestamp ot YYYY-MM-DD
-  $start = new DateTime();
-  $start->setTimestamp($start_date);
-  $start = $start->format('Y-m-d');
 
-  $end = new DateTime();
-  $end->setTimestamp($end_date);
-  $end = $end->format('Y-m-d');
+  // Convert timestamps to YYYY-MM-DD.
+  $start = date('Y-m-d', $start_date);
+  $end = date('Y-m-d', $end_date);
 
   list($year, $mon, $num) = getNumMonthsBetween($start, $end);
 

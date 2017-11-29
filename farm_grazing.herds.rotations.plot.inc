@@ -46,14 +46,10 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
   $height = 16;
 
   // get the start date month and year
-  $plan_start = new DateTime();
-  $plan_start->setTimestamp($start_ts);
-  $plan_start = $plan_start->format('Y-m-d');
+  $plan_start = date('Y-m-d', $start_ts);
 
   // get the end date month and year
-  $plan_end = new DateTime();
-  $plan_end->setTimestamp($end_ts);
-  $plan_end = $plan_end->format('Y-m-d');
+  $plan_end = date('Y-m-d', $end_ts);
 
   // get number of days in plan
   $plan_days = get_days_between_dates($plan_start, $plan_end);
@@ -177,15 +173,12 @@ function get_paddock_exclusions($plan_id, $paddock_id) {
 
   $results = array();
   foreach ($records as $record) {
-    // get the exclusion start_date as YYYY-MM-DD
-    $e_start = new DateTime();
-    $e_start->setTimestamp($record->start_date);
-    $e_start = $e_start->format('Y-m-d');
 
-    // get the exclusion end_date as YYYY-MM-DD
-    $e_end = new DateTime();
-    $e_end->setTimestamp($record->end_date);
-    $e_end = $e_end->format('Y-m-d');
+    // Get the exclusion start_date as YYYY-MM-DD.
+    $e_start = date('Y-m-d', $record->start_date);
+
+    // Get the exclusion end_date as YYYY-MM-DD.
+    $e_end = date('Y-m-d', $record->end_date);
 
     // exclusion start_date as days from start of plan
     $sday = get_days_between_dates($p_start, $e_start);
