@@ -665,22 +665,21 @@ function farm_grazing_validate_herd($herd_id, $plan_id, &$data, $silent = FALSE)
       $errors++;
     }
 
-    //  if farm_grazing_planned_arrival property is null set to plan start date
-    if (empty($animal['arrival'])) {
-      $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
-      $ts = $wrapper->field_farm_date_range->value->value();
-      $dt = new DateTime();
-      $dt->setTimestamp($ts);
-      $animal['arrival'] = $dt->format('Y-m-d');
+    // Get the plan's start and end dates.
+    $plan_wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
+    $plan_start_time = $plan_wrapper->field_farm_date_range->value->value();
+    $plan_end_time = $plan_wrapper->field_farm_date_range->value2->value();
+
+    // If the animal doesn't have a planned arrival, or if their planned
+    // arrival is earlier than the plan start time, use the plan start time.
+    if (empty($animal['arrival']) || strtotime($animal['arrival']) < $plan_start_time) {
+      $animal['arrival'] = date('Y-m-d', $plan_start_time);
     }
 
-    //  if farm_grazing_planned_departure property is null set to plan end date
-    if (empty($animal['departure'])) {
-      $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
-      $ts = $wrapper->field_farm_date_range->value2->value();
-      $dt = new DateTime();
-      $dt->setTimestamp($ts);
-      $animal['departure'] = $dt->format('Y-m-d');
+    // If the animal doesn't have a planned departure, or if their planned
+    // departure is later than the plan end time, use the plan end time.
+    if (empty($animal['departure'])  || strtotime($animal['departure']) > $plan_end_time) {
+      $animal['departure'] = date('Y-m-d', $plan_end_time);
     }
 
     //  has weight
