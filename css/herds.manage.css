@@ -1,0 +1,7 @@
+#farm-grazing-plan-herds-form .error {
+  color: #ff0000;
+}
+#farm-grazing-plan-herds-form input.error,
+#farm-grazing-plan-herds-form select.error {
+  border-color: #ff0000;
+}

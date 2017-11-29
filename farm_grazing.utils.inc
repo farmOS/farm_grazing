@@ -536,8 +536,13 @@ function get_grazing_group_detailed_info($asset_id, &$data) {
     $arrival = farm_asset_property_get($asset_id, 'farm_grazing_planned_arrival');
     $departure = farm_asset_property_get($asset_id, 'farm_grazing_planned_departure');
 
-    // get the group quantity for asset count
+    // Get the group quantity for asset count. If it is an empty string, this
+    // means that no inventory adjustments have been added, so we assume that
+    // this is an individual animal and give it a head count of 1.
     $head_count = farm_inventory($asset);
+    if ($head_count == '') {
+      $head_count = 1;
+    }
 
     // Get the DMI factor.
     $dmi_factor = getAnimalTypeDmiFactor($type);
@@ -614,18 +619,33 @@ function summarize_grazing_group_detailed_info(&$data) {
 }
 
 /**
- * farm_grazing_validate_herd($herd_id, $plan_id, &$data)
+ * Validate a herd in a plan.
  *
  * when a herd is attached to a grazing plan or otherwise modified
  * this function checks that all components of the herd have required
  * properties and initial observations.
  *
- * @returns $errors - the number of errors encountered
+ * @param int $herd_id
+ *   The herd (group asset) ID.
+ * @param int $plan_id
+ *   The farm plan ID.
+ * @param array &$data
+ *   An array of data to pass into get_grazing_group_detailed_info().
+ * @param bool $silent
+ *   Whether or not to output error messages using drupal_set_message().
+ *   Defaults to FALSE (errors will show).
+ *
+ * @return int
+ *   Returns the number of errors encountered.
  */
-function farm_grazing_validate_herd($herd_id, $plan_id, &$data) {
+function farm_grazing_validate_herd($herd_id, $plan_id, &$data, $silent = FALSE) {
   $errors = 0;
 
   get_grazing_group_detailed_info($herd_id, $data);
+
+  // Keep track of missing data.
+  $missing_type = 0;
+  $missing_weight = 0;
 
   foreach ($data as &$animal) {
 
@@ -639,8 +659,7 @@ function farm_grazing_validate_herd($herd_id, $plan_id, &$data) {
     //  farm_grazing_animal_type property exists and is valid
     $type = $animal['type'];
     if (empty($type)) {
-      $message = t('Animal "<a href="@animal_edit">@animal_name</a>" needs its Animal Type property set.', $animal_args);
-      drupal_set_message($message, 'error');
+      $missing_type++;
       $errors++;
     }
 
@@ -665,15 +684,30 @@ function farm_grazing_validate_herd($herd_id, $plan_id, &$data) {
     //  has weight
     $weight = $animal['weight'];
     if (empty($weight)) {
-      $message = t('Animal "<a href="@animal_edit">@animal_name</a>" needs an Observation -> Quantity -> weight set.', $animal_args);
-      drupal_set_message($message, 'error');
+      $missing_weight++;
       $errors++;
     }
 
     //  TODO are all animals/groups are in some paddock
 
     //  TODO is asset attached to another active plan?
+  }
 
+  // Print errors (unless we should be silent).
+  if (empty($silent) && !empty($errors)) {
+
+    // General message.
+    drupal_set_message('Some required data is missing from the herds/animals in this plan. Please see the errors below and add any data that may be missing. Fields that are required will be highlighted in the form below, along with any values that are calculated from those fields.', 'error');
+
+    // Missing animal types.
+    if (!empty($missing_type)) {
+      drupal_set_message(t('@count animal(s) do not have an animal type.', array('@count' => $missing_weight)), 'error');
+    }
+
+    // Missing weight.
+    if (!empty($missing_weight)) {
+      drupal_set_message(t('@count animal(s) are missing weight measurements.', array('@count' => $missing_weight)), 'error');
+    }
   }
 
   return $errors;
