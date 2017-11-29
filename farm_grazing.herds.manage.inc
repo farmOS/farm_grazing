@@ -333,6 +333,16 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
       $start_date = date_create_from_format('Y-m-d', $rec['arrival']);
       $end_date = date_create_from_format('Y-m-d', $rec['departure']);
 
+      // If the start/end date are empty, use the plan's start/end date.
+      if (empty($start_date)) {
+        $start_date = new DateTime();
+        $start_date->setTimestamp($start_ts);
+      }
+      if (empty($end_date)) {
+        $end_date = new DateTime();
+        $end_date->setTimestamp($end_ts);
+      }
+
       // get the DateInterval between them
       $diff = $start_date->diff($end_date);
 
