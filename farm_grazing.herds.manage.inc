@@ -749,7 +749,7 @@ function theme_farm_grazing_plan_herds_form(&$vars) {
 
       // define the table
       $header = array(
-        t('Herd Name'),
+        t('Animal Record'),
         t('Type'),
         t('Head Count'),
         t('Weight'),
