@@ -639,12 +639,6 @@ function farm_grazing_validate_herd($herd_id, $plan_id, &$data, $silent = FALSE)
 
   foreach ($data as &$animal) {
 
-    // Build some animal arguments for use in translateables.
-    $animal_args = array(
-      '@animal_edit' => url('farm/asset/' . $animal['id'] . '/edit'),
-      '@animal_name' => $animal['name'],
-    );
-
     // Things to validate
     //  farm_grazing_animal_type property exists and is valid
     $type = $animal['type'];
