@@ -16,6 +16,7 @@ dependencies[] = farm_movement
 dependencies[] = farm_plan
 dependencies[] = features
 dependencies[] = field_group
+dependencies[] = field_group_easy_responsive_tabs
 dependencies[] = help
 dependencies[] = list
 dependencies[] = number
