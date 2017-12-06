@@ -796,3 +796,40 @@ function farm_grazing_plan_log_update($log) {
      */
   }
 }
+
+/**
+ * Implements hook_entity_delete().
+ */
+function farm_grazing_entity_delete($entity, $type) {
+
+  // If this is not a grazing plan, bail.
+  if (!($type == 'farm_plan' && $entity->type == 'grazing')) {
+    return;
+  }
+
+  // When a grazing plan is deleted, clean up all related records.
+  $plan_id = $entity->id;
+
+  // Look up all rotations that reference this plan, and delete logs.
+  $result = db_query('SELECT log_id FROM {farm_grazing_rotations} WHERE plan_id = :plan_id', array('plan_id' => $plan_id));
+  foreach ($result as $row) {
+    if (!empty($row->log_id)) {
+      entity_delete('log', $row->log_id);
+    }
+  }
+
+  // Define database tables that need cleanup.
+  $tables = array(
+    'farm_grazing_plan_paddock',
+    'farm_grazing_plan_recovery',
+    'farm_grazing_herds',
+    'farm_grazing_rotations',
+  );
+
+  // Delete all records that reference this plan.
+  foreach ($tables as $table) {
+    db_delete($table)
+      ->condition('plan_id', $plan_id)
+      ->execute();
+  }
+}
