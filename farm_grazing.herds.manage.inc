@@ -676,6 +676,20 @@ function farm_grazing_plan_herd_remove_form_submit($form, &$form_state) {
     ->condition('plan_id', $form_state['values']['plan_id'])
     ->condition('herd_id', $form_state['values']['herd_id'])
     ->execute();
+
+  // Look up all rotations that reference this plan and herd, and delete logs.
+  $result = db_query('SELECT log_id FROM {farm_grazing_rotations} WHERE plan_id = :plan_id AND herd_id = :herd_id', array('plan_id' => $form_state['values']['plan_id'], ':herd_id' => $form_state['values']['herd_id']));
+  foreach ($result as $row) {
+    if (!empty($row->log_id)) {
+      entity_delete('log', $row->log_id);
+    }
+  }
+
+  // Delete all rotations that reference this plan and herd.
+  db_delete('farm_grazing_rotations')
+    ->condition('plan_id', $form_state['values']['plan_id'])
+    ->condition('herd_id', $form_state['values']['herd_id'])
+    ->execute();
 }
 
 /**

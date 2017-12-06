@@ -109,5 +109,19 @@ function farm_grazing_select_paddocks_form_submit($form, &$form_state) {
       ->condition('paddock_id', $key)
       ->condition('plan_id', $plan)
       ->execute();
+
+    // Look up all rotations that reference this plan and paddock, and delete logs.
+    $result = db_query('SELECT log_id FROM {farm_grazing_rotations} WHERE plan_id = :plan_id AND paddock_id = :paddock_id', array('plan_id' => $plan, ':paddock_id' => $key));
+    foreach ($result as $row) {
+      if (!empty($row->log_id)) {
+        entity_delete('log', $row->log_id);
+      }
+    }
+
+    // Delete all rotations that reference this plan and paddock.
+    db_delete('farm_grazing_rotations')
+      ->condition('plan_id', $plan)
+      ->condition('paddock_id', $key)
+      ->execute();
   }
 }
