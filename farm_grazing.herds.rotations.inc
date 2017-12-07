@@ -192,18 +192,10 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
           '#maxlength' => 10,
         ),
         'start_date' => array(
-          '#type' => 'textfield',
-          '#title' => t('Start date'),
-          '#title_display' => 'invisible',
-          '#default_value' => $start_str,
-          '#disabled' => TRUE,
+          '#markup' => $start_str,
         ),
         'end_date' => array(
-          '#type' => 'textfield',
-          '#title' => t('End date'),
-          '#title_display' => 'invisible',
-          '#default_value' => $end_str,
-          '#disabled' => TRUE,
+          '#markup' => $end_str,
         ),
         'image' => array(
           '#markup' => '<img src="' . base_path() . 'farm/grazing/plan/' . $plan .
