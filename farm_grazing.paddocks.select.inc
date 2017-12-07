@@ -32,7 +32,7 @@ function farm_grazing_select_paddocks_form($form, &$form_state, $plan_obj) {
   }
 
   // get a list of selected paddocks
-  $selected_paddocks = get_selected_paddock_for_plan($plan);
+  $selected_paddocks = farm_grazing_get_selected_paddock_for_plan($plan);
 
   // build the default value selections.
   $selected = array();
@@ -78,7 +78,7 @@ function farm_grazing_select_paddocks_form_submit($form, &$form_state) {
   $plan = $form_state['values']['plan'];
 
   // get the old list of selected paddocks for comparison
-  $old_selected = get_selected_paddock_for_plan($plan);
+  $old_selected = farm_grazing_get_selected_paddock_for_plan($plan);
 
   // this will be an array where $key will be the same as $id
   $paddocks = array_filter($form_state['values']['checkboxes']);

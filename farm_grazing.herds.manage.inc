@@ -110,7 +110,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     $group = farm_asset_load($herd->herd_id);
 
     $data = array();
-    $summary = getHerdDataAndSummary($herd->herd_id, $plan, $data);
+    $summary = farm_grazing_get_herd_data_and_summary($herd->herd_id, $plan, $data);
 
     // save all the herd info here, we'll use it later
     // to generate the tables we display
@@ -421,7 +421,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
     }
   }
 
-  $paddocks_in_plan = get_selected_paddock_quality_for_plan($plan);
+  $paddocks_in_plan = farm_grazing_get_selected_paddock_quality_for_plan($plan);
   $cell_size = 0;
   foreach ($paddocks_in_plan as $paddock_id => $quality) {
     $cell_size = $cell_size + farm_area_calculate_area($paddock_id);

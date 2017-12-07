@@ -115,7 +115,7 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {
       $paddocks = farm_area_load_areas('paddock', 'name');
     }
     elseif ($form_state['values']['paddocks'] == 'plan') {
-      $paddock_ids = get_selected_paddock_for_plan($plan);
+      $paddock_ids = farm_grazing_get_selected_paddock_for_plan($plan);
       $paddocks = taxonomy_term_load_multiple($paddock_ids);
     }
 
@@ -161,7 +161,7 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {
           // threshold is the number of days overlap in the month
           // for the month to be counted.
           $threshold = 15;
-          countMonths($arrival, $departure, $row, $threshold);
+          farm_grazing_count_months($arrival, $departure, $row, $threshold);
 
           // get date last grazed
           if ($departure > $date_last_grazed) {

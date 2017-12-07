@@ -33,7 +33,7 @@ function farm_grazing_plan_productivity_form($form, &$form_state, $plan_obj) {
   );
 
   // get a list of selected paddocks
-  $selected = get_selected_paddock_quality_for_plan($plan);
+  $selected = farm_grazing_get_selected_paddock_quality_for_plan($plan);
 
   $form['paddocks'] = array(
     '#theme' => 'farm_grazing_paddocks_productivity',

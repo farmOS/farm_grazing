@@ -133,7 +133,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
   }
   else {
     // get non-growing season grazing days and cache it here
-    $ng_pad = getNonGrowingSummaryForPlanId($plan, 1);
+    $ng_pad = farm_grazing_get_non_growing_summary_for_plan_id($plan, 1);
     $ng_grazing = array();
     for ($i = 0; $i < count($ng_pad) - 2; $i++) {
       $ng_grazing[$ng_pad[$i][11]] = $ng_pad[$i][4];
@@ -164,13 +164,13 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     $paddocks = $query->fetchAll();
     $rowcnt = $query->rowCount();
 
-    $arrival = getHerdEarliestArrival($rec->herd_id, $plan);
+    $arrival = farm_grazing_get_herd_earliest_arrival($rec->herd_id, $plan);
     $start_date = date_create_from_format('Y-m-d', $arrival);
     $i = 1;
     $cache = array();
     foreach ($paddocks as $pad) {
       if ($grazing_growing_season) {
-        $grazing_days = getPaddockGrazingDays($pad->duration, $pad->paddock_id, $plan, $rec->herd_id, $cache);
+        $grazing_days = farm_grazing_get_paddock_grazing_days($pad->duration, $pad->paddock_id, $plan, $rec->herd_id, $cache);
       }
       else {
         $grazing_days = $ng_grazing[$pad->paddock_id];
@@ -397,7 +397,7 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
       return;
     }
     // build data as we are going to need it
-    $paddocks = getGrazingDaysForPlanId($plan_id, $d1, $d2, TRUE);
+    $paddocks = farm_grazing_get_grazing_days_for_plan_id($plan_id, $d1, $d2, TRUE);
     $data = array();
     foreach ($paddocks as $p) {
       $data[$p[5]] = $p;
@@ -409,7 +409,7 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
     $cache = array();
     $start_date = $plan_start_ts;
     foreach ($records as $rec) {
-      $days = getPaddockGrazingDays(NULL, $rec->paddock_id, $plan_id, $rec->herd_id, $cache, $mode);
+      $days = farm_grazing_get_paddock_grazing_days(NULL, $rec->paddock_id, $plan_id, $rec->herd_id, $cache, $mode);
 
       // Update the log.
       if (!empty($rec->log_id)) {
@@ -491,7 +491,7 @@ function farm_grazing_plan_rotation_add_submit($form, &$form_state) {
     $paddock = taxonomy_term_load($paddock_id);
 
     // get the paddock duration ie: num grazing days
-    $duration = getPaddockGrazingDays(NULL, $paddock_id, $plan_id, $herd_id, $cache, $mode);
+    $duration = farm_grazing_get_paddock_grazing_days(NULL, $paddock_id, $plan_id, $herd_id, $cache, $mode);
 
     // Create movement log.
     $log = farm_movement_create($herd, array($paddock), $start_date, 'farm_activity', FALSE);

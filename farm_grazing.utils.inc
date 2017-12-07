@@ -5,10 +5,10 @@
 /**
  * Utility function to fetch things from farmOS
  *
- * getHerdCountForPlan(plan_id)
+ * farm_grazing_get_herd_count_for_plan(plan_id)
  *
  */
-function getHerdCountForPlan($plan_id) {
+function farm_grazing_get_herd_count_for_plan($plan_id) {
   // return the equiv. to SELECT count(herd_id) FROM {farm_grazing_herds}
   // WHERE planid=$plan
   $query = db_select('farm_grazing_herds', 'h')
@@ -19,9 +19,9 @@ function getHerdCountForPlan($plan_id) {
 }
 
 /**
- * getPaddockCountForPlan($plan)
+ * farm_grazing_get_paddock_count_for_plan($plan)
  */
-function getPaddockCountForPlan($plan_id) {
+function farm_grazing_get_paddock_count_for_plan($plan_id) {
   $query = db_select('farm_grazing_plan_paddock', 'a')
     ->fields('a', array('paddock_id'))
     ->condition('a.plan_id', $plan_id);
@@ -30,6 +30,8 @@ function getPaddockCountForPlan($plan_id) {
 }
 
 /**
+ * farm_grazing_get_selected_paddock_for_plan($plan_id)
+ *
  * Get a list of all paddock_ids from farm_grazing_plan_paddock
  *
  * @param $plan_id
@@ -38,7 +40,7 @@ function getPaddockCountForPlan($plan_id) {
  * @return array
  *   An array of paddock IDs.
  */
-function get_selected_paddock_for_plan($plan_id) {
+function farm_grazing_get_selected_paddock_for_plan($plan_id) {
   // query table of paddocks for this plan
   // and build an array of those that are currently selected
   $paddocks = array();
@@ -50,9 +52,11 @@ function get_selected_paddock_for_plan($plan_id) {
 }
 
 /**
+ * farm_grazing_get_selected_paddock_quality_for_plan($plan)
+ *
  * Get a list of all paddock_ids and quality from farm_grazing_plan_paddock
  */
-function get_selected_paddock_quality_for_plan($plan) {
+function farm_grazing_get_selected_paddock_quality_for_plan($plan) {
   // query table of paddocks for this plan
   // and build an array of those that are currently selected
   $selected = array();
@@ -64,7 +68,7 @@ function get_selected_paddock_quality_for_plan($plan) {
 }
 
 /**
- * getHerdEarliestArrival($herd_id, $plan_id)
+ * farm_grazing_get_herd_earliest_arrival($herd_id, $plan_id)
  *
  * Recursive walk through herd and find the earliest arrival date for any
  * part of the herd.
@@ -72,14 +76,14 @@ function get_selected_paddock_quality_for_plan($plan) {
  * @param $herd_id  int
  * @returns string YYYY-MM-DD
  */
-function getHerdEarliestArrival($herd_id, $plan_id) {
+function farm_grazing_get_herd_earliest_arrival($herd_id, $plan_id) {
   $data = array();
-  $summary = getHerdDataAndSummary($herd_id, $plan_id, $data);
+  $summary = farm_grazing_get_herd_data_and_summary($herd_id, $plan_id, $data);
   return $summary['arrival'];
 }
 
 /**
- * getPaddockGrazingDays()
+ * farm_grazing_get_paddock_grazing_days()
  *
  * @param duration - current saved value
  * @param paddock_id int
@@ -89,10 +93,10 @@ function getHerdEarliestArrival($herd_id, $plan_id) {
  *   2 = force return to avg grazing days
  *   3 = force return to max grazing days
  */
-function getPaddockGrazingDays($duration, $paddock_id, $plan_id, $herd_id, &$cache, $mode = 0) {
+function farm_grazing_get_paddock_grazing_days($duration, $paddock_id, $plan_id, $herd_id, &$cache, $mode = 0) {
   if ($cache == NULL) {
     // build the cache as we are going to need it
-    $paddocks = getGrazingDaysForPlanId($plan_id, $d1, $d2, TRUE);
+    $paddocks = farm_grazing_get_grazing_days_for_plan_id($plan_id, $d1, $d2, TRUE);
     $cache = array();
     foreach ($paddocks as $p) {
       $cache[$p[5]] = $p;
@@ -140,21 +144,21 @@ function getPaddockGrazingDays($duration, $paddock_id, $plan_id, $herd_id, &$cac
 }
 
 /**
- *
+ * farm_grazing_get_grazing_days_for_plan_id($plan_id, &$chk_min_recovery, &$chk_max_recovery, $include_ids = true, $add_links = false)
  */
-function getGrazingDaysForPlanId($plan_id, &$chk_min_recovery, &$chk_max_recovery, $include_ids = true, $add_links = false) {
+function farm_grazing_get_grazing_days_for_plan_id($plan_id, &$chk_min_recovery, &$chk_max_recovery, $include_ids = true, $add_links = false) {
 
   // get the plan id
   $plan = $plan_id;
 
   // get the herd count
-  $herd_cnt = getHerdCountForPlan($plan);
+  $herd_cnt = farm_grazing_get_herd_count_for_plan($plan);
   if ($herd_cnt == 0) {
     $herd_cnt = 1;
   }
 
   // get the paddock count
-  $paddock_cnt = getPaddockCountForPlan($plan);
+  $paddock_cnt = farm_grazing_get_paddock_count_for_plan($plan);
 
   $results = db_query('SELECT min(min_recovery) as minmin, max(max_recovery) as maxmax FROM {farm_grazing_plan_recovery} WHERE plan_id=:plan', array(':plan' => $plan));
   foreach ($results as $record) {
@@ -256,15 +260,15 @@ function getGrazingDaysForPlanId($plan_id, &$chk_min_recovery, &$chk_max_recover
 /**
  * Get Farm Plan Dates from plan id and optionally format them.
  */
-function getFarmPlanDatesFromId($plan_id, $format = NULL) {
+function farm_grazing_get_farm_plan_dates_from_id($plan_id, $format = NULL) {
   $plan_obj = farm_plan_load($plan_id);
-  return getFarmPlanDates($plan_obj, $format);
+  return farm_grazing_get_farm_plan_dates($plan_obj, $format);
 }
 
 /**
  * Get Farm Plan Dates from plan object and optionally format them.
  */
-function getFarmPlanDates($plan_obj, $format = NULL) {
+function farm_grazing_get_farm_plan_dates($plan_obj, $format = NULL) {
 
   $wrapper = entity_metadata_wrapper('farm_plan', $plan_obj->id);
   $start_ts = $wrapper->field_farm_date_range->value->value();
@@ -279,13 +283,13 @@ function getFarmPlanDates($plan_obj, $format = NULL) {
 }
 
 /**
- * getNumMonthsBetween($date1, $date2)
+ * farm_grazing_get_num_months_between($date1, $date2)
  *
  * @param $date1    string YYYY-MM-DD
  * @param $date2    string YYYY-MM-DD
  * @returns array($start_year, $start_month, $number_of_months)
  */
-function getNumMonthsBetween($date1, $date2) {
+function farm_grazing_get_num_months_between($date1, $date2) {
   if ($date1 > $date2) {
     return array();
   }
@@ -311,7 +315,7 @@ function getNumMonthsBetween($date1, $date2) {
 }
 
 /**
- * daysAvailableByMonth($startDate1, $endDate1, $startDate2, $endDate2)
+ * farm_grazing_days_available_by_month($startDate1, $endDate1, $startDate2, $endDate2)
  * Compute the days overlap per month between start and end dates
  * for the given year
  *
@@ -321,9 +325,9 @@ function getNumMonthsBetween($date1, $date2) {
  * @param $endDate2     string YYYY-MM-DD
  * @returns array of ints, number of days in each month of overlap
  */
-function daysAvailableByMonth($startDate1, $endDate1, $startDate2, $endDate2) {
+function farm_grazing_days_available_by_month($startDate1, $endDate1, $startDate2, $endDate2) {
 
-  list($year, $mon, $num_months) = getNumMonthsBetween($startDate1, $endDate1);
+  list($year, $mon, $num_months) = farm_grazing_get_num_months_between($startDate1, $endDate1);
 
   for ($i = 0; $i < $num_months + 1; $i++) {
     $month_start = $year . '-' . sprintf('%02d', $mon) . '-01';
@@ -341,14 +345,14 @@ function daysAvailableByMonth($startDate1, $endDate1, $startDate2, $endDate2) {
       $year++;
     }
 
-    $days[] = overlapInDays($month_start, $month_end, $startDate2, $endDate2);
+    $days[] = farm_grazing_overlap_in_days($month_start, $month_end, $startDate2, $endDate2);
   }
 
   return $days;
 }
 
 /**
- * countMonths($start_date, $end_date, &$months, $threshold=15)
+ * farm_grazing_count_months($start_date, $end_date, &$months, $threshold=15)
  *
  * Used by Herds/History to count months grazed
  *
@@ -357,13 +361,13 @@ function daysAvailableByMonth($startDate1, $endDate1, $startDate2, $endDate2) {
  * @param &$months      array of 12 ints
  * @param $threshold    int, number of days in a month to count the month
  */
-function countMonths($start_date, $end_date, &$months, $threshold = 15) {
+function farm_grazing_count_months($start_date, $end_date, &$months, $threshold = 15) {
 
   // Convert timestamps to YYYY-MM-DD.
   $start = date('Y-m-d', $start_date);
   $end = date('Y-m-d', $end_date);
 
-  list($year, $mon, $num) = getNumMonthsBetween($start, $end);
+  list($year, $mon, $num) = farm_grazing_get_num_months_between($start, $end);
 
   for ($i = 0; $i < $num; $i++) {
     $month_start = $year . '-' . sprintf('%02d', $mon) . '-01';
@@ -382,7 +386,7 @@ function countMonths($start_date, $end_date, &$months, $threshold = 15) {
     }
 
     // get the number of days in this month
-    $days = overlapInDays($month_start, $month_end, $month_start, $month_end);
+    $days = farm_grazing_overlap_in_days($month_start, $month_end, $month_start, $month_end);
     if ($days >= $threshold) {
       $months[$mon]++;
       // Increment the total.
@@ -392,7 +396,7 @@ function countMonths($start_date, $end_date, &$months, $threshold = 15) {
 }
 
 /**
- * compute the overlapInDays($startDate1, $endDate1, $startDate2, $endDate2)
+ * compute the farm_grazing_overlap_in_days($startDate1, $endDate1, $startDate2, $endDate2)
  * What is the overlap, in whole days, of two time periods?
  *
  * @param $startDate1   string
@@ -401,8 +405,8 @@ function countMonths($start_date, $end_date, &$months, $threshold = 15) {
  * @param $endDate2     string
  * @returns int     Overlap in days
  */
-function overlapInDays($startDate1, $endDate1, $startDate2, $endDate2) {
-  $overlap = overlapInMinutes($startDate1, $endDate1, $startDate2, $endDate2);
+function farm_grazing_overlap_in_days($startDate1, $endDate1, $startDate2, $endDate2) {
+  $overlap = farm_grazing_overlap_in_minutes($startDate1, $endDate1, $startDate2, $endDate2);
   $days = round($overlap / 60 / 24);
   return $days;
 }
@@ -416,7 +420,7 @@ function overlapInDays($startDate1, $endDate1, $startDate2, $endDate2) {
  * @param $endDate2     string
  * @returns int     Overlap in minutes
  */
-function overlapInMinutes($startDate1, $endDate1, $startDate2, $endDate2) {
+function farm_grazing_overlap_in_minutes($startDate1, $endDate1, $startDate2, $endDate2) {
   // Figure out which is the later start time
   $lastStart = $startDate1 >= $startDate2 ? $startDate1 : $startDate2;
   // Convert that to an integer
@@ -442,7 +446,7 @@ function overlapInMinutes($startDate1, $endDate1, $startDate2, $endDate2) {
  * @param date2 - string, YYYY-MM-DD
  * @returns in - number of days between dates or 0
  */
-function get_days_between_dates($date1, $date2) {
+function farm_grazing_get_days_between_dates($date1, $date2) {
   if ($date1 > $date2) {
     return 0;
   }
@@ -457,34 +461,34 @@ function get_days_between_dates($date1, $date2) {
 }
 
 /**
- * getAnimalTypeName($type)
+ * farm_grazing_get_animal_type_name($type)
  *
  * Return name field from {farm_grazing_animal_types} table
  */
-function getAnimalTypeName($type) {
+function farm_grazing_get_animal_type_name($type) {
   return db_query('SELECT name FROM {farm_grazing_animal_types} WHERE type_id=:tid', array(':tid' => $type))->fetchField();
 }
 
 /**
- * getAnimalTypeDmiFactor($type)
+ * farm_grazing_get_animal_type_dmi_factor($type)
  *
  * Return dmi_factor field from {farm_grazing_animal_types} table
  */
-function getAnimalTypeDmiFactor($type) {
+function farm_grazing_get_animal_type_dmi_factor($type) {
   $dmi_factor = db_query('SELECT dmi_factor FROM {farm_grazing_animal_types} WHERE type_id=:tid', array(':tid' => $type))->fetchField();
   $dmi_factor = $dmi_factor / 100;
   return $dmi_factor;
 }
 
 /**
- * get_grazing_group_detailed_info($asset_id, &$data)
+ * farm_grazing_get_grazing_group_detailed_info($asset_id, &$data)
  *
  * Recursively walk a nested group structure extracting records
  * for each leaf node.
  *
  * Usage:
  *  $data = array();
- *  get_grazing_group_detailed_info($asset_id, $data);
+ *  farm_grazing_get_grazing_group_detailed_info($asset_id, $data);
  *
  * Results:
  *  $data = array(
@@ -502,7 +506,7 @@ function getAnimalTypeDmiFactor($type) {
  *    ...
  *  );
  */
-function get_grazing_group_detailed_info($asset_id, &$data) {
+function farm_grazing_get_grazing_group_detailed_info($asset_id, &$data) {
   // get the asset
   $asset = farm_asset_load($asset_id);
 
@@ -516,7 +520,7 @@ function get_grazing_group_detailed_info($asset_id, &$data) {
     $children = farm_group_members($asset);
     if (!empty($children)) {
       foreach ($children as $child) {
-        get_grazing_group_detailed_info($child->id, $data);
+        farm_grazing_get_grazing_group_detailed_info($child->id, $data);
       }
     }
   }
@@ -535,7 +539,7 @@ function get_grazing_group_detailed_info($asset_id, &$data) {
     }
 
     // Get the DMI factor.
-    $dmi_factor = getAnimalTypeDmiFactor($type);
+    $dmi_factor = farm_grazing_get_animal_type_dmi_factor($type);
 
     // Get the weight value and units, if they exist.
     $weight = farm_livestock_animal_weight($asset);
@@ -558,9 +562,9 @@ function get_grazing_group_detailed_info($asset_id, &$data) {
 }
 
 /**
- * summarize_grazing_group_detailed_info(&$data)
+ * farm_grazing_summarize_group_detailed_info(&$data)
  *
- * Take the results of get_grazing_group_detailed_info()
+ * Take the results of farm_grazing_get_grazing_group_detailed_info()
  * and create a one record summary used by Herds/Manage
  *
  * Returns:
@@ -573,10 +577,10 @@ function get_grazing_group_detailed_info($asset_id, &$data) {
  *
  * Usage:
  *  $data = array();
- *  get_grazing_group_detailed_info($asset_id, $data);
- *  $summary = summarize_grazing_group_detailed_info($data);
+ *  farm_grazing_get_grazing_group_detailed_info($asset_id, $data);
+ *  $summary = farm_grazing_summarize_group_detailed_info($data);
  */
-function summarize_grazing_group_detailed_info(&$data) {
+function farm_grazing_summarize_group_detailed_info(&$data) {
   $sum_sau = 0;
   $sum_dmi = 0;
   $head_count = 0;
@@ -620,7 +624,7 @@ function summarize_grazing_group_detailed_info(&$data) {
  * @param int $plan_id
  *   The farm plan ID.
  * @param array &$data
- *   An array of data to pass into get_grazing_group_detailed_info().
+ *   An array of data to pass into farm_grazing_get_grazing_group_detailed_info().
  * @param bool $silent
  *   Whether or not to output error messages using drupal_set_message().
  *   Defaults to FALSE (errors will show).
@@ -631,7 +635,7 @@ function summarize_grazing_group_detailed_info(&$data) {
 function farm_grazing_validate_herd($herd_id, $plan_id, &$data, $silent = FALSE) {
   $errors = 0;
 
-  get_grazing_group_detailed_info($herd_id, $data);
+  farm_grazing_get_grazing_group_detailed_info($herd_id, $data);
 
   // Keep track of missing data.
   $missing_type = 0;
@@ -698,17 +702,17 @@ function farm_grazing_validate_herd($herd_id, $plan_id, &$data, $silent = FALSE)
 
 
 /**
- * getHerdDataAndSummary($herd_id, $plan_id, &$data)
+ * farm_grazing_get_herd_data_and_summary($herd_id, $plan_id, &$data)
  */
-function getHerdDataAndSummary($herd_id, $plan_id, &$data) {
+function farm_grazing_get_herd_data_and_summary($herd_id, $plan_id, &$data) {
   farm_grazing_validate_herd($herd_id, $plan_id, $data);
-  return summarize_grazing_group_detailed_info($data);
+  return farm_grazing_summarize_group_detailed_info($data);
 }
 
 /**
- * getHerdSizeInSau($plan_id)
+ * farm_grazing_get_herd_size_in_sau($plan_id)
  */
-function getHerdSizeInSau($plan_id) {
+function farm_grazing_get_herd_size_in_sau($plan_id) {
   // get list of herds in this plan
   $query = db_query('SELECT * FROM {farm_grazing_herds} WHERE plan_id=:plan_id', array(':plan_id' => $plan_id));
 
@@ -721,7 +725,7 @@ function getHerdSizeInSau($plan_id) {
     }
 
     $data = array();
-    $summary = getHerdDataAndSummary($record->herd_id, $plan_id, $data);
+    $summary = farm_grazing_get_herd_data_and_summary($record->herd_id, $plan_id, $data);
 
     $tot_sau += $summary['herd_sau'];
   }
@@ -730,19 +734,19 @@ function getHerdSizeInSau($plan_id) {
 }
 
 /**
- * getNonGrowingSummaryForPlanId($plan_id, $add_ids = FALSE, $add_links = FALSE)
+ * farm_grazing_get_non_growing_summary_for_plan_id($plan_id, $add_ids = FALSE, $add_links = FALSE)
  *
  * Compute statistics for paddocks in non-growing season plan
  */
-function getNonGrowingSummaryForPlanId($plan_id, $add_ids = FALSE, $add_links = FALSE) {
+function farm_grazing_get_non_growing_summary_for_plan_id($plan_id, $add_ids = FALSE, $add_links = FALSE) {
 
   // get herds size if defined
-  $herd_size = getHerdSizeInSau($plan_id);
+  $herd_size = farm_grazing_get_herd_size_in_sau($plan_id);
 
   $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
 
   $num_rotations = $wrapper->field_expected_rotations->value();
-  $num_paddocks = getPaddockCountForPlan($plan_id);
+  $num_paddocks = farm_grazing_get_paddock_count_for_plan($plan_id);
   $days_drought_reserve = $wrapper->field_days_of_drought_reserve->value();
   $days_bulk_feeding = $wrapper->field_days_bulk_feeding->value();
   $days_drought_grazing = $days_drought_reserve / $num_paddocks;

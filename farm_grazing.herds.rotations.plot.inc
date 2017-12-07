@@ -52,21 +52,21 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
   $plan_end = date('Y-m-d', $end_ts);
 
   // get number of days in plan
-  $plan_days = get_days_between_dates($plan_start, $plan_end);
+  $plan_days = farm_grazing_get_days_between_dates($plan_start, $plan_end);
 
   // get number of days from start of plan to start_date
-  $days_to_start = get_days_between_dates($plan_start, $start_date);
+  $days_to_start = farm_grazing_get_days_between_dates($plan_start, $start_date);
 
   // get number of days from start of plan to end_date
-  $days_to_end = get_days_between_dates($plan_start, $end_date);
+  $days_to_end = farm_grazing_get_days_between_dates($plan_start, $end_date);
 
   // get day width in pixels and adjust image width
   $day_width = round($width / ($plan_days + 1));
   $width = $plan_days * $day_width;
 
   if (!$header) {
-    $exclusions = get_paddock_exclusions($plan, $paddock_id);
-    $recovery = get_paddock_recovery($plan, $paddock_id, $end_date);
+    $exclusions = farm_grazing_get_paddock_exclusions($plan, $paddock_id);
+    $recovery = farm_grazing_get_paddock_recovery($plan, $paddock_id, $end_date);
   }
 
   // Create a demo image.
@@ -114,7 +114,7 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
     t('Jul'), t('Aug'), t('Sep'), t('Oct'), t('Nov'), t('Dec'),
   );
 
-  $days = daysAvailableByMonth($plan_start, $plan_end, $plan_start, $plan_end);
+  $days = farm_grazing_days_available_by_month($plan_start, $plan_end, $plan_start, $plan_end);
 
   list($y, $m, $d) = explode('-', $plan_start);
   $sum = 0;
@@ -142,7 +142,7 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
 }
 
 /**
- * get_paddock_exclusions($plan_id, $paddock_id)
+ * farm_grazing_get_paddock_exclusions($plan_id, $paddock_id)
  *
  *   $exclusions = array(
  *     array(
@@ -160,13 +160,13 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
  * @return array where sday and eday are the number of days from start of plan
  *   for the exclusion start date and end date or zero if before plan start
  */
-function get_paddock_exclusions($plan_id, $paddock_id) {
+function farm_grazing_get_paddock_exclusions($plan_id, $paddock_id) {
 
   // Load utility functions.
   module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
 
   // load the plan dates
-  list($p_start, $p_end) = getFarmPlanDatesFromId($plan_id, 'Y-m-d');
+  list($p_start, $p_end) = farm_grazing_get_farm_plan_dates_from_id($plan_id, 'Y-m-d');
 
   // get query paddock exclusions
   $records = db_query('SELECT * FROM {farm_grazing_paddock_exclusions} WHERE paddock_id=:paddock_id', array(':paddock_id' => $paddock_id));
@@ -181,10 +181,10 @@ function get_paddock_exclusions($plan_id, $paddock_id) {
     $e_end = date('Y-m-d', $record->end_date);
 
     // exclusion start_date as days from start of plan
-    $sday = get_days_between_dates($p_start, $e_start);
+    $sday = farm_grazing_get_days_between_dates($p_start, $e_start);
 
     // exclusion start_date as days from start of plan
-    $eday = get_days_between_dates($p_start, $e_end);
+    $eday = farm_grazing_get_days_between_dates($p_start, $e_end);
 
     $results[] = array(
       'id' => $record->paddock_id,
@@ -198,7 +198,7 @@ function get_paddock_exclusions($plan_id, $paddock_id) {
 }
 
 /**
- * get_paddock_recovery($plan_id, $paddock_id)
+ * farm_grazing_get_paddock_recovery($plan_id, $paddock_id)
  *
  *   $recovery = array(
  *     array(
@@ -208,13 +208,13 @@ function get_paddock_exclusions($plan_id, $paddock_id) {
  *     ...
  *   );
  */
-function get_paddock_recovery($plan_id, $paddock_id, $end_date) {
+function farm_grazing_get_paddock_recovery($plan_id, $paddock_id, $end_date) {
 
   // Load utility functions.
   module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
 
   // load the plan dates
-  list($p_start, $p_end) = getFarmPlanDatesFromId($plan_id, 'Y-m-d');
+  list($p_start, $p_end) = farm_grazing_get_farm_plan_dates_from_id($plan_id, 'Y-m-d');
   list($yr, $mon, $day) = explode('-', $end_date);
 
   $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
@@ -233,7 +233,7 @@ function get_paddock_recovery($plan_id, $paddock_id, $end_date) {
   }
 
   // sday = end_date - plan start
-  $sday = get_days_between_dates($p_start, $end_date);
+  $sday = farm_grazing_get_days_between_dates($p_start, $end_date);
 
   // eday = sday + recovery
   $eday = $sday + $recovery;

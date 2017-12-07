@@ -36,7 +36,7 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
   $diff = $start_date->diff($end_date);
 
   // get the number of paddocks in the plan
-  $num_paddocks = getPaddockCountForPlan($plan);
+  $num_paddocks = farm_grazing_get_paddock_count_for_plan($plan);
 
   $form['#tree'] = TRUE;
 
@@ -75,7 +75,7 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
   );
 
   if ($grazing_growing_season) {
-    $minmax = getPlanRecovery($plan);
+    $minmax = farm_grazing_get_plan_recovery($plan);
   }
   else {
     $minmax = array();
@@ -140,7 +140,7 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
   }
 
   // get herd count from database or 1.0
-  $herd_cnt = getHerdCountForPlan($plan);
+  $herd_cnt = farm_grazing_get_herd_count_for_plan($plan);
   if ($herd_cnt == 0) {
     $herd_cnt = 1;
   }
@@ -191,9 +191,9 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
 }
 
 /**
- * getPlanRecovery($plan)
+ * farm_grazing_get_plan_recovery($plan)
  */
-function getPlanRecovery($plan) {
+function farm_grazing_get_plan_recovery($plan) {
   $minmax = array();
   $results = db_query('select month, min_recovery, max_recovery from {farm_grazing_plan_recovery} where plan_id=:plan', array(':plan' => $plan));
   foreach ($results as $record) {
