@@ -252,7 +252,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
   }
 
   drupal_add_css('svg {position:absolute; background:white;}', 'inline');
-  drupal_add_css('td img, th img {position:relative; width:100%; height:100%;}', 'inline');
+  drupal_add_css('td img, th img {position:relative; width:100%; height:100%; min-width: 200px;}', 'inline');
 
   $form =& $variables['form'];
 
