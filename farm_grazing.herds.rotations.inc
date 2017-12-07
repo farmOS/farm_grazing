@@ -467,7 +467,15 @@ function farm_grazing_plan_rotation_add_submit($form, &$form_state) {
   $record = $result->fetchAssoc();
 
   // Calculate the start date.
-  $start_date = $record['start_date'] + $record['duration'] * 24 * 3600;
+  if (!empty($record)) {
+    $start_date = $record['start_date'] + $record['duration'] * 24 * 3600;
+  }
+
+  // If a record doesn't exist, use the start date of the plan itself.
+  else {
+    $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
+    $start_date = $wrapper->field_farm_date_range->value->value();
+  }
 
   // get the weight of the next record to add
   $weight = $record['weight'] + 1;
