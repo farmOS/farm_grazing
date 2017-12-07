@@ -690,6 +690,9 @@ function farm_grazing_plan_herd_remove_form_submit($form, &$form_state) {
     ->condition('plan_id', $form_state['values']['plan_id'])
     ->condition('herd_id', $form_state['values']['herd_id'])
     ->execute();
+
+  // Tell the user what we did.
+  drupal_set_message(t('A herd was removed from the plan. All rotations associated with the herd were deleted. Check your planned rotations and make any necessary adjustments.'), 'warning');
 }
 
 /**

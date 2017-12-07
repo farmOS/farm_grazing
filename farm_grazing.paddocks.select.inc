@@ -97,7 +97,9 @@ function farm_grazing_select_paddocks_form_submit($form, &$form_state) {
       ->execute();
   }
 
-  // next delete records that exist but are no longer selected
+  // Next, delete paddocks that are no longer selected. Remember if paddocks
+  // are removed so we can alert the user afterwards.
+  $paddocks_removed = FALSE;
   foreach ($old_selected as $key) {
     // if an existing db record is in the incoming selections
     // we have nothing to do
@@ -123,5 +125,13 @@ function farm_grazing_select_paddocks_form_submit($form, &$form_state) {
       ->condition('plan_id', $plan)
       ->condition('paddock_id', $key)
       ->execute();
+
+    // Remember that we removed paddocks.
+    $paddocks_removed = TRUE;
+  }
+
+  // If paddocks were removed, tell the user what we did.
+  if (!empty($paddocks_removed)) {
+    drupal_set_message(t('Paddocks were removed from the plan. All rotations through those paddocks were deleted. Check your planned rotations and make any necessary adjustments.'), 'warning');
   }
 }
