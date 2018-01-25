@@ -17,7 +17,7 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {
   // looking back 1, 3, 5, 7, 9, all years
 
   // foreach paddock
-  //   get historical moves in an out of paddock
+  //   get historical moves in and out of paddock
   //   build row with count of use by month
   //   mon-year when last used
 
@@ -103,6 +103,22 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {
     'empty' => t('No paddocks found!'),
   );
 
+  // build the second table showing starting and ending paddock
+  // for each plan covered by the history range
+
+  $table2 = array(
+    'header' => array(
+      t('Plan Name'),
+      t('Herd Name'),
+      t('Start Paddock'),
+      t('Start Date'),
+      t('End Paddock'),
+      t('End Date'),
+    ),
+    'rows' => array(),
+    'empty' => t('No data available'),
+  );
+
   // If the form has been submitted, and paddocks and years are available...
   if (!empty($form_state['values']['paddocks']) && !empty($form_state['values']['years'])) {
 
@@ -183,6 +199,59 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {
         $table['rows'][] = $row;
       }
     }
+    // first get a list plan_id, herd_id, herd_name for for all plans
+    // that meet the search criteria
+
+    // rows2[plan_name, herd_name, paddock_start, start_date, paddock_end, end_date]
+    $rows2 = array();
+
+    $sql = 'SELECT h.plan_id, h.herd_id, p.name as plan_name, a.name as herd_name
+      FROM {farm_plan} p
+      LEFT JOIN {farm_grazing_herds} h ON p.id=h.plan_id
+      LEFT JOIN field_data_field_farm_date_range d
+        ON d.field_farm_date_range_value > :start_date
+        OR d.field_farm_date_range_value2 > :start_date
+      LEFT JOIN {farm_asset} a ON a.id=h.herd_id
+      ORDER BY d.field_farm_date_range_value desc';
+
+    // foreach record of above
+    $query = db_query($sql, array(':start_date' => $start_time));
+    $records = $query->fetchAll();
+    foreach ($records as $record) {
+      $row = array($record->plan_name, $record->herd_name);
+    
+      // get the first paddock of that rotation
+      $sql2 = 'SELECT t.name, r.start_date
+        FROM (
+          SELECT plan_id, herd_id, min(start_date) AS min_start
+          FROM {farm_grazing_rotations}
+        ) AS x JOIN {farm_grazing_rotations} AS r
+        ON x.plan_id=r.plan_id AND x.herd_id=r.herd_id AND x.min_start=r.start_date
+        LEFT JOIN {taxonomy_term_data} t ON r.paddock_id=t.tid
+        WHERE x.plan_id=:plan_id AND x.herd_id=:herd_id';
+
+      $results = db_query($sql2, array(':plan_id' => $record->plan_id, ':herd_id' => $record->herd_id));
+      $row[] = $results->fetchColumn(1);
+      $row[] = $results->fetchColumn(2);
+
+      // get the last paddock of the rotation
+
+      $sql3 = 'SELECT t.name, round(r.start_date + r.duration * 24 * 3600) AS end_date
+        FROM (
+          SELECT plan_id, herd_id, max(start_date) AS max_start
+          FROM {farm_grazing_rotations}
+        ) AS x JOIN {farm_grazing_rotations} AS r
+        ON x.plan_id=r.plan_id AND x.herd_id=r.herd_id AND x.max_start=r.start_date
+        LEFT JOIN {taxonomy_term_data} t ON r.paddock_id=t.tid
+        WHERE x.plan_id=:plan_id AND x.herd_id=:herd_id';
+
+      $results = db_query($sql3, array(':plan_id' => $record->plan_id, ':herd_id' => $record->herd_id));
+      $row[] = $results->fetchColumn(1);
+      $row[] = $results->fetchColumn(2);
+
+      $table2['rows'][] = $row;
+    }
+
   }
 
   $form['section_title'] = array(
@@ -191,6 +260,15 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {
   $form['section_table'] = array(
     '#prefix' => '<div id="farm-grazing-history">',
     '#markup' => theme('table', $table),
+  );
+
+  // render the table
+
+  $form['section2_title'] = array(
+    '#markup' => '<h4>' . t('Historical Start/End Paddock Usage') . '</h4>',
+  );
+  $form['section2_table'] = array(
+    '#markup' => theme('table', $table2),
     '#suffix' => '</div>',
   );
 
