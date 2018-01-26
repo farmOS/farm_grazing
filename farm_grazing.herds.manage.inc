@@ -609,7 +609,8 @@ function farm_grazing_plan_herds_form_submit($form, &$form_state) {
       if ($animal_form['arrival']['#default_value'] != $animal_details['arrival']) {
 
         // Set the asset property value.
-        farm_asset_property_set($animal_id, 'farm_grazing_planned_arrival', $animal_details['arrival']);
+        $planned_arrival = strtotime($animal_details['arrival']);
+        farm_asset_property_set($animal_id, 'farm_grazing_planned_arrival', $planned_arrival);
         $updated = TRUE;
       }
 
@@ -617,7 +618,8 @@ function farm_grazing_plan_herds_form_submit($form, &$form_state) {
       if ($animal_form['departure']['#default_value'] != $animal_details['departure']) {
 
         // Set the asset property value.
-        farm_asset_property_set($animal_id, 'farm_grazing_planned_departure', $animal_details['departure']);
+        $planned_departure = strtotime($animal_details['departure']);
+        farm_asset_property_set($animal_id, 'farm_grazing_planned_departure', $planned_departure);
         $updated = TRUE;
       }
     }

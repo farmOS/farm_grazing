@@ -271,3 +271,14 @@ function farm_grazing_schema() {
 
   return $schema;
 }
+
+/**
+ * Change planned arrival and departure dates to timestamps in the database.
+ */
+function farm_grazing_update_7000(&$sandbox) {
+  $result = db_query("SELECT * FROM {farm_asset_property} WHERE name IN ('farm_grazing_planned_arrival', 'farm_grazing_planned_departure')");
+  foreach ($result as $row) {
+    $row->value = strtotime($row->value);
+    drupal_write_record('farm_asset_property', $row, array('id', 'name'));
+  }
+}

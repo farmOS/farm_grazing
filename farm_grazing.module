@@ -434,12 +434,12 @@ function farm_grazing_entity_view_alter(&$build, $type) {
 
       case 'planned_arrival':
         $label = t('Planned arrival');
-        $value = $property;
+        $value = date('Y-m-d', $property);
         break;
 
       case 'planned_departure':
         $label = t('Planned departure');
-        $value = $property;
+        $value = date('Y-m-d', $property);
         break;
     }
 
@@ -500,20 +500,22 @@ function farm_grazing_form_farm_asset_form_alter(&$form, &$form_state, $form_id)
   );
 
   // Planned arrival date.
+  $planned_arrival = farm_asset_property_get($asset->id, 'farm_grazing_planned_arrival');
   $form['farm_grazing']['farm_grazing_planned_arrival'] = array(
     '#type' => 'date_select',
     '#title' => t('Planned arrival date'),
-    '#default_value' => farm_asset_property_get($asset->id, 'farm_grazing_planned_arrival'),
+    '#default_value' => !empty($planned_arrival) ? date('Y-m-d', $planned_arrival) : NULL,
     '#date_format' => 'Y-m-d',
     '#date_label_position' => 'within',
     '#date_year_range' => '-3:+10',
   );
 
   // Planned departure date.
+  $planned_departure = farm_asset_property_get($asset->id, 'farm_grazing_planned_departure');
   $form['farm_grazing']['farm_grazing_planned_departure'] = array(
     '#type' => 'date_select',
     '#title' => t('Planned departure date'),
-    '#default_value' => farm_asset_property_get($asset->id, 'farm_grazing_planned_departure'),
+    '#default_value' => !empty($planned_departure) ? date('Y-m-d', $planned_departure) : NULL,
     '#date_format' => 'Y-m-d',
     '#date_label_position' => 'within',
     '#date_year_range' => '-3:+10',
@@ -552,6 +554,13 @@ function farm_grazing_asset_form_submit(array $form, array &$form_state) {
   );
   foreach ($properties as $name) {
     if (!empty($form_state['values'][$name])) {
+
+      // Convert arrival and departure dates to a timestamp.
+      if (in_array($name, array('farm_grazing_planned_arrival', 'farm_grazing_planned_departure'))) {
+        $form_state['values'][$name] = strtotime($form_state['values'][$name]);
+      }
+
+      // Save the asset property.
       farm_asset_property_set($asset->id, $name, $form_state['values'][$name]);
     }
   }
