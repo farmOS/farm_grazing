@@ -402,17 +402,23 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
     foreach ($form_state['values']['herds'] as $herd_id => $rotations) {
       foreach ($rotations['rotations'] as $rid => $data) {
 
+        // Load the rotation log.
+        if (!empty($data['log_id'])) {
+          $log = log_load($data['log_id']);
+        }
+
+        // If the log is missing, stop everything and alert the user.
+        if (empty($log)) {
+          drupal_set_message(t('A log is missing from one or more rotations. Remove the rotation and recreate it to fix this issue.'));
+          return;
+        }
+
         // Calculate the start date as a timestamp.
         $start_date = strtotime($data['start_date']);
 
-        // Update the log.
-        if (!empty($data['log_id'])) {
-          $log = log_load($data['log_id']);
-          if (!empty($log)) {
-            $log->timestamp = $start_date;
-            log_save($log);
-          }
-        }
+        // Update the log timestamp.
+        $log->timestamp = $start_date;
+        log_save($log);
 
         // Update the rotation record.
         db_update('farm_grazing_rotations')
@@ -448,16 +454,23 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
     $cache = array();
     $start_date = $plan_start_ts;
     foreach ($records as $rec) {
-      $days = farm_grazing_get_paddock_grazing_days(NULL, $rec->paddock_id, $plan_id, $rec->herd_id, $cache, $mode);
 
-      // Update the log.
+      // Load the rotation log.
       if (!empty($rec->log_id)) {
         $log = log_load($rec->log_id);
-        if (!empty($log)) {
-          $log->timestamp = $start_date;
-          log_save($log);
-        }
       }
+
+      // If the log is missing, stop everything and alert the user.
+      if (empty($log)) {
+        drupal_set_message(t('A log is missing from one or more rotations. Remove the rotation and recreate it to fix this issue.'));
+        return;
+      }
+
+      $days = farm_grazing_get_paddock_grazing_days(NULL, $rec->paddock_id, $plan_id, $rec->herd_id, $cache, $mode);
+
+      // Update the log timestamp.
+      $log->timestamp = $start_date;
+      log_save($log);
 
       // Update the rotation record.
       db_update('farm_grazing_rotations')
