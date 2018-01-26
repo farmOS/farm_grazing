@@ -276,15 +276,24 @@ function theme_farm_grazing_plan_rotations_form($variables) {
           $item =& $form['herds'][$herd_id]['rotations'][$rid];
 
           // Build movement log columns (link and done checkbox)
+          $log_exists = FALSE;
           $log_link = '';
           $log_done = '';
           if (!empty($item['log_id']['#value'])) {
             $log = log_load($item['log_id']['#value']);
-            $uri = entity_uri('log', $log);
-            $log_link = l(t('View log'), $uri['path']);
-            if (!empty($log->done)) {
-              $log_done = '✔';
+            if (!empty($log)) {
+              $log_exists = TRUE;
+              $uri = entity_uri('log', $log);
+              $log_link = l(t('View log'), $uri['path']);
+              if (!empty($log->done)) {
+                $log_done = '✔';
+              }
             }
+          }
+
+          // If a log doesn't exist, make it clear that it's missing.
+          if (!$log_exists) {
+            $log_link = '(missing)';
           }
 
           // Build a link to remove the rotation.
