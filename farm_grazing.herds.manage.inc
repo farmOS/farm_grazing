@@ -217,9 +217,13 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
         '#element_validate' => array('element_validate_number'),
       );
 
+      $animal_fields['total_weight'] = array(
+        '#markup' => $rec['weight'] * $rec['head_count'],
+      );
+
       // SAU.
       $animal_fields['sau'] = array(
-        '#markup' => round($rec['weight'] / 1000.0, 2),
+        '#markup' => round($rec['weight'] * $rec['head_count'] / 1000.0, 2),
       );
 
       // DMI.
@@ -770,6 +774,7 @@ function theme_farm_grazing_plan_herds_form(&$vars) {
               drupal_render($item['type']),
               drupal_render($item['head_count']),
               drupal_render($item['weight']),
+              drupal_render($item['total_weight']),
               drupal_render($item['sau']),
               drupal_render($item['dmi']),
               drupal_render($item['arrival']),
@@ -784,7 +789,8 @@ function theme_farm_grazing_plan_herds_form(&$vars) {
         t('Animal Record'),
         t('Type'),
         t('Head Count'),
-        t('Weight'),
+        t('Weight (Average)'),
+        t('Total Weight'),
         t('SAU'),
         t('Daily Intake'),
         t('Planned Arrival'),
