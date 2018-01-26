@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * farm_grazing.views_default.inc
