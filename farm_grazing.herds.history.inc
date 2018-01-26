@@ -233,7 +233,7 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {
 
       $results = db_query($sql2, array(':plan_id' => $record->plan_id, ':herd_id' => $record->herd_id))->fetchAssoc();
       $row[] = $results['name'];
-      $row[] = date('Y-m-d', $results['start_date']);
+      $row[] = !empty($results['start_date']) ? date('Y-m-d', $results['start_date']) : '';
 
       // get the last paddock of the rotation
 
@@ -249,7 +249,7 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {
 
       $results = db_query($sql3, array(':plan_id' => $record->plan_id, ':herd_id' => $record->herd_id))->fetchAssoc();
       $row[] = $results['name'];
-      $row[] = date('Y-m-d', $results['end_date']);
+      $row[] = !empty($results['end_date']) ? date('Y-m-d', $results['end_date']) : '';
 
       $table2['rows'][] = $row;
     }
