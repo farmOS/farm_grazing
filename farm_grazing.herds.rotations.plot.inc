@@ -81,21 +81,21 @@ function farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $start_date, $end_da
   $plan_end = $plan_end->format('Y-m-d');
 
   // get number of days in plan
-  $plan_days = get_days_between_dates($plan_start, $plan_end);
+  $plan_days = farm_grazing_get_days_between_dates($plan_start, $plan_end);
 
   // get number of days from start of plan to start_date
-  $days_to_start = get_days_between_dates($plan_start, $start_date);
+  $days_to_start = farm_grazing_get_days_between_dates($plan_start, $start_date);
 
   // get number of days from start of plan to end_date
-  $days_to_end = get_days_between_dates($plan_start, $end_date);
+  $days_to_end = farm_grazing_get_days_between_dates($plan_start, $end_date);
 
   // get day width in pixels and adjust image width
   $day_width = $width / ($plan_days + 1);
   $width = $plan_days * $day_width;
 
   if (!$header) {
-    $exclusions = get_paddock_exclusions($plan, $paddock_id);
-    $recovery = get_paddock_recovery($plan, $paddock_id, $end_date);
+    $exclusions = farm_grazing_get_paddock_exclusions($plan, $paddock_id);
+    $recovery = farm_grazing_get_paddock_recovery($plan, $paddock_id, $end_date);
   }
 
   // Create a demo image.
@@ -145,7 +145,7 @@ function farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $start_date, $end_da
     t('Jul'), t('Aug'), t('Sep'), t('Oct'), t('Nov'), t('Dec'),
   );
 
-  $days = daysAvailableByMonth($plan_start, $plan_end, $plan_start, $plan_end);
+  $days = farm_grazing_days_available_by_month($plan_start, $plan_end, $plan_start, $plan_end);
 
   list($y, $m, $d) = explode('-', $plan_start);
   $sum = 0;
