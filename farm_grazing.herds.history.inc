@@ -254,22 +254,25 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {
 
   }
 
-  $form['section_title'] = array(
+  $form['tables'] = array(
+    '#prefix' => '<div id="farm-grazing-history">',
+    '#suffix' => '</div>',
+  );
+
+  $form['tables']['section_title'] = array(
     '#markup' => '<h4>' . t('Historical Grazing Patterns') . '</h4>',
   );
-  $form['section_table'] = array(
-    '#prefix' => '<div id="farm-grazing-history">',
+  $form['tables']['section_table'] = array(
     '#markup' => theme('table', $table),
   );
 
   // render the table
 
-  $form['section2_title'] = array(
+  $form['tables']['section2_title'] = array(
     '#markup' => '<h4>' . t('Historical Start/End Paddock Usage') . '</h4>',
   );
-  $form['section2_table'] = array(
+  $form['tables']['section2_table'] = array(
     '#markup' => theme('table', $table2),
-    '#suffix' => '</div>',
   );
 
   return $form;
@@ -288,5 +291,5 @@ function farm_grazing_plan_history_form_submit($form, &$form_state) {
  *
  */
 function farm_grazing_plan_history_form_ajax($form, $form_state) {
-  return $form['section_table'];
+  return $form['tables'];
 }
