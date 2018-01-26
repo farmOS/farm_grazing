@@ -174,6 +174,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     $i = 1;
     $cache = array();
     foreach ($paddocks as $pad) {
+      $log = log_load($pad->log_id);
       if ($grazing_growing_season) {
         $grazing_days = farm_grazing_get_paddock_grazing_days($pad->duration, $pad->paddock_id, $plan, $rec->herd_id, $cache);
       }
@@ -195,6 +196,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
           '#default_value' => round($grazing_days, 1),
           '#size' => 10,
           '#maxlength' => 10,
+          '#disabled' => !empty($log->done) ? TRUE : FALSE,
         ),
         'start_date' => array(
           '#type' => 'value',
