@@ -413,6 +413,11 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
           return;
         }
 
+        // If the log is already marked as "done", skip it.
+        if (!empty($log->done)) {
+          continue;
+        }
+
         // Calculate the start date as a timestamp.
         $start_date = strtotime($data['start_date']);
 
@@ -464,6 +469,11 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
       if (empty($log)) {
         drupal_set_message(t('A log is missing from one or more rotations. Remove the rotation and recreate it to fix this issue.'));
         return;
+      }
+
+      // If the log is already marked as "done", skip it.
+      if (!empty($log->done)) {
+        continue;
       }
 
       $days = farm_grazing_get_paddock_grazing_days(NULL, $rec->paddock_id, $plan_id, $rec->herd_id, $cache, $mode);
