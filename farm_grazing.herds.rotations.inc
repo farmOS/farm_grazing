@@ -136,19 +136,9 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
       '#submit' => array('farm_grazing_plan_rotations_form_submit'),
     );
   }
-  else {
-    // get non-growing season grazing days and cache it here
-    $ng_pad = farm_grazing_get_non_growing_summary_for_plan_id($plan, 1);
-    $ng_grazing = array();
-    for ($i = 0; $i < count($ng_pad) - 2; $i++) {
-      $ng_grazing[$ng_pad[$i][11]] = $ng_pad[$i][4];
-    }
-  }
 
   // build sections for each herds associated with this plan
   $form['herds'] = array();
-
-  $cache = NULL;
 
   // foreach herd
   foreach ($herd_records as $rec) {
@@ -169,22 +159,11 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     $paddocks = $query->fetchAll();
     $rowcnt = $query->rowCount();
 
-    $arrival = farm_grazing_get_herd_earliest_arrival($rec->herd_id, $plan);
-    $start_date = date_create_from_format('Y-m-d', $arrival);
-    $i = 1;
-    $cache = array();
     foreach ($paddocks as $pad) {
       $log = log_load($pad->log_id);
-      if ($grazing_growing_season) {
-        $grazing_days = farm_grazing_get_paddock_grazing_days($pad->duration, $pad->paddock_id, $plan, $rec->herd_id, $cache);
-      }
-      else {
-        $grazing_days = $ng_grazing[$pad->paddock_id];
-      }
-      $start_str = $start_date->format('Y-m-d');
-      $end_date = $start_date;
-      $end_date->modify('+' . round($grazing_days) . ' days');
-      $end_str = $end_date->format('Y-m-d');
+      // Figure out the start and end date strings.
+      $start_str = date('Y-m-d', $pad->start_date);
+      $end_str = date('Y-m-d', $pad->start_date + ($pad->duration * 86400));
       $form['herds'][$rec->herd_id]['rotations'][$pad->id] = array(
         'name' => array(
           '#markup' => $pad->name,
@@ -193,7 +172,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
           '#type' => 'textfield',
           '#title' => t('Grazing days'),
           '#title_display' => 'invisible',
-          '#default_value' => round($grazing_days, 1),
+          '#default_value' => $pad->duration,
           '#size' => 10,
           '#maxlength' => 10,
           '#disabled' => !empty($log->done) ? TRUE : FALSE,
@@ -235,8 +214,6 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
       if (!$grazing_growing_season) {
         $form['herds'][$rec->herd_id]['rotations'][$pad->id]['grazing_days']['#disabled'] = TRUE;
       }
-      $start_date = $end_date;
-      $i++;
     }
   } // end foreach herd
 
