@@ -225,14 +225,15 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {
         FROM (
           SELECT plan_id, herd_id, min(start_date) AS min_start
           FROM {farm_grazing_rotations}
+          GROUP BY plan_id, herd_id
         ) AS x JOIN {farm_grazing_rotations} AS r
         ON x.plan_id=r.plan_id AND x.herd_id=r.herd_id AND x.min_start=r.start_date
         LEFT JOIN {taxonomy_term_data} t ON r.paddock_id=t.tid
         WHERE x.plan_id=:plan_id AND x.herd_id=:herd_id';
 
-      $results = db_query($sql2, array(':plan_id' => $record->plan_id, ':herd_id' => $record->herd_id));
-      $row[] = $results->fetchColumn(1);
-      $row[] = $results->fetchColumn(2);
+      $results = db_query($sql2, array(':plan_id' => $record->plan_id, ':herd_id' => $record->herd_id))->fetchAssoc();
+      $row[] = $results['name'];
+      $row[] = date('Y-m-d', $results['start_date']);
 
       // get the last paddock of the rotation
 
@@ -240,14 +241,15 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {
         FROM (
           SELECT plan_id, herd_id, max(start_date) AS max_start
           FROM {farm_grazing_rotations}
+          GROUP BY plan_id, herd_id
         ) AS x JOIN {farm_grazing_rotations} AS r
         ON x.plan_id=r.plan_id AND x.herd_id=r.herd_id AND x.max_start=r.start_date
         LEFT JOIN {taxonomy_term_data} t ON r.paddock_id=t.tid
         WHERE x.plan_id=:plan_id AND x.herd_id=:herd_id';
 
-      $results = db_query($sql3, array(':plan_id' => $record->plan_id, ':herd_id' => $record->herd_id));
-      $row[] = $results->fetchColumn(1);
-      $row[] = $results->fetchColumn(2);
+      $results = db_query($sql3, array(':plan_id' => $record->plan_id, ':herd_id' => $record->herd_id))->fetchAssoc();
+      $row[] = $results['name'];
+      $row[] = date('Y-m-d', $results['end_date']);
 
       $table2['rows'][] = $row;
     }
