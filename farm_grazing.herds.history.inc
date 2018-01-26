@@ -219,7 +219,7 @@ function farm_grazing_plan_history_form($form, $form_state, $plan_obj = NULL) {
     $records = $query->fetchAll();
     foreach ($records as $record) {
       $row = array($record->plan_name, $record->herd_name);
-    
+
       // get the first paddock of that rotation
       $sql2 = 'SELECT t.name, r.start_date
         FROM (
