@@ -14,11 +14,7 @@ function farm_grazing_field_default_field_instances() {
   // Exported field_instance: 'farm_plan-grazing-field_days_bulk_feeding'.
   $field_instances['farm_plan-grazing-field_days_bulk_feeding'] = array(
     'bundle' => 'grazing',
-    'default_value' => array(
-      0 => array(
-        'value' => 0,
-      ),
-    ),
+    'default_value' => NULL,
     'deleted' => 0,
     'description' => '',
     'display' => array(
@@ -58,11 +54,7 @@ function farm_grazing_field_default_field_instances() {
   // Exported field_instance: 'farm_plan-grazing-field_days_of_drought_reserve'.
   $field_instances['farm_plan-grazing-field_days_of_drought_reserve'] = array(
     'bundle' => 'grazing',
-    'default_value' => array(
-      0 => array(
-        'value' => 0,
-      ),
-    ),
+    'default_value' => NULL,
     'deleted' => 0,
     'description' => '',
     'display' => array(
