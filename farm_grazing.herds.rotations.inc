@@ -197,9 +197,17 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
           '#maxlength' => 10,
         ),
         'start_date' => array(
+          '#type' => 'value',
+          '#value' => $start_str,
+        ),
+        'start_date_markup' => array(
           '#markup' => $start_str,
         ),
         'end_date' => array(
+          '#type' => 'value',
+          '#value' => $end_str,
+        ),
+        'end_date_markup' => array(
           '#markup' => $end_str,
         ),
         'image' => array(
@@ -313,8 +321,8 @@ function theme_farm_grazing_plan_rotations_form($variables) {
             'data' => array(
               drupal_render($item['name']),
               drupal_render($item['grazing_days']),
-              drupal_render($item['start_date']),
-              drupal_render($item['end_date']),
+              drupal_render($item['start_date_markup']),
+              drupal_render($item['end_date_markup']),
               drupal_render($item['image']),
               $log_link,
               $log_done,
