@@ -33,9 +33,9 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
   // the user back to the herd management page to correct them. Do not show
   // the rest of the rotations page.
   $errors = 0;
-  foreach ($herd_records as $record) {
+  foreach ($herd_records as $herd) {
     $data = array();
-    $errors += farm_grazing_validate_herd($record->herd_id, $record->plan_id, $data, TRUE);
+    $errors += farm_grazing_validate_herd($herd->herd_id, $herd->plan_id, $data, TRUE);
   }
   if (empty($herd_records) || !empty($errors)) {
     $message = t('Some required data is missing from the herds/animals in this plan. Please correct these issues in the <a href="@herds_manage">Manage Herds</a> tab.', array('@herds_manage' => url('farm/plan/' . $plan . '/herds')));
@@ -60,14 +60,14 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
 
   // Create an array of herd options for the select list.
   $herd_options = array();
-  foreach ($herd_records as $rec) {
-    $herd_options[$rec->herd_id] = $rec->name;
+  foreach ($herd_records as $herd) {
+    $herd_options[$herd->herd_id] = $herd->name;
   }
 
   // Create an array of paddock options for the select list.
   $paddock_options = array();
-  foreach ($paddock_records as $rec) {
-    $paddock_options[$rec->paddock_id] = $rec->name;
+  foreach ($paddock_records as $paddock) {
+    $paddock_options[$paddock->paddock_id] = $paddock->name;
   }
 
   // Add a fieldset with options for adding additional paddock rotations for a
@@ -110,36 +110,11 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     '#submit' => array('farm_grazing_plan_rotation_add_submit'),
   );
 
-  // If this is a growing season plan, add control to reset the number of
-  // grazing days on all rotations.
-  if ($grazing_growing_season) {
-    $form['reset_grazing_days'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Reset Grazing Days'),
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-    );
-    $form['reset_grazing_days']['select'] = array(
-      '#type' => 'select',
-      '#title' => t('Which Grazing Days'),
-      '#description' => t('Select the option to reset all fields below.'),
-      '#options' => array(
-        '0' => '- ' . t('Select Grazing Days Option') . ' -',
-        '1' => t('Minimum grazing days'),
-        '2' => t('Average grazing days'),
-        '3' => t('Maximum grazing days'),
-      ),
-      '#required' => FALSE,
-    );
-    $form['reset_grazing_days']['submit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Update Grazing Days'),
-      '#submit' => array('farm_grazing_plan_rotations_reset_grazing_form_submit'),
-    );
-  }
-
   // build sections for each herds associated with this plan
   $form['herds'] = array();
+
+  // Keep track of whether or not there are rotations in the form.
+  $rotations_exist = FALSE;
 
   // Iterate through the herds.
   foreach ($herd_records as $herd) {
@@ -150,18 +125,12 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     );
 
     // Query all the paddock rotations for this plan+herd.
-    $query = db_query('SELECT p.id, p.plan_id, p.herd_id, p.paddock_id,
-        p.duration, p.start_date, p.log_id, p.weight as weight, t.name
-      FROM {farm_grazing_rotations} p
-      LEFT JOIN taxonomy_term_data t ON p.paddock_id=t.tid
-      WHERE plan_id=:plan_id AND herd_id=:herd_id
-      ORDER BY p.weight, p.start_date ASC',
-      array(':plan_id' => $plan, ':herd_id' => $herd->herd_id));
-    $rotations = $query->fetchAll();
-    $rowcnt = $query->rowCount();
+    $rotations = farm_grazing_load_rotations($plan, $herd->herd_id);
+    $count_rotations = count($rotations);
 
     // Iterate through the paddock rotations.
-    foreach ($rotations as $i => $rotation) {
+    $weight = 0;
+    foreach ($rotations as $rotation) {
 
       // Load the log that is linked to the rotation.
       $log = log_load($rotation->log_id);
@@ -215,35 +184,63 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
         'weight' => array(
           '#type' => 'weight',
           '#title' => t('Order'),
-          '#default_value' => $pad->weight,
-          '#delta' => $rowcnt,
+          '#default_value' => $weight,
+          '#delta' => $count_rotations,
           '#title_display' => 'invisible',
           '#attributes' => array(
             'class' => array('herd_' . $herd->herd_id . '_weight'),
           ),
         ),
       );
+
+      // Keep track of the fact that there are rotations in the form.
+      $rotations_exist = TRUE;
+
+      // Increment the weight.
+      $weight++;
     }
   } // end foreach herd
 
-  // Now we add our submit button for recalcuating rotations. Include a
-  // required checkbox in order to submit it.
-  $form['actions'] = array(
-    '#type' => 'actions',
-    'submit' => array(
-      '#type' => 'submit',
-      '#value' => t('Recalculate'),
-    ),
-    'confirm' => array(
-      '#type' => 'checkbox',
-      '#title' => t('Are you sure?'),
-      '#description' => t('This will recalculate the start and end dates of all rotations in this plan. All "Done" movements will not be affected.'),
-      '#required' => TRUE,
-      '#default_value' => FALSE,
-    ),
+  // If there are no rotations, stop here. We won't show the form options for
+  // recalculating, because there's nothing to recalculate.
+  if (!$rotations_exist) {
+    return $form;
+  }
+
+  // Add options for recalculating rotations.
+  $form['recalculate'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Recalculate all rotations'),
+    '#description' => t('This will recalculate the start and end dates of all rotations in this plan, and optionally reset the grazing days for each. All "Done" movements will not be affected.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
   );
 
-  // Return markup.
+  // If this is a growing season plan, add control to reset the number of
+  // grazing days on all rotations.
+  if ($grazing_growing_season) {
+    $form['recalculate']['reset_grazing_days'] = array(
+      '#type' => 'select',
+      '#title' => t('Reset grazing days?'),
+      '#description' => t('This will reset the grazing days for all rotations in this plan to either the minimum, average, or maximum for each paddock.'),
+      '#options' => array(
+        0 => t('No change'),
+        1 => t('Minimum'),
+        2 => t('Average'),
+        3 => t('Maximum'),
+      ),
+      '#default_value' => 0,
+      '#required' => TRUE,
+    );
+  }
+
+  // Submit button.
+  $form['recalculate']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Recalculate'),
+  );
+
+  // Return the form.
   return $form;
 }
 
@@ -311,7 +308,6 @@ function theme_farm_grazing_plan_rotations_form($variables) {
             $class = array();
             $remove_link = '';
             $item['grazing_days']['#disabled'] = TRUE;
-            $weight = '';
           }
 
           // Assemble the row.
@@ -403,121 +399,68 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
   // Get the plan ID.
   $plan_id = $form_state['values']['plan'];
 
-  // Iterate through herds.
+  // Get the reset rotations mode, if available.
+  $reset_rotations = $form_state['values']['recalculate']['reset_grazing_days'];
+
+  // If there are herds in the form, iterate through them.
   if (!empty($form_state['values']['herds'])) {
-    foreach ($form_state['values']['herds'] as $herd_id => $rotations) {
-      foreach ($rotations['rotations'] as $rid => $data) {
+    foreach ($form_state['values']['herds'] as $herd_id => $herd_form_values) {
 
-        // Load the rotation log.
-        if (!empty($data['log_id'])) {
-          $log = log_load($data['log_id']);
-        }
+      // Load all rotations for the herd in this plan.
+      $rotations = farm_grazing_load_rotations($plan_id, $herd_id);
 
-        // If the log is missing, stop everything and alert the user.
-        if (empty($log)) {
-          drupal_set_message(t('A log is missing from one or more rotations. Remove the rotation and recreate it to fix this issue.'));
-          return;
-        }
-
-        // If the log is already marked as "done", skip it.
-        if (!empty($log->done)) {
-          continue;
-        }
-
-        // Calculate the start date as a timestamp.
-        $start_date = strtotime($data['start_date']);
-
-        // Update the log timestamp.
-        $log->timestamp = $start_date;
-        log_save($log);
-
-        // Update the rotation record.
-        db_update('farm_grazing_rotations')
-          ->fields(array(
-            'duration' => $data['grazing_days'],
-            'weight' => $data['weight'],
-            'start_date' => $start_date,
-          ))
-          ->condition('id', $rid)
-          ->condition('herd_id', $herd_id)
-          ->condition('plan_id', $plan_id)
-          ->execute();
+      // If there are no rotations, skip this herd.
+      if (empty($rotations)) {
+        continue;
       }
+
+      // If there are rotations in the herd form...
+      if (!empty($herd_form_values['rotations'])) {
+
+        // Keep track of whether or not the order of rotations is changing.
+        $reorder = FALSE;
+
+        // Iterate through the rotations.
+        foreach ($herd_form_values['rotations'] as $rotation_id => $rotation_form_values) {
+
+          // If the grazing days have been changed, save it to the rotation for
+          // recalculation after this.
+          $duration = $rotation_form_values['grazing_days'];
+          $duration_default = $form['herds'][$herd_id]['rotations'][$rotation_id]['grazing_days']['#default_value'];
+          if ($duration != $duration_default) {
+            $rotations[$rotation_id]->duration = $duration;
+          }
+
+          // Add the weight to the rotation. If the user changed it, trigger a
+          // reorder of the rotations.
+          $weight = $rotation_form_values['weight'];
+          $weight_default = $form['herds'][$herd_id]['rotations'][$rotation_id]['weight']['#default_value'];
+          $rotations[$rotation_id]->weight = $weight;
+          if ($rotations[$rotation_id]->weight != $weight_default) {
+            $reorder = TRUE;
+          }
+        }
+
+        // Reorder rotations, if desired.
+        if ($reorder) {
+          uasort($rotations, 'farm_grazing_rotation_sort');
+        }
+      }
+
+      // Recalculate all rotations for the herd in this plan.
+      farm_grazing_recalculate_rotations($plan_id, $herd_id, $rotations, $reset_rotations);
     }
   }
 }
 
 /**
- * Rotations reset grazing days form submit.
+ * Rotation sort callback.
  */
-function farm_grazing_plan_rotations_reset_grazing_form_submit($form, &$form_state) {
-
-  // Get the plan ID.
-  $plan_id = $form_state['values']['plan'];
-
-  // Load the plan's start time.
-  $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
-  $plan_start_ts = $wrapper->field_farm_date_range->value->value();
-
-  // If the reset mode is 0 we have nothing to update so return.
-  $mode = $form_state['values']['reset_grazing_days']['select'];
-  if ($mode == 0) {
-    return;
+function farm_grazing_rotation_sort($a, $b) {
+  if ($a->weight == $b->weight) {
+    return 0;
   }
-
-  // Build grazing days data as we are going to need it.
-  $paddocks = farm_grazing_get_grazing_days_for_plan_id($plan_id, $d1, $d2, TRUE);
-  $data = array();
-  if (!empty($paddocks)) {
-    foreach ($paddocks as $p) {
-      $data[$p[5]] = $p;
-    }
-  }
-
-  // Load all rotation records in the plan.
-  $rotations = db_query('SELECT id, paddock_id, herd_id, log_id FROM {farm_grazing_rotations} WHERE plan_id=:plan_id', array(':plan_id' => $plan_id));
-
-  // If there are rotation records, iterate through them.
-  if (!empty($rotations)) {
-    $cache = array();
-    $start_date = $plan_start_ts;
-    foreach ($rotations as $rotation) {
-
-      // Load the rotation log.
-      if (!empty($rotation->log_id)) {
-        $log = log_load($rotation->log_id);
-      }
-
-      // If the log is missing, stop everything and alert the user.
-      if (empty($log)) {
-        drupal_set_message(t('A log is missing from one or more rotations. Remove the rotation and recreate it to fix this issue.'));
-        return;
-      }
-
-      // If the log is already marked as "done", skip it.
-      if (!empty($log->done)) {
-        continue;
-      }
-
-      $days = farm_grazing_get_paddock_grazing_days(NULL, $rotation->paddock_id, $plan_id, $rotation->herd_id, $cache, $mode);
-
-      // Update the log timestamp.
-      $log->timestamp = $start_date;
-      log_save($log);
-
-      // Update the rotation record.
-      db_update('farm_grazing_rotations')
-        ->fields(array(
-          'duration' => $days,
-          'start_date' => $start_date,
-        ))
-        ->condition('id', $rotation->id)
-        ->execute();
-
-      // increment the paddock start_date by the duration in seconds
-      $start_date += $days * 24 * 3600;
-    }
-  }
+  return ($a->weight < $b->weight) ? -1 : 1;
 }
 
 /**
@@ -547,23 +490,24 @@ function farm_grazing_plan_rotation_add_submit($form, &$form_state) {
   $paddock_ids = $form_state['values']['add']['paddock_id'];
   $mode = $form_state['values']['add']['mode'];
 
-  // Get the timestamp of the end of the last rotation.
-  $result = db_query("SELECT duration, start_date, weight FROM {farm_grazing_rotations} WHERE plan_id=:plan_id AND herd_id=:herd_id ORDER BY weight DESC LIMIT 1", array(':plan_id' => $plan_id, ':herd_id' => $herd_id));
-  $record = $result->fetchAssoc();
+  // Get the last rotation for the herd in this plan.
+  $last_rotation = db_query("SELECT * FROM {farm_grazing_rotations} WHERE plan_id=:plan_id AND herd_id=:herd_id ORDER BY start_date DESC LIMIT 1", array(':plan_id' => $plan_id, ':herd_id' => $herd_id))->fetch();
 
-  // Calculate the start date.
-  if (!empty($record)) {
-    $start_date = $record['start_date'] + $record['duration'] * 24 * 3600;
+  // If a rotation doesn't exist, load the timestamp when the plan starts.
+  if (empty($last_rotation)) {
+    $plan_wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
+    $timestamp = $plan_wrapper->field_farm_date_range->value->value();
   }
 
-  // If a record doesn't exist, use the start date of the plan itself.
+  // Otherwise, calculate the timestamp when this rotation ends.
   else {
-    $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
-    $start_date = $wrapper->field_farm_date_range->value->value();
-  }
 
-  // get the weight of the next record to add
-  $weight = $record['weight'] + 1;
+    // Convert the duration to seconds.
+    $duration_seconds = $last_rotation->duration * 86400;
+
+    // Add it to the start time of the rotation.
+    $timestamp = $last_rotation->start_date + $duration_seconds;
+  }
 
   $cache = array();
   // Iterate through the paddocks and add rotation records.
@@ -579,23 +523,21 @@ function farm_grazing_plan_rotation_add_submit($form, &$form_state) {
     $duration = farm_grazing_get_paddock_grazing_days(NULL, $paddock_id, $plan_id, $herd_id, $cache, $mode);
 
     // Create movement log.
-    $log = farm_movement_create($herd, array($paddock), $start_date, 'farm_activity', FALSE);
+    $log = farm_movement_create($herd, array($paddock), $timestamp, 'farm_activity', FALSE);
 
-    // db_insert('farm_grazing_herd_paddocks')
-    db_insert('farm_grazing_rotations')
-      ->fields(array(
-        'paddock_id' => $paddock_id,
-        'plan_id' => $plan_id,
-        'herd_id' => $herd_id,
-        'duration' => $duration,
-        'start_date' => $start_date,
-        'log_id' => !empty($log->id) ? $log->id : 0,
-        'weight' => $weight + $i,
-      ))
-      ->execute();
+    // Write the new rotation record to the database.
+    $rotation = array(
+      'paddock_id' => $paddock_id,
+      'plan_id' => $plan_id,
+      'herd_id' => $herd_id,
+      'duration' => $duration,
+      'start_date' => $timestamp,
+      'log_id' => !empty($log->id) ? $log->id : 0,
+    );
+    drupal_write_record('farm_grazing_rotations', $rotation);
 
-    // update the start_date for the next paddock by duration in seconds
-    $start_date += $duration * 24 * 3600;
+    // Update the start_date for the next paddock by duration in seconds.
+    $timestamp += $duration * 24 * 3600;
   }
 }
 
@@ -613,10 +555,10 @@ function farm_grazing_plan_rotation_delete_form($form, &$form_state, $plan, $rot
     drupal_exit();
   }
 
-  // Save the rotation ID to the form.
-  $form['rotation_id'] = array(
+  // Save the rotation to the form.
+  $form['rotation'] = array(
     '#type' => 'value',
-    '#value' => $rotation->id,
+    '#value' => $rotation,
   );
 
   // Load the herd.
@@ -647,50 +589,32 @@ function farm_grazing_plan_rotation_delete_form($form, &$form_state, $plan, $rot
  */
 function farm_grazing_plan_rotation_delete_form_submit($form, &$form_state) {
 
-  // If a rotation ID wasn't set, bail.
-  if (empty($form_state['values']['rotation_id'])) {
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
+
+  // If a rotation wasn't set, bail.
+  if (empty($form_state['values']['rotation'])) {
     return;
   }
-  $rotation_id = $form_state['values']['rotation_id'];
+  $rotation = $form_state['values']['rotation'];
+
+  // Get the plan ID and herd ID.
+  $plan_id = $rotation->plan_id;
+  $herd_id = $rotation->herd_id;
 
   // Delete log.
-  $log_id = db_query('SELECT log_id FROM {farm_grazing_rotations} WHERE id = :id', array(':id' => $rotation_id))->fetchField();
-  if (!empty($log_id)) {
-    $log = log_load($log_id);
+  if (!empty($rotation->log_id)) {
+    $log = log_load($rotation->log_id);
     if (!empty($log)) {
       log_delete($log);
     }
   }
 
-  // get duration and start_date of record being deleted
-  $result = db_query("SELECT duration, start_date, plan_id, herd_id FROM {farm_grazing_rotations} WHERE id=:id", array(':id' => $rotation_id));
-  $rec_delete = $result->fetchAssoc();
-  $plan_id = $rec_delete['plan_id'];
-  $herd_id = $rec_delete['herd_id'];
-  // In seconds.
-  $duration = $rec_delete['duration'] * 24 * 3600;
-  $start_date = $rec_delete['start_date'];
-
   // Delete the rotation record.
   db_delete('farm_grazing_rotations')
-    ->condition('id', $rotation_id)
+    ->condition('id', $rotation->id)
     ->execute();
 
-  // for all records following this one
-  $records = db_query("SELECT id, log_id, start_date FROM {farm_grazing_rotations} WHERE start_date>:start_date AND plan_id=:plan_id AND herd_id=:herd_id", array(':start_date' => $start_date, ':plan_id' => $plan_id, ':herd_id' => $herd_id));
-  foreach ($records as $rec) {
-    //   set the start_date = start_date - duration
-    //   update database
-    db_update('farm_grazing_rotations')
-      ->expression('start_date', 'start_date - :duration', array(':duration' => $duration))
-      ->condition('id', $rec->id)
-      ->execute();
-
-    //   update log
-    $log = log_load($rec->log_id);
-    if (!empty($log)) {
-      $log->timestamp = $log->timestamp - $duration;
-      log_save($log);
-    }
-  }
+  // Recalculate all the remaining rotations.
+  farm_grazing_recalculate_rotations($plan_id, $herd_id);
 }
