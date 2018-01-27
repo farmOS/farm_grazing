@@ -983,6 +983,6 @@ function farm_grazing_recalculate_rotations($plan_id, $herd_id, $rotations = arr
 
   // If rotation(s) were saved, print a message.
   if ($saved_rotation) {
-    drupal_set_message(t('Rotations have been recalculated for plan %plan', array('%plan' => $plan_wrapper->label())));
+    drupal_set_message(t('Rotations have been recalculated for plan %plan. <a href="@rotations_url">Review the updated rotations.</a>', array('%plan' => $plan_wrapper->label(), '@rotations_url' => 'farm/plan/' . $plan_id . '/herds/rotations')));
   }
 }
