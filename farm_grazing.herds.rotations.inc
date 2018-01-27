@@ -170,6 +170,11 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
       $start_str = date('Y-m-d', $rotation->start_date);
       $end_str = date('Y-m-d', $rotation->start_date + ($rotation->duration * 86400));
 
+      // The grazing days field should be disabled if:
+      //   a) the plan is not a growing season, or:
+      //   b) the log is done
+      $grazing_days_disabled = !$grazing_growing_season || !empty($log->done);
+
       // Add form fields for the rotation details.
       $form['herds'][$herd->herd_id]['rotations'][$rotation->id] = array(
         'name' => array(
@@ -182,7 +187,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
           '#default_value' => $rotation->duration,
           '#size' => 10,
           '#maxlength' => 10,
-          '#disabled' => !empty($log->done) ? TRUE : FALSE,
+          '#disabled' => $grazing_days_disabled,
         ),
         'start_date' => array(
           '#type' => 'value',
@@ -218,9 +223,6 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
           ),
         ),
       );
-      if (!$grazing_growing_season) {
-        $form['herds'][$herd->herd_id]['rotations'][$rotation->id]['grazing_days']['#disabled'] = TRUE;
-      }
     }
   } // end foreach herd
 
