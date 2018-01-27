@@ -110,8 +110,9 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     '#submit' => array('farm_grazing_plan_rotation_add_submit'),
   );
 
+  // If this is a growing season plan, add control to reset the number of
+  // grazing days on all rotations.
   if ($grazing_growing_season) {
-    // build optional control to reset the number of grazing days
     $form['reset_grazing_days'] = array(
       '#type' => 'fieldset',
       '#title' => t('Reset Grazing Days'),
@@ -140,39 +141,45 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
   // build sections for each herds associated with this plan
   $form['herds'] = array();
 
-  // foreach herd
-  foreach ($herd_records as $rec) {
+  // Iterate through the herds.
+  foreach ($herd_records as $herd) {
 
     // create a section for the herd and list the paddocks assigned to it
-    $form['herds'][$rec->herd_id]['title'] = array(
-      '#markup' => '<h4>' . t('Rotations for herd ') . $rec->name . '</h4>',
+    $form['herds'][$herd->herd_id]['title'] = array(
+      '#markup' => '<h4>' . t('Rotations for herd %herd', array('%herd' => $herd->name)) . '</h4>',
     );
 
-    // build a table of paddocks assigned to this herd
+    // Query all the paddock rotations for this plan+herd.
     $query = db_query('SELECT p.id, p.plan_id, p.herd_id, p.paddock_id,
         p.duration, p.start_date, p.log_id, p.weight as weight, t.name
       FROM {farm_grazing_rotations} p
       LEFT JOIN taxonomy_term_data t ON p.paddock_id=t.tid
       WHERE plan_id=:plan_id AND herd_id=:herd_id
       ORDER BY p.weight, p.start_date ASC',
-      array(':plan_id' => $plan, ':herd_id' => $rec->herd_id));
-    $paddocks = $query->fetchAll();
+      array(':plan_id' => $plan, ':herd_id' => $herd->herd_id));
+    $rotations = $query->fetchAll();
     $rowcnt = $query->rowCount();
 
-    foreach ($paddocks as $pad) {
-      $log = log_load($pad->log_id);
+    // Iterate through the paddock rotations.
+    foreach ($rotations as $i => $rotation) {
+
+      // Load the log that is linked to the rotation.
+      $log = log_load($rotation->log_id);
+
       // Figure out the start and end date strings.
-      $start_str = date('Y-m-d', $pad->start_date);
-      $end_str = date('Y-m-d', $pad->start_date + ($pad->duration * 86400));
-      $form['herds'][$rec->herd_id]['rotations'][$pad->id] = array(
+      $start_str = date('Y-m-d', $rotation->start_date);
+      $end_str = date('Y-m-d', $rotation->start_date + ($rotation->duration * 86400));
+
+      // Add form fields for the rotation details.
+      $form['herds'][$herd->herd_id]['rotations'][$rotation->id] = array(
         'name' => array(
-          '#markup' => $pad->name,
+          '#markup' => $rotation->name,
         ),
         'grazing_days' => array(
           '#type' => 'textfield',
           '#title' => t('Grazing days'),
           '#title_display' => 'invisible',
-          '#default_value' => $pad->duration,
+          '#default_value' => $rotation->duration,
           '#size' => 10,
           '#maxlength' => 10,
           '#disabled' => !empty($log->done) ? TRUE : FALSE,
@@ -193,12 +200,12 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
         ),
         'image' => array(
           '#markup' => '<img src="' . base_path() . 'farm/grazing/plan/' . $plan .
-          '/plot/' . $pad->paddock_id . '/' . $start_str . '/' . $end_str .
+          '/plot/' . $rotation->paddock_id . '/' . $start_str . '/' . $end_str .
           '">',
         ),
         'log_id' => array(
           '#type' => 'value',
-          '#value' => !empty($pad->log_id) ? $pad->log_id : 0,
+          '#value' => !empty($rotation->log_id) ? $rotation->log_id : 0,
         ),
         'weight' => array(
           '#type' => 'weight',
@@ -207,12 +214,12 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
           '#delta' => $rowcnt,
           '#title_display' => 'invisible',
           '#attributes' => array(
-            'class' => array('herd_' . $rec->herd_id . '_weight'),
+            'class' => array('herd_' . $herd->herd_id . '_weight'),
           ),
         ),
       );
       if (!$grazing_growing_season) {
-        $form['herds'][$rec->herd_id]['rotations'][$pad->id]['grazing_days']['#disabled'] = TRUE;
+        $form['herds'][$herd->herd_id]['rotations'][$rotation->id]['grazing_days']['#disabled'] = TRUE;
       }
     }
   } // end foreach herd
