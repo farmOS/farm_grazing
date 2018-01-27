@@ -162,15 +162,12 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
           '#type' => 'value',
           '#value' => $start_str,
         ),
-        'start_date_markup' => array(
-          '#markup' => $start_str,
-        ),
         'end_date' => array(
           '#type' => 'value',
           '#value' => $end_str,
         ),
-        'end_date_markup' => array(
-          '#markup' => $end_str,
+        'date_range' => array(
+          '#markup' => t('@start_date to @end_date', array('@start_date' => $start_str, '@end_date' => $end_str)),
         ),
         'image' => array(
           '#markup' => '<img src="' . base_path() . 'farm/grazing/plan/' . $plan .
@@ -315,8 +312,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
             'data' => array(
               drupal_render($item['name']),
               drupal_render($item['grazing_days']),
-              drupal_render($item['start_date_markup']),
-              drupal_render($item['end_date_markup']),
+              drupal_render($item['date_range']),
               drupal_render($item['image']),
               $log_link,
               $log_done,
@@ -338,11 +334,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
           'class' => array('col-xs-1'),
         ),
         array(
-          'data' => t('Start Date'),
-          'class' => array('col-xs-1'),
-        ),
-        array(
-          'data' => t('End Date'),
+          'data' => t('Date Range'),
           'class' => array('col-xs-1'),
         ),
         array(
