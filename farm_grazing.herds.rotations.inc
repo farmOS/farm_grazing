@@ -226,12 +226,22 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     }
   } // end foreach herd
 
-  // Now we add our submit button, for submitting the form results.
-  //
-  // The 'actions' wrapper used here isn't strictly necessary for tabledrag,
-  // but is included as a Form API recommended practice.
-  $form['actions'] = array('#type' => 'actions');
-  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save Changes'));
+  // Now we add our submit button for recalcuating rotations. Include a
+  // required checkbox in order to submit it.
+  $form['actions'] = array(
+    '#type' => 'actions',
+    'submit' => array(
+      '#type' => 'submit',
+      '#value' => t('Recalculate'),
+    ),
+    'confirm' => array(
+      '#type' => 'checkbox',
+      '#title' => t('Are you sure?'),
+      '#description' => t('This will recalculate the start and end dates of all rotations in this plan. All "Done" movements will not be affected.'),
+      '#required' => TRUE,
+      '#default_value' => FALSE,
+    ),
+  );
 
   // Return markup.
   return $form;
