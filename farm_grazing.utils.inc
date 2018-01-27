@@ -851,3 +851,25 @@ function farm_grazing_get_non_growing_summary_for_plan_id($plan_id, $add_ids = F
 
   return $rows;
 }
+
+/**
+ * Load rotations for a given plan and herd.
+ *
+ * @param $plan_id
+ *   The plan ID.
+ * @param $herd_id
+ *   The herd ID (group asset ID).
+ *
+ * @return array
+ *   Returns an array of rotations loaded from the database, keyed by ID.
+ */
+function farm_grazing_load_rotations($plan_id, $herd_id) {
+  $query = db_select('farm_grazing_rotations', 'r');
+  $query->fields('r');
+  $query->leftJoin('taxonomy_term_data', 't', 'r.paddock_id = t.tid');
+  $query->addField('t', 'name');
+  $query->condition('plan_id', $plan_id);
+  $query->condition('herd_id', $herd_id);
+  $query->orderBy('start_date', 'ASC');
+  return $query->execute()->fetchAllAssoc('id');
+}
