@@ -275,37 +275,52 @@ function theme_farm_grazing_plan_rotations_form($variables) {
         foreach (element_children($form['herds'][$herd_id]['rotations']) as $rid) {
           $item =& $form['herds'][$herd_id]['rotations'][$rid];
 
-          // Build movement log columns (link and done checkbox)
-          $log_exists = FALSE;
-          $log_link = '';
-          $log_done = '';
+          // Start an array for action links.
+          $actions = array();
+
+          // Start an array for row classes.
+          $classes = array();
+
+          // Load the rotation log.
           if (!empty($item['log_id']['#value'])) {
             $log = log_load($item['log_id']['#value']);
-            if (!empty($log)) {
-              $log_exists = TRUE;
-              $uri = entity_uri('log', $log);
-              $log_link = l(t('View log'), $uri['path']);
-              if (!empty($log->done)) {
-                $log_done = '✔';
-              }
+          }
+
+          // If the log is missing or didn't load, make it clear to the user
+          // (in the "Done" column).
+          if (!empty($log)) {
+
+            // Add an action link to view the log.
+            $uri = entity_uri('log', $log);
+            $actions[] = l(t('View log'), $uri['path']);
+
+            // If the log is done, add a checkbox.
+            if (!empty($log->done)) {
+              $log_done = '✔';
+            }
+
+            // Or, if the log is not done, leave the "Done" column blank, and
+            // make the row draggable.
+            else {
+              $log_done = '';
+              $classes[] = 'draggable';
             }
           }
 
-          // If a log doesn't exist, make it clear that it's missing.
-          if (!$log_exists) {
-            $log_link = '(missing)';
+          // If the log is missing or didn't load, make it clear to the user
+          // (in the "Done" column).
+          else {
+            $log_done = '(log missing)';
           }
 
-          // Build a link to remove the rotation.
-          $remove_link = l(t('Remove'), 'farm/plan/' . $plan . '/herds/rotations/' . $rid . '/delete', array('query' => array('destination' => current_path())));
-
-          $class = array('draggable');
-          $weight = drupal_render($item['weight']);
-          if ($log_done == '✔') {
-            $class = array();
-            $remove_link = '';
-            $item['grazing_days']['#disabled'] = TRUE;
+          // If there is no log, or if the log is not done, add an action link
+          // for removing the rotation.
+          if (empty($log) || empty($log->done)) {
+            $actions[] = l(t('Remove'), 'farm/plan/' . $plan . '/herds/rotations/' . $rid . '/delete', array('query' => array('destination' => current_path())));
           }
+
+          // Assemble actions links.
+          $actions_links = implode(' | ', $actions);
 
           // Assemble the row.
           $rows[] = array(
@@ -314,12 +329,11 @@ function theme_farm_grazing_plan_rotations_form($variables) {
               drupal_render($item['grazing_days']),
               drupal_render($item['date_range']),
               drupal_render($item['image']),
-              $log_link,
               $log_done,
-              $remove_link,
-              $weight,
+              $actions_links,
+              drupal_render($item['weight']),
             ),
-            'class' => $class,
+            'class' => $classes,
           );
         }
       }
@@ -339,19 +353,15 @@ function theme_farm_grazing_plan_rotations_form($variables) {
         ),
         array(
           'data' => '<img src="' . base_path() . 'farm/grazing/plan/' . $plan . '/plot/0/0/0">',
-          'class' => array('col-xs-4'),
+          'class' => array('col-xs-5'),
         ),
         array(
-          'data' => t('Movement Log'),
+          'data' => t('Done'),
           'class' => array('col-xs-1'),
         ),
         array(
-          'data' => t('Movement Done'),
-          'class' => array('col-xs-1'),
-        ),
-        array(
-          'data' => t('Remove'),
-          'class' => array('col-xs-1'),
+          'data' => t('Actions'),
+          'class' => array('col-xs-2'),
         ),
         array(
           'data' => t('Sort weight'),
