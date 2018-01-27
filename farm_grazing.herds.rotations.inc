@@ -157,6 +157,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
           '#size' => 10,
           '#maxlength' => 10,
           '#disabled' => $grazing_days_disabled,
+          '#element_validate' => array('element_validate_integer_positive'),
         ),
         'start_date' => array(
           '#type' => 'value',
