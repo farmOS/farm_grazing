@@ -134,7 +134,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     $form['reset_grazing_days']['submit'] = array(
       '#type' => 'submit',
       '#value' => t('Update Grazing Days'),
-      '#submit' => array('farm_grazing_plan_rotations_form_submit'),
+      '#submit' => array('farm_grazing_plan_rotations_reset_grazing_form_submit'),
     );
   }
 
@@ -390,11 +390,11 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
   // Load utility functions.
   module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
 
+  // Get the plan ID.
   $plan_id = $form_state['values']['plan'];
-  $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
-  $plan_start_ts = $wrapper->field_farm_date_range->value->value();
 
-  if ($form_state['values']['op'] == t('Save Changes')) {
+  // Iterate through herds.
+  if (!empty($form_state['values']['herds'])) {
     foreach ($form_state['values']['herds'] as $herd_id => $rotations) {
       foreach ($rotations['rotations'] as $rid => $data) {
 
@@ -435,30 +435,47 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
       }
     }
   }
-  elseif ($form_state['values']['op'] == t('Update Grazing Days')) {
-    // if Update Grazing Days was click but select is 0
-    // we have nothing to update so return
-    $mode = $form_state['values']['reset_grazing_days']['select'];
-    if ($mode == 0) {
-      return;
-    }
-    // build data as we are going to need it
-    $paddocks = farm_grazing_get_grazing_days_for_plan_id($plan_id, $d1, $d2, TRUE);
-    $data = array();
+}
+
+/**
+ * Rotations reset grazing days form submit.
+ */
+function farm_grazing_plan_rotations_reset_grazing_form_submit($form, &$form_state) {
+
+  // Get the plan ID.
+  $plan_id = $form_state['values']['plan'];
+
+  // Load the plan's start time.
+  $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
+  $plan_start_ts = $wrapper->field_farm_date_range->value->value();
+
+  // If the reset mode is 0 we have nothing to update so return.
+  $mode = $form_state['values']['reset_grazing_days']['select'];
+  if ($mode == 0) {
+    return;
+  }
+
+  // Build grazing days data as we are going to need it.
+  $paddocks = farm_grazing_get_grazing_days_for_plan_id($plan_id, $d1, $d2, TRUE);
+  $data = array();
+  if (!empty($paddocks)) {
     foreach ($paddocks as $p) {
       $data[$p[5]] = $p;
     }
+  }
 
-    // update all rotation records in plan
-    $records = db_query('SELECT id, paddock_id, herd_id, log_id FROM {farm_grazing_rotations} WHERE plan_id=:plan_id', array(':plan_id' => $plan_id));
+  // Load all rotation records in the plan.
+  $rotations = db_query('SELECT id, paddock_id, herd_id, log_id FROM {farm_grazing_rotations} WHERE plan_id=:plan_id', array(':plan_id' => $plan_id));
 
+  // If there are rotation records, iterate through them.
+  if (!empty($rotations)) {
     $cache = array();
     $start_date = $plan_start_ts;
-    foreach ($records as $rec) {
+    foreach ($rotations as $rotation) {
 
       // Load the rotation log.
-      if (!empty($rec->log_id)) {
-        $log = log_load($rec->log_id);
+      if (!empty($rotation->log_id)) {
+        $log = log_load($rotation->log_id);
       }
 
       // If the log is missing, stop everything and alert the user.
@@ -472,7 +489,7 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
         continue;
       }
 
-      $days = farm_grazing_get_paddock_grazing_days(NULL, $rec->paddock_id, $plan_id, $rec->herd_id, $cache, $mode);
+      $days = farm_grazing_get_paddock_grazing_days(NULL, $rotation->paddock_id, $plan_id, $rotation->herd_id, $cache, $mode);
 
       // Update the log timestamp.
       $log->timestamp = $start_date;
@@ -484,7 +501,7 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
           'duration' => $days,
           'start_date' => $start_date,
         ))
-        ->condition('id', $rec->id)
+        ->condition('id', $rotation->id)
         ->execute();
 
       // increment the paddock start_date by the duration in seconds
