@@ -851,3 +851,130 @@ function farm_grazing_get_non_growing_summary_for_plan_id($plan_id, $add_ids = F
 
   return $rows;
 }
+
+/**
+ * Load rotations for a given plan and herd.
+ *
+ * @param $plan_id
+ *   The plan ID.
+ * @param $herd_id
+ *   The herd ID (group asset ID).
+ *
+ * @return array
+ *   Returns an array of rotations loaded from the database, keyed by ID.
+ */
+function farm_grazing_load_rotations($plan_id, $herd_id) {
+  $query = db_select('farm_grazing_rotations', 'r');
+  $query->fields('r');
+  $query->leftJoin('taxonomy_term_data', 't', 'r.paddock_id = t.tid');
+  $query->addField('t', 'name');
+  $query->condition('plan_id', $plan_id);
+  $query->condition('herd_id', $herd_id);
+  $query->orderBy('start_date', 'ASC');
+  return $query->execute()->fetchAllAssoc('id');
+}
+
+/**
+ * Recalculate the rotations for a plan and save them, along with their logs.
+ *
+ * @param @plan_id
+ *   The plan ID.
+ * @param @herd_id
+ *   The herd ID (group asset ID).
+ * @param $rotations
+ *   Optionally, an array of rotation records to recalculate. If this is
+ *   omitted, the rotations will be loaded from the database.
+ * @param $reset_durations
+ *   Optionally use this parameter to reset the rotation's duration (in grazing
+ *   days) to one of the following options:
+ *     0 = no change
+ *     1 = minimum
+ *     2 = average
+ *     3 = maximum
+ */
+function farm_grazing_recalculate_rotations($plan_id, $herd_id, $rotations = array(), $reset_durations = 0) {
+
+  // If rotations are not provided, load them from the plan.
+  if (empty($rotations)) {
+
+    // Load rotations from the database.
+    $rotations = farm_grazing_load_rotations($plan_id, $herd_id);
+
+    // If no rotations are loaded, bail.
+    if (empty($rotations)) {
+      return;
+    }
+  }
+
+  // Load the plan's start time.
+  $plan_wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
+  $plan_start_time = $plan_wrapper->field_farm_date_range->value->value();
+
+  // Make sure $reset_durations is a valid option.
+  if (!in_array($reset_durations, array(0, 1, 2, 3))) {
+    $reset_durations = 0;
+  }
+
+  // If we are resetting the grazing days, build grazing days data for the
+  // paddocks.
+  if ($reset_durations != 0) {
+    $paddocks = farm_grazing_get_grazing_days_for_plan_id($plan_id, $d1, $d2, TRUE);
+    $data = array();
+    if (!empty($paddocks)) {
+      foreach ($paddocks as $p) {
+        $data[$p[5]] = $p;
+      }
+    }
+  }
+
+  // Keep track of whether or not any rotations were saved.
+  $saved_rotation = FALSE;
+
+  // Iterate through the rotations, keeping track of the timestamp after each,
+  // starting with the start time of the plan.
+  $timestamp = $plan_start_time;
+  foreach ($rotations as $rotation) {
+
+    // Load the rotation log.
+    if (!empty($rotation->log_id)) {
+      $log = log_load($rotation->log_id);
+    }
+
+    // If the log is missing, stop everything and alert the user.
+    if (empty($log)) {
+      drupal_set_message(t('A log is missing from one or more rotations. Remove the rotation and recreate it to fix this issue.'));
+      return;
+    }
+
+    // If the log is not marked "done", update the log and rotation.
+    if (empty($log->done)) {
+
+      // Update the rotation and log timestamps.
+      $rotation->start_date = $timestamp;
+      $log->timestamp = $timestamp;
+
+      // Recalculate rotation duration, if desired.
+      if (in_array($reset_durations, array(1, 2, 3))) {
+        $cache = array();
+        $rotation->duration = farm_grazing_get_paddock_grazing_days(NULL, $rotation->paddock_id, $plan_id, $rotation->herd_id, $cache, $reset_durations);
+      }
+
+      // Update the rotation record.
+      drupal_write_record('farm_grazing_rotations', $rotation, array('id'));
+
+      // Save the log.
+      log_save($log);
+
+      // Remember that we saved a rotation.
+      $saved_rotation = TRUE;
+    }
+
+    // Increment the timestamp by the duration in seconds.
+    $timestamp += $rotation->duration * 24 * 3600;
+  }
+
+  // If rotation(s) were saved, print a message.
+  if ($saved_rotation) {
+    drupal_set_message(t('Rotations have been recalculated for plan %plan', array('%plan' => $plan_wrapper->label())));
+  }
+}

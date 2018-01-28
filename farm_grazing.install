@@ -110,12 +110,6 @@ function farm_grazing_schema() {
         'unsigned' => TRUE,
         'default' => 0,
       ),
-      'weight' => array(
-        'description' => 'Order of rotations',
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
-      ),
     ),
     'primary key' => array('id'),
     'indexes' => array(
@@ -124,7 +118,6 @@ function farm_grazing_schema() {
       'paddock_id' => array('paddock_id'),
       'log_id' => array('log_id'),
       'start_date' => array('start_date'),
-      'weight' => array('weight'),
     ),
   );
 
@@ -281,4 +274,11 @@ function farm_grazing_update_7000(&$sandbox) {
     $row->value = strtotime($row->value);
     drupal_write_record('farm_asset_property', $row, array('id', 'name'));
   }
+}
+
+/**
+ * Remove the weight column from {farm_grazing_rotations} table.
+ */
+function farm_grazing_update_7001(&$sandbox) {
+  db_drop_field('farm_grazing_rotations', 'weight');
 }
