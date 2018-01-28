@@ -786,21 +786,50 @@ function farm_grazing_plan_asset_update($asset) {
  */
 function farm_grazing_plan_log_update($log) {
 
-  // Only proceed if this log is linked to a grazing plan.
-  $plan_id = db_query('SELECT plan_id FROM {farm_grazing_rotations} WHERE log_id = :log_id', array(':log_id' => $log->id))->fetchField();
-  if (empty($plan_id)) {
+  // If rotations are being recalculated, do not run the logic in this
+  // function. This flag is set by the farm_grazing_recalculate_rotations()
+  // function, to prevent an infinite loop, because it will call log_save()
+  // which will end up running this code.
+  if (!empty($log->recalculating_rotations)) {
     return;
   }
 
-  // If the timestamp of the log is changing, we need to update other logs and
-  // rotations in the plan.
+  // Load the grazing rotation that this log is linked to.
+  $rotation = db_query('SELECT * FROM {farm_grazing_rotations} WHERE log_id = :log_id', array(':log_id' => $log->id))->fetch();
+
+  // If it is not linked to a rotation, we don't care about it.
+  if (empty($rotation)) {
+    return;
+  }
+
+  // If the timestamp of the log is changing, we need to update other rotations
+  // and logs in the plan.
   if (!empty($log->original->timestamp) && $log->original->timestamp != $log->timestamp) {
 
-    /**
-     * @todo
-     * Update future rotations + logs, show a message telling the user this
-     * happened.
-     */
+    // Load utility functions.
+    module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
+
+    // Load all rotations for the same herd in the plan.
+    $rotations = farm_grazing_load_rotations($rotation->plan_id, $rotation->herd_id);
+
+    // Find the rotation that comes before this one.
+    $previous_rotation_id = NULL;
+    foreach ($rotations as $rotation_id => $r) {
+      if ($rotation_id == $rotation->id) {
+        break;
+      }
+      $previous_rotation_id = $rotation_id;
+    }
+
+    // Update the duration of the previous rotation, if one exists.
+    if (!empty($previous_rotation_id)) {
+      $duration = round(($log->timestamp - $rotations[$previous_rotation_id]->start_date) / 86400);
+      $rotations[$previous_rotation_id]->duration = $duration;
+      drupal_write_record('farm_grazing_rotations', $rotations[$previous_rotation_id], array('id'));
+    }
+
+    // Recalculate all rotations.
+    farm_grazing_recalculate_rotations($rotation->plan_id, $rotation->herd_id, $rotations);
   }
 }
 

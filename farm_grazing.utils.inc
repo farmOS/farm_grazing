@@ -959,6 +959,14 @@ function farm_grazing_recalculate_rotations($plan_id, $herd_id, $rotations = arr
         $rotation->duration = farm_grazing_get_paddock_grazing_days(NULL, $rotation->paddock_id, $plan_id, $rotation->herd_id, $cache, $reset_durations);
       }
 
+      // Add a flag to the log record to indicate that we are in the process
+      // of recalculating all rotations. This is used in
+      // farm_grazing_plan_log_update(), which handles other cases where a
+      // log's timestamp is changing. We don't want to run that code when we
+      // are recalculating all the rotations, because it will cause an
+      // an infinite loop.
+      $log->recalculating_rotations = TRUE;
+
       // Update the rotation record.
       drupal_write_record('farm_grazing_rotations', $rotation, array('id'));
 
@@ -975,6 +983,6 @@ function farm_grazing_recalculate_rotations($plan_id, $herd_id, $rotations = arr
 
   // If rotation(s) were saved, print a message.
   if ($saved_rotation) {
-    drupal_set_message(t('Rotations have been recalculated for plan %plan', array('%plan' => $plan_wrapper->label())));
+    drupal_set_message(t('Rotations have been recalculated for plan %plan. <a href="@rotations_url">Review the updated rotations.</a>', array('%plan' => $plan_wrapper->label(), '@rotations_url' => 'farm/plan/' . $plan_id . '/herds/rotations')));
   }
 }
