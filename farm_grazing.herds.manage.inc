@@ -126,8 +126,15 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
       'summary' => $summary,
     );
 
+    // if either are empty then use the plan start or end as appropriate
     $arrival_date = $summary['arrival'];
+    if (empty($arrival_date)) {
+      $arrival_date = date('Y-m-d', $start_ts);
+    }
     $departure_date = $summary['departure'];
+    if (empty($departure_date)) {
+      $departure_date = date('Y-m-d', $end_ts);
+    }
 
     // build the section 1 summary table
     $form['section_1']['herds'][$herd->herd_id] = array(
