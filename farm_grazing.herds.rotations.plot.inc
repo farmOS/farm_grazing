@@ -131,10 +131,17 @@ function farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $start_date, $end_da
         "style=\"fill:orange;fill-opacity:.5\" />";
     }
 
+    $delta = 0;
+    if ($days_to_start == $days_to_end) {
+      $delta = 1;
+    }
+
     // add the paddock for grazing period
     $x1 = $days_to_start * $day_width;
     $y1 = 10;
-    $w = ($days_to_end - $days_to_start) * $day_width;
+    // TODO check the math on (end-start) get rounded to zero??
+    // +1 to days so something alsways should on plot
+    $w = ($days_to_end - $days_to_start + 1) * $day_width;
     $h = $height - 20;
     $im .= "<rect x=\"$x1\" y=\"$y1\" width=\"$w\" height=\"$h\" " .
       "style=\"fill:green;fill-opacity:1\" />";
