@@ -89,7 +89,8 @@ function farm_grazing_schema() {
       ),
       'duration' => array(
         'description' => 'Planned number of grazing days in paddock for this herd',
-        'type' => 'float',
+        'type' => 'int',
+        'not null' => TRUE,
         'unsigned' => TRUE,
       ),
       #
@@ -281,4 +282,26 @@ function farm_grazing_update_7000(&$sandbox) {
  */
 function farm_grazing_update_7001(&$sandbox) {
   db_drop_field('farm_grazing_rotations', 'weight');
+}
+
+/**
+ * Convert grazing rotation durations to whole numbers.
+ */
+function farm_grazing_update_7002(&$sandbox) {
+
+  // Update all existing data.
+  // First, round the duration to the nearest whole number.
+  // Then, if it is zero, convert it to null.
+  // If it's null, then make it 1 (via coalesce()).
+  db_query("UPDATE {farm_grazing_rotations} SET duration = COALESCE(NULLIF(ROUND(duration), 0), 1)");
+
+  // Change the duration field from a float to an integer in the database.
+  $field_name = 'duration';
+  $spec = array(
+    'description' => 'Planned number of grazing days in paddock for this herd',
+    'type' => 'int',
+    'not null' => TRUE,
+    'unsigned' => TRUE,
+  );
+  db_change_field('farm_grazing_rotations', $field_name, $field_name, $spec);
 }
