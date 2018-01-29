@@ -143,8 +143,8 @@ function farm_grazing_get_paddock_grazing_days($duration, $paddock_id, $plan_id,
       break;
   }
 
-  // Round the days to a whole number.
-  $days = round($days);
+  // Round the days down to the nearest whole number.
+  $days = floor($days);
 
   // If it was rounded down to zero, enforce a minimum of 1 day.
   if ($days == 0) {

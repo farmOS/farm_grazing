@@ -293,7 +293,7 @@ function farm_grazing_update_7002(&$sandbox) {
   // First, round the duration to the nearest whole number.
   // Then, if it is zero, convert it to null.
   // If it's null, then make it 1 (via coalesce()).
-  db_query("UPDATE {farm_grazing_rotations} SET duration = COALESCE(NULLIF(ROUND(duration), 0), 1)");
+  db_query("UPDATE {farm_grazing_rotations} SET duration = COALESCE(NULLIF(FLOOR(duration), 0), 1)");
 
   // Change the duration field from a float to an integer in the database.
   $field_name = 'duration';
