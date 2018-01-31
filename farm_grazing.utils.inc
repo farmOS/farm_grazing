@@ -513,8 +513,10 @@ function farm_grazing_get_grazing_group_detailed_info($asset_id, &$data) {
   // get the asset
   $asset = farm_asset_load($asset_id);
 
-  // ignore inactive ones
-  if (!$asset->active) {
+  // Ignore archived assets.
+  // This may be redundant because farm_group_members() already filters out
+  // archived assets by default.
+  if (!empty($asset->archived)) {
     return;
   }
 
