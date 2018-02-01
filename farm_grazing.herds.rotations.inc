@@ -402,7 +402,10 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
   $plan_id = $form_state['values']['plan'];
 
   // Get the reset rotations mode, if available.
-  $reset_rotations = $form_state['values']['recalculate']['reset_grazing_days'];
+  $reset_rotations = 0;
+  if (!empty($form_state['values']['recalculate']['reset_grazing_days'])) {
+    $reset_rotations = $form_state['values']['recalculate']['reset_grazing_days'];
+  }
 
   // If there are herds in the form, iterate through them.
   if (!empty($form_state['values']['herds'])) {
