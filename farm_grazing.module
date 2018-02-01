@@ -821,15 +821,26 @@ function farm_grazing_plan_log_update($log) {
       $previous_rotation_id = $rotation_id;
     }
 
-    // Update the duration of the previous rotation, if one exists.
-    if (!empty($previous_rotation_id)) {
+    // If this is the first rotation, set the $start_time parameter for the
+    // farm_grazing_recalculate_rotations() function to the new timestamp of
+    // this log.
+    if (empty($previous_rotation_id)) {
+      $start_time = $log->timestamp;
+    }
+
+    // Or, if this is not the first rotation, update the duration of the
+    // previous one (and set $start_time to NULL so that it defaults to the
+    // plan start time).
+    else {
       $duration = round(($log->timestamp - $rotations[$previous_rotation_id]->start_date) / 86400);
       $rotations[$previous_rotation_id]->duration = $duration;
       drupal_write_record('farm_grazing_rotations', $rotations[$previous_rotation_id], array('id'));
+      $start_time = NULL;
     }
 
     // Recalculate all rotations.
-    farm_grazing_recalculate_rotations($rotation->plan_id, $rotation->herd_id, $rotations);
+    $reset_durations = FALSE;
+    farm_grazing_recalculate_rotations($rotation->plan_id, $rotation->herd_id, $rotations, $reset_durations, $start_time);
 
     // Print a message.
     $plan_wrapper = entity_metadata_wrapper('farm_plan', $rotation->plan_id);
