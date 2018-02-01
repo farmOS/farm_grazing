@@ -912,9 +912,6 @@ function farm_grazing_recalculate_rotations($plan_id, $herd_id, $rotations = arr
     }
   }
 
-  // Keep track of whether or not any rotations were saved.
-  $saved_rotation = FALSE;
-
   // Iterate through the rotations, keeping track of the timestamp after each,
   // starting with the start time of the plan.
   $timestamp = $plan_start_time;
@@ -957,17 +954,9 @@ function farm_grazing_recalculate_rotations($plan_id, $herd_id, $rotations = arr
 
       // Save the log.
       log_save($log);
-
-      // Remember that we saved a rotation.
-      $saved_rotation = TRUE;
     }
 
     // Increment the timestamp by the duration in seconds.
     $timestamp += $rotation->duration * 24 * 3600;
-  }
-
-  // If rotation(s) were saved, print a message.
-  if ($saved_rotation) {
-    drupal_set_message(t('Rotations have been recalculated for plan %plan. <a href="@rotations_url">Review the updated rotations.</a>', array('%plan' => $plan_wrapper->label(), '@rotations_url' => url('farm/plan/' . $plan_id . '/herds/rotations'))));
   }
 }

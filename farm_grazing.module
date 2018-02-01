@@ -830,6 +830,10 @@ function farm_grazing_plan_log_update($log) {
 
     // Recalculate all rotations.
     farm_grazing_recalculate_rotations($rotation->plan_id, $rotation->herd_id, $rotations);
+
+    // Print a message.
+    $plan_wrapper = entity_metadata_wrapper('farm_plan', $rotation->plan_id);
+    drupal_set_message(t('Rotations have been recalculated for plan %plan. <a href="@rotations_url">Review the updated rotations.</a>', array('%plan' => $plan_wrapper->label(), '@rotations_url' => url('farm/plan/' . $rotation->plan_id . '/herds/rotations'))));
   }
 }
 

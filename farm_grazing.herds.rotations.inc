@@ -456,6 +456,9 @@ function farm_grazing_plan_rotations_form_submit($form, &$form_state) {
       farm_grazing_recalculate_rotations($plan_id, $herd_id, $rotations, $reset_rotations);
     }
   }
+
+  // Print a message.
+  drupal_set_message(t('All rotations have been saved.'));
 }
 
 /**
@@ -622,4 +625,7 @@ function farm_grazing_plan_rotation_delete_form_submit($form, &$form_state) {
 
   // Recalculate all the remaining rotations.
   farm_grazing_recalculate_rotations($plan_id, $herd_id);
+
+  // Print a message.
+  drupal_set_message(t('The rotation has been deleted. All rotations after it were automatically recalculated.'));
 }
