@@ -876,8 +876,11 @@ function farm_grazing_load_rotations($plan_id, $herd_id) {
  *     1 = minimum
  *     2 = average
  *     3 = maximum
+ * @param int $start_time
+ *   Optionally set a start time for the first rotation. If omitted, the plan's
+ *   start time will be used instead.
  */
-function farm_grazing_recalculate_rotations($plan_id, $herd_id, $rotations = array(), $reset_durations = 0) {
+function farm_grazing_recalculate_rotations($plan_id, $herd_id, $rotations = array(), $reset_durations = 0, $start_time = NULL) {
 
   // If rotations are not provided, load them from the plan.
   if (empty($rotations)) {
@@ -890,10 +893,6 @@ function farm_grazing_recalculate_rotations($plan_id, $herd_id, $rotations = arr
       return;
     }
   }
-
-  // Load the plan's start time.
-  $plan_wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
-  $plan_start_time = $plan_wrapper->field_farm_date_range->value->value();
 
   // Make sure $reset_durations is a valid option.
   if (!in_array($reset_durations, array(0, 1, 2, 3))) {
@@ -912,9 +911,14 @@ function farm_grazing_recalculate_rotations($plan_id, $herd_id, $rotations = arr
     }
   }
 
-  // Iterate through the rotations, keeping track of the timestamp after each,
-  // starting with the start time of the plan.
-  $timestamp = $plan_start_time;
+  // If a $start_time is not provided, use the start time of the plan.
+  if (empty($start_time)) {
+    $plan_wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
+    $start_time = $plan_wrapper->field_farm_date_range->value->value();
+  }
+
+  // Iterate through the rotations, keeping track of the timestamp after each.
+  $timestamp = $start_time;
   foreach ($rotations as $rotation) {
 
     // Load the rotation log.
