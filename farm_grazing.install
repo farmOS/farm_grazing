@@ -282,3 +282,38 @@ function farm_grazing_update_7000(&$sandbox) {
 function farm_grazing_update_7001(&$sandbox) {
   db_drop_field('farm_grazing_rotations', 'weight');
 }
+
+/**
+ * Migrate paddock exclusions to plan considerations.
+ */
+function farm_grazing_update_7002(&$sandbox) {
+
+  // Enable the Farm Plan Considerations module, if it isn't already.
+  $module = 'farm_plan_consideration';
+  if (!module_exists($module)) {
+    module_enable(array($module));
+  }
+
+  // Load all records from the exclusions table.
+  $result = db_query('SELECT * FROM {farm_grazing_paddock_exclusions}');
+
+  // Iterate through the exclusions.
+  foreach ($result as $record) {
+
+    // Create a new consideration.
+    $consideration = farm_plan_consideration_create('exclusion', $record->reason, $record->start_date, $record->end_date);
+
+    // Link it to the paddock entity.
+    $consideration->entities = array(
+      'taxonomy_term' => array(
+        $record->paddock_id
+      ),
+    );
+
+    // Save the consideration.
+    farm_plan_consideration_save($consideration);
+  }
+
+  // Drop the exclusions table.
+  db_drop_table('farm_grazing_paddock_exclusions');
+}
