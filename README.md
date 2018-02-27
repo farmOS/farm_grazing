@@ -1,7 +1,7 @@
 FARM GRAZING
 ============
 
-Holistic herd management module for farmOS.
+Rotational grazing planning module for farmOS.
 
 This module is an add-on for the [farmOS](http://drupal.org/project/farm)
 distribution.
@@ -33,5 +33,7 @@ This project has been sponsored by:
 
 Special thanks to:
  * Sallie Calhoun
+ * Kelly Mulville
+ * Jess Maier
  * Frank Aragona
  * Jody Borris
