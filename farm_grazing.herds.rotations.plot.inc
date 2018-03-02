@@ -350,7 +350,13 @@ function farm_grazing_get_paddock_exclusions($plan_id, $paddock_id) {
   list($p_start, $p_end) = farm_grazing_get_farm_plan_dates_from_id($plan_id, 'Y-m-d');
 
   // get query paddock exclusions
-  $records = db_query('SELECT * FROM {farm_grazing_paddock_exclusions} WHERE paddock_id=:paddock_id', array(':paddock_id' => $paddock_id));
+  $records = db_query("SELECT e.entity_id as paddock_id,
+      c.start as start_date,
+      c.end as end_date,
+      c.name as exclusion_type
+      FROM {farm_plan_consideration} c JOIN {farm_plan_consideration_entity} e ON c.id=e.consideration_id
+      WHERE c.type='exclusion' AND e.entity_type='taxonomy_term' AND e.entity_id=:paddock_id",
+      array(':paddock_id' => $paddock_id));
 
   $results = array();
   foreach ($records as $record) {
