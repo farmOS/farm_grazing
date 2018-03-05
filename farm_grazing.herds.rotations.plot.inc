@@ -400,37 +400,73 @@ function farm_grazing_get_paddock_recovery($plan_id, $paddock_id, $end_date) {
   // Load utility functions.
   module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
 
-  // load the plan dates
-  list($p_start, $p_end) = farm_grazing_get_farm_plan_dates_from_id($plan_id, 'Y-m-d');
-  list($yr, $mon, $day) = explode('-', $end_date);
-
   $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
+  $start_ts = $wrapper->field_farm_date_range->value->value();
+  $p_start = date('Y-m-d', $start_ts);
+  $end_ts = $wrapper->field_farm_date_range->value2->value();
   $grazing_growing_season = $wrapper->field_grazing_growing_season->value();
 
-  if ($grazing_growing_season) {
-    $recovery = db_query('SELECT (min_recovery+max_recovery)/2.0 AS avg_recovery FROM {farm_grazing_plan_recovery} WHERE plan_id=:plan_id AND month=:month', array(':plan_id' => $plan_id, ':month' => $yr . $mon))->fetchField();
+  $results = array();
+
+  // get all plans that proceed or overlap this plan by some number of days
+  $window = 90.0*24*3600;   // a 90 window
+  $plans = db_query("SELECT p.id, p.name, d.field_farm_date_range_value AS p_start,
+            d.field_farm_date_range_value2 AS p_end
+       FROM {farm_plan} p JOIN {field_data_field_farm_date_range} d
+         ON p.id=d.entity_id AND p.type=d.bundle AND d.entity_type = 'farm_plan'
+      WHERE d.field_farm_date_range_value2 > :start_ts - :window
+         OR p.id=:plan_id",
+     array(':plan_id' => $plan_id, ':start_ts' => $start_ts, ':window' => $window));
+
+  // get list of rotation end dates for this paddock in each of the plans as the recovery start date
+  foreach ($plans as $plan) {
+      $r_starts = db_query('SELECT start_date + duration*24*3600 AS r_start
+          FROM {farm_grazing_rotations}
+          WHERE plan_id=:plan_id AND paddock_id=:paddock_id',
+        array(':plan_id' => $plan->id, ':paddock_id' => $paddock_id));
+
+      // compute the recovery period for each rotation given the plan the rotation is in
+      // and whether it is growing season or not
+
+      foreach ($r_starts as $rec) {
+          $wrap = entity_metadata_wrapper('farm_plan', $plan->id);
+          $growing = $wrap->field_grazing_growing_season->value();
+
+          if ($growing) {
+            // get the year month of the start of recovery period
+            list($yr, $mon, $day) = explode('-', date('Y-m-d', $rec->r_start));
+            
+            $recovery = db_query('SELECT (min_recovery+max_recovery)/2.0 AS avg_recovery FROM {farm_grazing_plan_recovery} WHERE plan_id=:plan_id AND month=:month', array(':plan_id' => $plan->id, ':month' => $yr . $mon))->fetchField();
+          }
+          else {
+            // TODO
+            $plan_days = floor(($end_ts - $start_ts) / 3600 / 24);
+
+            $expected_rotations = $wrapper->field_expected_rotations->value();
+            if ($expected_rotations == 0) {
+                $expected_rotations = 1;
+            }
+            $recovery = $plan_days / $expected_rotations;
+          }
+
+          // sday = days from plan start to start of recovery period
+          $sday = farm_grazing_get_days_between_dates($p_start, date('Y-m-d', $rec->r_start));
+
+          // if the start of recovery is before plan start then recovery need to be adjusted also
+          if ($sday == 0) {
+            $delta = farm_grazing_get_days_between_dates(date('Y-m-d', $rec->r_start), $p_start);
+            $recovery = $recovery - $delta;
+          }
+
+          // eday = sday + recovery
+          $eday = $sday + $recovery;
+
+          $results[] = array(
+              'sday' => $sday,
+              'eday' => $eday,
+            );
+      }
   }
-  else {
-    $start_ts = $wrapper->field_farm_date_range->value->value();
-    $end_ts = $wrapper->field_farm_date_range->value2->value();
-    $plan_days = floor(($end_ts - $start_ts) / 3600 / 24);
-
-    $expected_rotations = $wrapper->field_expected_rotations->value();
-    $recovery = $plan_days / $expected_rotations;
-  }
-
-  // sday = end_date - plan start
-  $sday = farm_grazing_get_days_between_dates($p_start, $end_date);
-
-  // eday = sday + recovery
-  $eday = $sday + $recovery;
-
-  $results = array(
-    array(
-      'sday' => $sday,
-      'eday' => $eday,
-    ),
-  );
 
   return $results;
 }
