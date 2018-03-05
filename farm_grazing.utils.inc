@@ -917,9 +917,17 @@ function farm_grazing_recalculate_rotations($plan_id, $herd_id, $rotations = arr
     $start_time = $plan_wrapper->field_farm_date_range->value->value();
   }
 
+  // Get the first rotation's array key, if it exists. This will be used to
+  // perform specific logic on the first rotation in the logic below.
+  $first = NULL;
+  if (!empty($rotations)) {
+    reset($rotations);
+    $first = key($rotations);
+  }
+
   // Iterate through the rotations, keeping track of the timestamp after each.
   $timestamp = $start_time;
-  foreach ($rotations as $rotation) {
+  foreach ($rotations as $rotation_id => $rotation) {
 
     // Load the rotation log.
     if (!empty($rotation->log_id)) {
@@ -930,6 +938,14 @@ function farm_grazing_recalculate_rotations($plan_id, $herd_id, $rotations = arr
     if (empty($log)) {
       drupal_set_message(t('A log is missing from one or more rotations. Remove the rotation and recreate it to fix this issue.'));
       return;
+    }
+
+    // If this is the first rotation, and it's timestamp is different than that
+    // of the plan, start with the rotation's timestamp instead of the plan's.
+    // This covers cases where a plan is started with one date, but the reality
+    // is that the first movement doesn't take place until later.
+    if (!empty($first) && $rotation_id == $first && $log->timestamp != $timestamp) {
+      $timestamp = $log->timestamp;
     }
 
     // If the log is not marked "done", update the log and rotation.
