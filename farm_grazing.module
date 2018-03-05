@@ -828,13 +828,33 @@ function farm_grazing_plan_log_update($log) {
       $start_time = $log->timestamp;
     }
 
-    // Or, if this is not the first rotation, update the duration of the
-    // previous one (and set $start_time to NULL so that it defaults to the
-    // plan start time).
+    // Or, if this is not the first rotation...
     else {
+
+      // We can't handle rearranging rotations here (that's what the rotations
+      // form is for), so if the new timestamp is less than or equal to the
+      // start of the previous rotation, then we need to abort and warn the
+      // user that rearranging isn't possible.
+      if ($log->timestamp <= $rotations[$previous_rotation_id]->start_date) {
+
+        // Reset the log timestamp to what it was originally.
+        $log->timestamp = $log->original->timestamp;
+        log_save($log);
+
+        // Set a warning message directing user to the rotations form.
+        drupal_set_message(t('It is not possible to rearrange grazing rotations by changing the movement date. The date was not changed. Please use the !rotations_form to rearrange and recalculate your rotations.', array('!rotations_form' => l('Rotations form', 'farm/plan/' . $rotation->plan_id . '/herds/rotations'))), 'error');
+
+        // Abort this function entirely - no recalculations should take place.
+        return;
+      }
+
+      // Recalculate the previous rotation's duration.
       $duration = round(($log->timestamp - $rotations[$previous_rotation_id]->start_date) / 86400);
       $rotations[$previous_rotation_id]->duration = $duration;
       drupal_write_record('farm_grazing_rotations', $rotations[$previous_rotation_id], array('id'));
+
+      // Set $start_time to NULL so that farm_grazing_recalculate_rotations()
+      // uses the plan start time.
       $start_time = NULL;
     }
 
