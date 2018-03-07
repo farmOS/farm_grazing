@@ -348,7 +348,7 @@ function farm_grazing_feeds_tamper_default_alter(&$feeds_tampers) {
  */
 function farm_grazing_farm_plan_consideration_types() {
   return array(
-    'exclusion' => array(
+    'farm_grazing_exclusion' => array(
       'label' => t('Paddock exclusion'),
       'color' => 'orange',
     ),
