@@ -10,6 +10,8 @@
  *
  * Parameters from URL
  *
+ * farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date)
+ *
  * @param plan_obj   - drupal plan object
  * @param paddock_id - int, paddock id for this plan
  * @param start_date - string YYYY-MM-DD, start of paddock grazing
@@ -18,33 +20,14 @@
  * @returns an image showing rotation in calendar or calendar header image
  */
 function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) {
-  define('DO_SVG', 1);
-
-  if (DO_SVG) {
-    farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $start_date, $end_date);
-  }
-  else {
-    farm_grazing_plan_plot_png($plan_obj, $paddock_id, $start_date, $end_date);
-  }
-}
-
-/**
- * farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $start_date, $end_date)
- *
- * @param plan_obj   - drupal plan object
- * @param paddock_id - int, paddock id for this plan
- * @param start_date - string YYYY-MM-DD, start of paddock grazing
- * @param end_date   - string YYYY-MM-DD, end of paddock grazing
- *
- * @returns an image showing rotation in calendar or calendar header image
- */
-function farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $start_date, $end_date) {
   // Load utility functions.
   module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
 
   $wrapper = entity_metadata_wrapper('farm_plan', $plan_obj->id);
   $start_ts = $wrapper->field_farm_date_range->value->value();
   $end_ts = $wrapper->field_farm_date_range->value2->value();
+
+  $c_types = farm_plan_consideration_types();
 
   // Set the header Content-type
   drupal_add_http_header('Content-Type', 'image/svg+xml');
@@ -117,8 +100,9 @@ function farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $start_date, $end_da
       $y1 = 2;
       $w = ($event['eday'] - $event['sday']) * $day_width;
       $h = $height - 4;
+      $title = $event['type'];
       $im .= "<rect x=\"$x1\" y=\"$y1\" width=\"$w\" height=\"$h\" " .
-             "style=\"fill:red;fill-opacity:1\" />";
+             "style=\"fill:red;fill-opacity:1\" alt=\"$title\" class=\"enabled\" />";
     }
 
     // add recovery periods
@@ -128,7 +112,7 @@ function farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $start_date, $end_da
       $w = ($event['eday'] - $event['sday']) * $day_width;
       $h = $height - 12;
       $im .= "<rect x=\"$x1\" y=\"$y1\" width=\"$w\" height=\"$h\" " .
-        "style=\"fill:orange;fill-opacity:.5\" />";
+        "style=\"fill:orange;fill-opacity:.5\" alt=\"Grazing Recovery Period\" class=\"enabled\" />";
     }
 
     $delta = 0;
@@ -144,7 +128,7 @@ function farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $start_date, $end_da
     $w = ($days_to_end - $days_to_start + $delta) * $day_width;
     $h = $height - 20;
     $im .= "<rect x=\"$x1\" y=\"$y1\" width=\"$w\" height=\"$h\" " .
-      "style=\"fill:green;fill-opacity:1\" />";
+      "style=\"fill:green;fill-opacity:1\" alt=\"Grazing\" class=\"enabled\" />";
   }
 
   // draw the month boundaries
@@ -185,144 +169,6 @@ function farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $start_date, $end_da
 }
 
 /**
- * farm_grazing_plan_plot_png($plan_obj, $paddock_id, $start_date, $end_date)
- *
- * @param plan_obj   - drupal plan object
- * @param paddock_id - int, paddock id for this plan
- * @param start_date - string YYYY-MM-DD, start of paddock grazing
- * @param end_date   - string YYYY-MM-DD, end of paddock grazing
- *
- * @returns an image showing rotation in calendar or calendar header image
- */
-function farm_grazing_plan_plot_png($plan_obj, $paddock_id, $start_date, $end_date) {
-  // Load utility functions.
-  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
-
-  $wrapper = entity_metadata_wrapper('farm_plan', $plan_obj->id);
-  $start_ts = $wrapper->field_farm_date_range->value->value();
-  $end_ts = $wrapper->field_farm_date_range->value2->value();
-
-  // Set the header Content-type
-  drupal_add_http_header('Content-Type', 'image/png');
-
-  $plan = $plan_obj->id;
-  $header = 0;
-
-  // if paddock_id, start_date and end_date == 0 then generate the header image
-  // If any of the arguments are empty, bail with a 404 not found.
-  if (isset($plan) &&
-      isset($paddock_id) && $paddock_id == 0 &&
-      isset($start_date) && $start_date == 0 &&
-      isset($end_date)   && $end_date == 0) {
-    // generate header image
-    $header = 1;
-  }
-  elseif (empty($plan) || empty($paddock_id) || empty($start_date) || empty($end_date)) {
-    drupal_not_found();
-    drupal_exit();
-  }
-
-  // set image width and height
-  $width = 550;
-  $height = 16;
-
-  // get the start date month and year
-  $plan_start = date('Y-m-d', $start_ts);
-
-  // get the end date month and year
-  $plan_end = date('Y-m-d', $end_ts);
-
-  // get number of days in plan
-  $plan_days = farm_grazing_get_days_between_dates($plan_start, $plan_end);
-
-  // get number of days from start of plan to start_date
-  $days_to_start = farm_grazing_get_days_between_dates($plan_start, $start_date);
-
-  // get number of days from start of plan to end_date
-  $days_to_end = farm_grazing_get_days_between_dates($plan_start, $end_date);
-
-  // get day width in pixels and adjust image width
-  $day_width = round($width / ($plan_days + 1));
-  $width = $plan_days * $day_width;
-
-  if (!$header) {
-    $exclusions = farm_grazing_get_paddock_exclusions($plan, $paddock_id);
-    $recovery = farm_grazing_get_paddock_recovery($plan, $paddock_id, $end_date);
-  }
-
-  // Create a demo image.
-  $im = @imagecreate($width, $height)
-  or die("Cannot Initialize new GD image stream");
-
-  $white = imagecolorallocate($im, 255, 255, 255);
-  imagefill($im, 0, 0, $white);
-
-  if (!$header) {
-
-    // add exclusion periods
-    $red = imagecolorallocate($im, 255, 0, 0);
-    foreach ($exclusions as $event) {
-      $x1 = $event['sday'] * $day_width;
-      $y1 = 3;
-      $x2 = $event['eday'] * $day_width;
-      $y2 = $height - 3;
-      imagefilledrectangle($im, $x1, $y1, $x2, $y2, $red);
-    }
-
-    // add recovery periods
-    $orange = imagecolorallocate($im, 255, 128, 0);
-    foreach ($recovery as $event) {
-      $x1 = $event['sday'] * $day_width;
-      $y1 = 5;
-      $x2 = $event['eday'] * $day_width;
-      $y2 = $height - 5;
-      imagefilledrectangle($im, $x1, $y1, $x2, $y2, $orange);
-    }
-
-    // add the paddock for grazing period
-    $green = imagecolorallocate($im, 0, 255, 0);
-    $x1 = $days_to_start * $day_width;
-    $y1 = 6;
-    $x2 = $days_to_end * $day_width;
-    $y2 = $height - 6;
-    imagefilledrectangle($im, $x1, $y1, $x2, $y2, $green);
-  }
-
-  $black = imagecolorallocate($im, 0, 0, 0);
-
-  // draw the month boundaries
-  $months = array(t('Jan'), t('Feb'), t('Mar'), t('Apr'), t('May'), t('Jun'),
-    t('Jul'), t('Aug'), t('Sep'), t('Oct'), t('Nov'), t('Dec'),
-  );
-
-  $days = farm_grazing_days_available_by_month($plan_start, $plan_end, $plan_start, $plan_end);
-
-  list($y, $m, $d) = explode('-', $plan_start);
-  $sum = 0;
-  foreach ($days as $num) {
-    if ($num == 0) {
-      continue;
-    }
-    $sum += $num;
-    $x1 = $sum * $day_width;
-    $y1 = 0;
-    $x2 = $x1;
-    $y2 = $height;
-    imageline($im, $x1, $y1, $x2, $y2, $black);
-    if ($header) {
-      imagestring($im, 2, $x1 + 10, $y1 + 3, $months[$m % 12], $black);
-    }
-    $m++;
-  }
-
-  // output the image, 2nd param is filename, NULL sends to stdout
-  imagepng($im);
-  imagedestroy($im);
-
-  drupal_exit();
-}
-
-/**
  * farm_grazing_get_paddock_exclusions($plan_id, $paddock_id)
  *
  *   $exclusions = array(
@@ -330,7 +176,7 @@ function farm_grazing_plan_plot_png($plan_obj, $paddock_id, $start_date, $end_da
  *       'id' => paddock_id,
  *       'sday' => (exc_start - plan_start) as days,
  *       'eday' => (exc_end   - plan_start) as days,
- *       'type' => exclusion_type,
+ *       'type' => exclusion_type, // name
  *     ),
  *     ...
  *   );
@@ -355,7 +201,7 @@ function farm_grazing_get_paddock_exclusions($plan_id, $paddock_id) {
       c.end as end_date,
       c.name as exclusion_type
       FROM {farm_plan_consideration} c JOIN {farm_plan_consideration_entity} e ON c.id=e.consideration_id
-      WHERE c.type='exclusion' AND e.entity_type='taxonomy_term' AND e.entity_id=:paddock_id",
+      WHERE c.type='farm_grazing_exclusion' AND e.entity_type='taxonomy_term' AND e.entity_id=:paddock_id",
       array(':paddock_id' => $paddock_id));
 
   $results = array();
