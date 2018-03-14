@@ -270,7 +270,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
   }
 
   drupal_add_css('svg {position:absolute; background:white;}', 'inline');
-  drupal_add_css('td img, th img {position:relative; width:100%; height:100%; min-width: 200px;}', 'inline');
+  drupal_add_css('td svg, th svg {position:relative; width:100%; height:100%; min-width: 200px;}', 'inline');
 
     // TODO
     // This css and the following JS  are for doing tooltips over the rectangles in the SVG images
@@ -358,6 +358,7 @@ jQuery(document).on(\'mousemove\', function(e){
   $form =& $variables['form'];
 
   $plan = $form['plan']['#value'];
+  $plan_obj = farm_plan_load($plan);
 
   $output = drupal_render($form['plan']);
   $output .= drupal_render($form['description']);
@@ -456,7 +457,7 @@ jQuery(document).on(\'mousemove\', function(e){
           'class' => array('col-xs-1'),
         ),
         array(
-          'data' => '<img src="' . base_path() . 'farm/grazing/plan/' . $plan . '/plot/0/0/0">',
+          'data' => farm_grazing_get_rotation_svg($plan_obj, 0, array(), 0, 0),
           'class' => array('col-xs-6'),
         ),
         array(
@@ -754,17 +755,23 @@ function farm_grazing_get_plan_considerations($plan_obj) {
     $plan_start = $wrapper->field_farm_date_range->value->value();
     $plan_end = $wrapper->field_farm_date_range->value2->value();
 
-    // TODO need to update consideration table to include plan_id column that may be NULL
-    // then fixup the code below to use it
+    // we need to select considerations that overlap the plan start and end dates
+    //                   start           end
+    //                     |----plan------|
+    //          |---|   |====| |=====|  |====| |----|
+    //
+    // in the cases above we want the considerations represented  by |===| and not
+    // those represented by |---|
+    //
 
     $sql = "SELECT e.entity_id, e.entity_type, c.start, c.end, c.name
         FROM {farm_plan_consideration} c
         LEFT JOIN {farm_plan_consideration_entity} e
         ON c.id=e.consideration_id
-        WHERE c.start <= :plan_end AND c.end >= :plan_start";
-        //-- AND ( c.plan_id=:plan_id OR c.plan_id IS NULL)";
+        WHERE c.start <= :plan_end AND c.end >= :plan_start
+        AND ( c.plan_id=:plan_id OR c.plan_id IS NULL)";
 
-    $records = db_query($sql, array(':plan_start' => $plan_start, ':plan_end' => $plan_end)); //, ':plan_id' => $plan_obj->id));
+    $records = db_query($sql, array(':plan_start' => $plan_start, ':plan_end' => $plan_end, ':plan_id' => $plan_obj->id));
 
     $considerations = array();
     foreach ($records as $record) {
