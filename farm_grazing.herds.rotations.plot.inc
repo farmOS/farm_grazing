@@ -23,14 +23,35 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
   // Load utility functions.
   module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
 
+  // Set the header Content-type
+  drupal_add_http_header('Content-Type', 'image/svg+xml');
+
+  // output the image
+  $svg = farm_grazing_plan_plot_svg($plan_obj, $paddock_id, array(), $start_date, $end_date);
+  echo $svg;
+
+  drupal_exit();
+}
+
+/**
+ * Generate SVG that plots a paddock rotation for visualization.
+ *
+ * @param plan_obj   - drupal plan object
+ * @param paddock_id - int, paddock id for this plan
+ * @param start_date - string YYYY-MM-DD, start of paddock grazing
+ * @param end_date   - string YYYY-MM-DD, end of paddock grazing
+ *
+ * @return SVG text showing rotation in calendar or calendar header image
+ */
+function farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $considerations, $start_date, $end_date) {
+  // Load utility functions.
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
+
   $wrapper = entity_metadata_wrapper('farm_plan', $plan_obj->id);
   $start_ts = $wrapper->field_farm_date_range->value->value();
   $end_ts = $wrapper->field_farm_date_range->value2->value();
 
   $c_types = farm_plan_consideration_types();
-
-  // Set the header Content-type
-  drupal_add_http_header('Content-Type', 'image/svg+xml');
 
   $plan = $plan_obj->id;
   $header = 0;
@@ -160,12 +181,10 @@ function farm_grazing_plan_plot($plan_obj, $paddock_id, $start_date, $end_date) 
     }
     $m++;
   }
-
-  // output the image
   $im .= '</svg>';
-  echo $im;
 
-  drupal_exit();
+  // return the svg text
+  return $im;
 }
 
 /**

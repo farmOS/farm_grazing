@@ -53,6 +53,9 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     '#type' => 'value',
     '#value' => $plan,
   );
+  $form['description'] = array(
+    '#markup' => '<div class="fg_description"></div>',
+  );
   $form['text'] = array(
     '#markup' => t('
       <p>Drag and drop to reorder the paddocks for each herd. Avoid grazing during paddock exclusions or recovery periods.</p>'),
@@ -158,7 +161,7 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
       $grazing_days_disabled = !$grazing_growing_season || !empty($log->done);
 
       // compute the SVG image data for this rotation
-      $svg = farm_grazing_get_rotation_svg($plan, $rotation->paddock_id, $considerations, $start_str, $end_str);
+      $svg = farm_grazing_get_rotation_svg($plan_obj, $rotation->paddock_id, $considerations, $start_str, $end_str);
 
       // Add form fields for the rotation details.
       $form['herds'][$herd->herd_id]['rotations'][$rotation->id] = array(
@@ -269,13 +272,13 @@ function theme_farm_grazing_plan_rotations_form($variables) {
   drupal_add_css('svg {position:absolute; background:white;}', 'inline');
   drupal_add_css('td img, th img {position:relative; width:100%; height:100%; min-width: 200px;}', 'inline');
 
-/*
     // TODO
     // This css and the following JS  are for doing tooltips over the rectangles in the SVG images
     // But this does not work with SVG in an IMG tag. So, the code needs to generate the SVG directly
     // into the TD and see if that works and if it does probably we should move the CSS and JS in files.
  
-  drupal_add_css('.heyo:hover {
+  drupal_add_css('
+.heyo:hover {
   fill: #CC2929;
   -moz-transition: 0.3s;
   -o-transition: 0.3s;
@@ -287,19 +290,23 @@ function theme_farm_grazing_plan_rotations_form($variables) {
   cursor: pointer;
 }
 
-.description {
+.fg_description {
   pointer-events: none;
   position: absolute;
   font-size: 18px;
   text-align: center;
+  vertical-align: top;
   background: white;
   padding: 10px 15px;
   z-index: 5;
   height: 30px;
-  line-height: 30px;
+  line-height: 4px;
   margin: 0 auto;
   color: #21669e;
   border-radius: 5px;
+  border-color: black;
+  border-style: solid;
+  border-width: thin;
   box-shadow: 0 0 0 1px #eee;
   -moz-transform: translateX(-50%);
   -ms-transform: translateX(-50%);
@@ -307,10 +314,10 @@ function theme_farm_grazing_plan_rotations_form($variables) {
   transform: translateX(-50%);
   display: none;
 }
-.description.active {
+.fg_description.active {
   display: block;
 }
-.description:after {
+.fg_description:after {
   content: "";
   position: absolute;
   left: 50%;
@@ -322,16 +329,16 @@ function theme_farm_grazing_plan_rotations_form($variables) {
   border-right: 10px solid transparent;
   border-top: 10px solid white;
 }
-');
+', 'inline');
 
-//drupal_add_js('//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js', 'theme');
-drupal_add_js('$description = jQuery(".description");
+drupal_add_js('jQuery(document).ready(function() {
+  $description = jQuery(".fg_description");
 
   jQuery(\'.enabled\').hover(function() {
           
     jQuery(this).attr("class", "enabled heyo");
     $description.addClass(\'active\');
-    $description.html($(this).attr(\'alt\'));
+    $description.html(jQuery(this).attr(\'alt\'));
   }, function() {
     $description.removeClass(\'active\');
   });
@@ -339,19 +346,21 @@ drupal_add_js('$description = jQuery(".description");
 jQuery(document).on(\'mousemove\', function(e){
   
   $description.css({
+
     left:  e.pageX,
-    top:   e.pageY - 70
+    top:   e.pageY - 180
   });
   
 });
+});
 ', 'inline');
-*/
 
   $form =& $variables['form'];
 
   $plan = $form['plan']['#value'];
 
   $output = drupal_render($form['plan']);
+  $output .= drupal_render($form['description']);
   $output .= drupal_render($form['text']);
 
   $output .= drupal_render($form['add']);
@@ -767,11 +776,17 @@ function farm_grazing_get_plan_considerations($plan_obj) {
 }
 
 /**
- * farm_grazing_get_rotation_svg($plan_id, $paddock_id, $considerations, $start_str, $end_str)
+ * farm_grazing_get_rotation_svg($plan_obj, $paddock_id, $considerations, $start_str, $end_str)
  */
-function farm_grazing_get_rotation_svg($plan_id, $paddock_id, $considerations, $start_str, $end_str) {
+function farm_grazing_get_rotation_svg($plan_obj, $paddock_id, $considerations, $start_str, $end_str) {
+    module_load_include('inc', 'farm_grazing', 'farm_grazing.herds.rotations.plot');
+
+    /*
+    $plan_id =$plan_obj->id;
     $svg = '<img src="' . base_path() . 'farm/grazing/plan/' . $plan_id .
       '/plot/' . $paddock_id . '/' . $start_str . '/' . $end_str .
       '">';
+     */
+    $svg = farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $considerations, $start_str, $end_str);
     return $svg;
 }
