@@ -617,6 +617,101 @@ function farm_grazing_log_form_validate(&$form, &$form_state) {
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function farm_grazing_form_farm_plan_consideration_form_alter(&$form, &$form_state, $form_id) {
+
+  // Get the consideration from the form (bail if it doesn't exist).
+  if (empty($form['consideration']['#value'])) {
+    return;
+  }
+  $consideration = $form['consideration']['#value'];
+
+  // If the consideration type is set to 'farm_grazing_exclusion' (in the
+  // consideration itself, or in the form fields), add fields for linking this
+  // consideration to a specific paddock.
+  $exclusion_type = 'farm_grazing_exclusion';
+  if ($consideration->type == $exclusion_type || (!empty($form_state['values']['type']) && $form_state['values']['type'] == $exclusion_type)) {
+
+    // Load all paddocks and generate an options list.
+    $paddocks = farm_area_load_areas('paddock', 'name');
+    $paddock_options = array();
+    foreach ($paddocks as $paddock) {
+      $paddock_options[$paddock->tid] = $paddock->name;
+    }
+
+    // Determine if a paddock has already been selected for this consideration,
+    // and use that as the default value.
+    $default_paddock_id = NULL;
+    if (!empty($consideration->entities['taxonomy_term'])) {
+      foreach ($consideration->entities['taxonomy_term'] as $id) {
+        $term = taxonomy_term_load($id);
+        if ($term->vocabulary_machine_name == 'farm_areas') {
+          if (!empty($term->field_farm_area_type) && $term->field_farm_area_type[LANGUAGE_NONE][0]['value'] == 'paddock') {
+            $default_paddock_id = $id;
+          }
+        }
+      }
+    }
+
+    // Add a paddock selection field to the form.
+    $form['extra']['paddock_id'] = array(
+      '#type' => 'select',
+      '#title' => t('Paddock'),
+      '#description' => t('Select the paddock to create an exclusion for.'),
+      '#options' => $paddock_options,
+      '#default_value' => $default_paddock_id,
+      '#required' => TRUE,
+    );
+
+    // Add our submit function.
+    $form['#submit'][] = 'farm_grazing_consideration_form_submit';
+  }
+}
+
+/**
+ * Consideration form submit function.
+ */
+function farm_grazing_consideration_form_submit(&$form, &$form_state) {
+
+  // If a paddock ID was set, then save it to the consideration.
+  if (!empty($form_state['values']['paddock_id']) && !empty($form_state['values']['consideration'])) {
+
+    // Get the consideration and paddock ID from the form.
+    $consideration = $form_state['values']['consideration'];
+    $paddock_id = $form_state['values']['paddock_id'];
+
+    // Initialize the taxonomy_term array if it isn't already.
+    if (!isset($consideration->entities['taxonomy_term'])) {
+      $consideration->entities['taxonomy_term'] = array();
+    }
+
+    // If the paddock_id already exists in the consideration, we don't need to
+    // do anything.
+    if (in_array($paddock_id, $consideration->entities['taxonomy_term'])) {
+      return;
+    }
+
+    // If an old paddock was referenced and we are changing it, remove that
+    // paddock reference.
+    if (!empty($form['extra']['paddock_id']['#default_value'])) {
+      $old_paddock_id = $form['extra']['paddock_id']['#default_value'];
+      if ($old_paddock_id != $paddock_id) {
+        foreach ($consideration->entities['taxonomy_term'] as $key => $value) {
+          if ($value == $old_paddock_id) {
+            unset ($consideration->entities['taxonomy_term'][$key]);
+          }
+        }
+      }
+    }
+
+    // Add the new paddock reference and save the consideration.
+    $consideration->entities['taxonomy_term'][] = $paddock_id;
+    farm_plan_consideration_save($consideration);
+  }
+}
+
+/**
  * Implements hook_entity_view().
  */
 function farm_grazing_entity_view($entity, $type, $view_mode, $langcode) {
