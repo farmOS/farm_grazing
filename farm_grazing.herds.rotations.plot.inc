@@ -127,7 +127,7 @@ function farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $considerations, $st
                 $sday = farm_grazing_get_days_between_dates($plan_start, $c_start);
                 $eday = farm_grazing_get_days_between_dates($plan_start, $c_end);
                 $x1 = $sday * $day_width;
-                $x2 = 0;
+                $y1 = 0;
                 $w = ($eday - $sday) * $day_width;
                 $h = $height;
                 $title = $rec->name;
@@ -153,12 +153,12 @@ function farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $considerations, $st
                 $sday = farm_grazing_get_days_between_dates($plan_start, $c_start);
                 $eday = farm_grazing_get_days_between_dates($plan_start, $c_end);
                 $x1 = $sday * $day_width;
-                $x2 = 2;
+                $y1 = 2;
                 $w = ($eday - $sday) * $day_width;
                 $h = $height - 4;
                 $title = $rec->name;
                 $im .= "<rect x=\"$x1\" y=\"$y1\" width=\"$w\" height=\"$h\" " .
-                       "style=\"fill:$color;fill-opacity:.75\" alt=\"$title\" class=\"enabled\" />";
+                       "style=\"fill:$color;fill-opacity:.5\" alt=\"$title\" class=\"enabled\" />";
             }
         }
     }
