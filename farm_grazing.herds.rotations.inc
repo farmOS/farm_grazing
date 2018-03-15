@@ -389,33 +389,33 @@ jQuery(document).on(\'mousemove\', function(e){
             $log = log_load($item['log_id']['#value']);
           }
 
-          // If the log is missing or didn't load, make it clear to the user
-          // (in the "Done" column).
+          // Build information about the log.
+          $log_info = '';
           if (!empty($log)) {
 
             // Add an action link to view the log.
             $uri = entity_uri('log', $log);
-            $actions[] = l(t('View log'), $uri['path']);
+            $log_info = l(t('View log'), $uri['path']);
 
             // If the log is done, add a checkbox.
             if (!empty($log->done)) {
-              $log_done = '✔';
+              $log_info .= ' (✔)';
             }
 
-            // Or, if the log is not done, leave the "Done" column blank, and
-            // make the row draggable.
+            // Or, if the log is not done, make the row draggable.
             else {
-              $log_done = '';
               $classes[] = 'draggable';
             }
           }
 
-          // If the log is missing or didn't load, make it clear to the user
-          // (in the "Done" column).
+          // If the log is missing or didn't load, make it clear to the user.
           // TODO unless this is a consideration only
           else {
-            $log_done = '(log missing)';
+            $log_info = '(log missing)';
           }
+
+          // Add log info as an action item.
+          $actions[] = $log_info;
 
           // If there is no log, or if the log is not done, add an action link
           // for removing the rotation.
@@ -434,7 +434,6 @@ jQuery(document).on(\'mousemove\', function(e){
               drupal_render($item['grazing_days']),
               drupal_render($item['date_range']),
               drupal_render($item['image']),
-              $log_done,
               $actions_links,
               drupal_render($item['weight']),
             ),
@@ -458,11 +457,7 @@ jQuery(document).on(\'mousemove\', function(e){
         ),
         array(
           'data' => farm_grazing_get_rotation_svg($plan_obj, 0, array(), 0, 0),
-          'class' => array('col-xs-6'),
-        ),
-        array(
-          'data' => t('Done'),
-          'class' => array('col-xs-1'),
+          'class' => array('col-xs-7'),
         ),
         array(
           'data' => t('Actions'),
