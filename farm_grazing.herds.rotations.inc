@@ -745,6 +745,7 @@ function farm_grazing_plan_rotation_delete_form_submit($form, &$form_state) {
  *
  * record->entity_id
  *       ->entity_type
+ *       ->type
  *       ->start
  *       ->end
  *       ->name
@@ -764,7 +765,7 @@ function farm_grazing_get_plan_considerations($plan_obj) {
     // those represented by |---|
     //
 
-    $sql = "SELECT e.entity_id, e.entity_type, c.start, c.end, c.name
+    $sql = "SELECT e.entity_id, e.entity_type, c.type, c.start, c.end, c.name
         FROM {farm_plan_consideration} c
         LEFT JOIN {farm_plan_consideration_entity} e
         ON c.id=e.consideration_id

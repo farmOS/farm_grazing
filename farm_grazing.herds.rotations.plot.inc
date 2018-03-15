@@ -109,31 +109,81 @@ function farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $considerations, $st
     ' width="' . $width . '" height="' . $height . '"' .
     ' viewBox="0 0 ' . $width . ' ' . $height . '">';
 
-  // svg needs css, added these to farm_grazing.herds.rotations.inc
-  // svg {position:absolute; background:white;}
-  // td svg, th svg {position:relative; width:100%; height:100%; margin:0 auto}
-
   if (!$header) {
 
+    // add urgent concerns
+    if (!empty($considerations)) {
+        $color = $c_types['urgent']['color'];
+        foreach ($considerations as $key => $records) {
+            if (! ($key == 0 or $key == $paddock_id)) {
+                continue;
+            }
+            foreach ($records as $rec) {
+                if ($rec->type != 'urgent') {
+                    continue;
+                }
+                $c_start = date('Y-m-d', $rec->start);
+                $c_end = date('Y-m-d', $rec->end);
+                $sday = farm_grazing_get_days_between_dates($plan_start, $c_start);
+                $eday = farm_grazing_get_days_between_dates($plan_start, $c_end);
+                $x1 = $sday * $day_width;
+                $x2 = 0;
+                $w = ($eday - $sday) * $day_width;
+                $h = $height;
+                $title = $rec->name;
+                $im .= "<rect x=\"$x1\" y=\"$y1\" width=\"$w\" height=\"$h\" " .
+                       "style=\"fill:$color;fill-opacity:1\" alt=\"$title\" class=\"enabled\" />";
+            }
+        }
+    }
+
+    // add management concerns
+    if (!empty($considerations)) {
+        $color = $c_types['concern']['color'];
+        foreach ($considerations as $key => $records) {
+            if (! ($key == 0 or $key == $paddock_id)) {
+                continue;
+            }
+            foreach ($records as $rec) {
+                if ($rec->type != 'concern') {
+                    continue;
+                }
+                $c_start = date('Y-m-d', $rec->start);
+                $c_end = date('Y-m-d', $rec->end);
+                $sday = farm_grazing_get_days_between_dates($plan_start, $c_start);
+                $eday = farm_grazing_get_days_between_dates($plan_start, $c_end);
+                $x1 = $sday * $day_width;
+                $x2 = 2;
+                $w = ($eday - $sday) * $day_width;
+                $h = $height - 4;
+                $title = $rec->name;
+                $im .= "<rect x=\"$x1\" y=\"$y1\" width=\"$w\" height=\"$h\" " .
+                       "style=\"fill:$color;fill-opacity:.75\" alt=\"$title\" class=\"enabled\" />";
+            }
+        }
+    }
+
     // add exclusion periods
+    $color = $c_types['farm_grazing_exclusion']['color'];
     foreach ($exclusions as $event) {
       $x1 = $event['sday'] * $day_width;
-      $y1 = 2;
+      $y1 = 4;
       $w = ($event['eday'] - $event['sday']) * $day_width;
-      $h = $height - 4;
+      $h = $height - 8;
       $title = $event['type'];
       $im .= "<rect x=\"$x1\" y=\"$y1\" width=\"$w\" height=\"$h\" " .
-             "style=\"fill:red;fill-opacity:1\" alt=\"$title\" class=\"enabled\" />";
+             "style=\"fill:$color;fill-opacity:.75\" alt=\"$title\" class=\"enabled\" />";
     }
 
     // add recovery periods
+    $color = 'goldenrod';
     foreach ($recovery as $event) {
       $x1 = $event['sday'] * $day_width;
-      $y1 = 6;
+      $y1 = 8;
       $w = ($event['eday'] - $event['sday']) * $day_width;
-      $h = $height - 12;
+      $h = $height - 16;
       $im .= "<rect x=\"$x1\" y=\"$y1\" width=\"$w\" height=\"$h\" " .
-        "style=\"fill:orange;fill-opacity:.5\" alt=\"Grazing Recovery Period\" class=\"enabled\" />";
+        "style=\"fill:$color;fill-opacity:.5\" alt=\"Grazing Recovery Period\" class=\"enabled\" />";
     }
 
     $delta = 0;
@@ -142,14 +192,15 @@ function farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $considerations, $st
     }
 
     // add the paddock for grazing period
+    $color = 'green';
     $x1 = $days_to_start * $day_width;
-    $y1 = 10;
+    $y1 = 12;
     // TODO check the math on (end-start) get rounded to zero??
     // +1 to days so something alsways should on plot
     $w = ($days_to_end - $days_to_start + $delta) * $day_width;
-    $h = $height - 20;
+    $h = $height - 24;
     $im .= "<rect x=\"$x1\" y=\"$y1\" width=\"$w\" height=\"$h\" " .
-      "style=\"fill:green;fill-opacity:1\" alt=\"Grazing\" class=\"enabled\" />";
+      "style=\"fill:$color;fill-opacity:1\" alt=\"Grazing\" class=\"enabled\" />";
   }
 
   // draw the month boundaries
