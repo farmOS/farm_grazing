@@ -270,7 +270,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
   }
 
   drupal_add_css('svg {position:absolute; background:white;}', 'inline');
-  drupal_add_css('td svg, th svg {position:relative; width:100%; height:100%; min-width: 200px;}', 'inline');
+  drupal_add_css('td svg, th svg {position:relative; width:100%; min-width: 200px;}', 'inline');
 
     // TODO
     // This css and the following JS  are for doing tooltips over the rectangles in the SVG images
