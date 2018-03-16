@@ -112,27 +112,16 @@ function farm_grazing_menu() {
     'weight' => 10,
   );
 
-  // Paddocks - Exclusions form.
+  // Add a new consideration.
   $items['farm/plan/%farm_plan/paddocks/exclusions'] = array(
     'title' => 'Exclusions',
     'description' => 'Define exclusion periods for paddocks.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('farm_grazing_exclusions_form', 2),
+    'page arguments' => array('farm_plan_consideration_form', 2),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(2),
-    'file' => 'farm_grazing.paddocks.exclusions.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 20,
-  );
-
-  $items['farm/grazing/exclusions/%/edit'] = array(
-    'title' => 'Edit/Delete Exclusion',
-    'description' => 'Allow paddock exclusions to be edited or deleted.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('farm_grazing_exclusions_edit_form', 3),
-    'access arguments' => array('edit any grazing farm plans'),
-    'file' => 'farm_grazing.paddocks.exclusions.inc',
-    'type' => MENU_CALLBACK,
   );
 
   // Paddocks - productivity.
