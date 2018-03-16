@@ -262,7 +262,7 @@ function farm_grazing_update_7002(&$sandbox) {
   foreach ($result as $record) {
 
     // Create a new consideration.
-    $consideration = farm_plan_consideration_create('exclusion', $record->reason, $record->start_date, $record->end_date);
+    $consideration = farm_plan_consideration_create('farm_grazing_exclusion', $record->reason, $record->start_date, $record->end_date);
 
     // Link it to the paddock entity.
     $consideration->entities = array(
