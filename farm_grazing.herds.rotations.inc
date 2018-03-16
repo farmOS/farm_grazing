@@ -53,6 +53,9 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     '#type' => 'value',
     '#value' => $plan,
   );
+  $form['description'] = array(
+    '#markup' => '<div class="fg_description"></div>',
+  );
   $form['text'] = array(
     '#markup' => t('
       <p>Drag and drop to reorder the paddocks for each herd. Avoid grazing during paddock exclusions or recovery periods.</p>'),
@@ -116,6 +119,9 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
   // Keep track of whether or not there are rotations in the form.
   $rotations_exist = FALSE;
 
+  // fetch all considerations that impact this plan
+  $considerations = farm_grazing_get_plan_considerations($plan_obj);
+
   // Iterate through the herds.
   foreach ($herd_records as $herd) {
 
@@ -123,6 +129,16 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     $form['herds'][$herd->herd_id]['title'] = array(
       '#markup' => '<h4>' . t('Rotations for herd %herd', array('%herd' => $herd->name)) . '</h4>',
     );
+
+    // setup the considerations that are not related to a paddock
+    // one idea was to put them into a separate table from the paddock rotations
+    // but getting them to align correctly with the following table seems problematic
+    if (!empty($considerations) and !empty($considerations[0])) {
+        foreach ($considerations[0] as $consider) {
+            // add a row for the consideration
+            // TODO
+        }
+    }
 
     // Query all the paddock rotations for this plan+herd.
     $rotations = farm_grazing_load_rotations($plan, $herd->herd_id);
@@ -143,6 +159,9 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
       //   a) the plan is not a growing season, or:
       //   b) the log is done
       $grazing_days_disabled = !$grazing_growing_season || !empty($log->done);
+
+      // compute the SVG image data for this rotation
+      $svg = farm_grazing_get_rotation_svg($plan_obj, $rotation->paddock_id, $considerations, $start_str, $end_str);
 
       // Add form fields for the rotation details.
       $form['herds'][$herd->herd_id]['rotations'][$rotation->id] = array(
@@ -170,10 +189,9 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
           '#markup' => t('@start_date to @end_date', array('@start_date' => $start_str, '@end_date' => $end_str)),
         ),
         'image' => array(
-          '#markup' => '<img src="' . base_path() . 'farm/grazing/plan/' . $plan .
-          '/plot/' . $rotation->paddock_id . '/' . $start_str . '/' . $end_str .
-          '">',
+          '#markup' => $svg,
         ),
+        // TODO this should be empty of only consideration
         'log_id' => array(
           '#type' => 'value',
           '#value' => !empty($rotation->log_id) ? $rotation->log_id : 0,
@@ -252,13 +270,98 @@ function theme_farm_grazing_plan_rotations_form($variables) {
   }
 
   drupal_add_css('svg {position:absolute; background:white;}', 'inline');
-  drupal_add_css('td img, th img {position:relative; width:100%; height:100%; min-width: 200px;}', 'inline');
+  drupal_add_css('td svg, th svg {position:relative; min-width: 200px;}', 'inline');
+
+    // TODO
+    // This css and the following JS  are for doing tooltips over the rectangles in the SVG images
+    // But this does not work with SVG in an IMG tag. So, the code needs to generate the SVG directly
+    // into the TD and see if that works and if it does probably we should move the CSS and JS in files.
+ 
+  drupal_add_css('
+.heyo:hover {
+  fill: #CC2929;
+  -moz-transition: 0.3s;
+  -o-transition: 0.3s;
+  -webkit-transition: 0.3s;
+  transition: 0.3s;
+}
+
+.enabled {
+  cursor: pointer;
+}
+
+.fg_description {
+  pointer-events: none;
+  position: absolute;
+  font-size: 18px;
+  text-align: center;
+  vertical-align: top;
+  background: white;
+  padding: 10px 15px;
+  z-index: 5;
+  height: 30px;
+  line-height: 4px;
+  margin: 0 auto;
+  color: #21669e;
+  border-radius: 5px;
+  border-color: black;
+  border-style: solid;
+  border-width: thin;
+  box-shadow: 0 0 0 1px #eee;
+  -moz-transform: translateX(-50%);
+  -ms-transform: translateX(-50%);
+  -webkit-transform: translateX(-50%);
+  transform: translateX(-50%);
+  display: none;
+}
+.fg_description.active {
+  display: block;
+}
+.fg_description:after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 0;
+  height: 0;
+  margin-left: -10px;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid white;
+}
+', 'inline');
+
+drupal_add_js('jQuery(document).ready(function() {
+  $description = jQuery(".fg_description");
+
+  jQuery(\'.enabled\').hover(function() {
+          
+    jQuery(this).attr("class", "enabled heyo");
+    $description.addClass(\'active\');
+    $description.html(jQuery(this).attr(\'alt\'));
+  }, function() {
+    $description.removeClass(\'active\');
+  });
+
+jQuery(document).on(\'mousemove\', function(e){
+  
+  $description.css({
+
+    left:  e.pageX,
+    top:   e.pageY - 180
+  });
+  
+});
+});
+', 'inline');
 
   $form =& $variables['form'];
 
   $plan = $form['plan']['#value'];
+  $plan_obj = farm_plan_load($plan);
 
   $output = drupal_render($form['plan']);
+  $output .= drupal_render($form['description']);
   $output .= drupal_render($form['text']);
 
   $output .= drupal_render($form['add']);
@@ -286,32 +389,33 @@ function theme_farm_grazing_plan_rotations_form($variables) {
             $log = log_load($item['log_id']['#value']);
           }
 
-          // If the log is missing or didn't load, make it clear to the user
-          // (in the "Done" column).
+          // Build information about the log.
+          $log_info = '';
           if (!empty($log)) {
 
             // Add an action link to view the log.
             $uri = entity_uri('log', $log);
-            $actions[] = l(t('View log'), $uri['path']);
+            $log_info = l(t('View log'), $uri['path']);
 
             // If the log is done, add a checkbox.
             if (!empty($log->done)) {
-              $log_done = '✔';
+              $log_info .= ' (✔)';
             }
 
-            // Or, if the log is not done, leave the "Done" column blank, and
-            // make the row draggable.
+            // Or, if the log is not done, make the row draggable.
             else {
-              $log_done = '';
               $classes[] = 'draggable';
             }
           }
 
-          // If the log is missing or didn't load, make it clear to the user
-          // (in the "Done" column).
+          // If the log is missing or didn't load, make it clear to the user.
+          // TODO unless this is a consideration only
           else {
-            $log_done = '(log missing)';
+            $log_info = '(log missing)';
           }
+
+          // Add log info as an action item.
+          $actions[] = $log_info;
 
           // If there is no log, or if the log is not done, add an action link
           // for removing the rotation.
@@ -323,13 +427,13 @@ function theme_farm_grazing_plan_rotations_form($variables) {
           $actions_links = implode(' | ', $actions);
 
           // Assemble the row.
+          // TODO name and grazing_days need colspan="2" for consideration only rows
           $rows[] = array(
             'data' => array(
               drupal_render($item['name']),
               drupal_render($item['grazing_days']),
               drupal_render($item['date_range']),
               drupal_render($item['image']),
-              $log_done,
               $actions_links,
               drupal_render($item['weight']),
             ),
@@ -352,16 +456,12 @@ function theme_farm_grazing_plan_rotations_form($variables) {
           'class' => array('col-xs-1'),
         ),
         array(
-          'data' => '<img src="' . base_path() . 'farm/grazing/plan/' . $plan . '/plot/0/0/0">',
-          'class' => array('col-xs-5'),
-        ),
-        array(
-          'data' => t('Done'),
-          'class' => array('col-xs-1'),
+          'data' => farm_grazing_get_rotation_svg($plan_obj, 0, array(), 0, 0),
+          'class' => array('col-xs-7'),
         ),
         array(
           'data' => t('Actions'),
-          'class' => array('col-xs-2'),
+          'class' => array('col-xs-1'),
         ),
         array(
           'data' => t('Sort weight'),
@@ -628,4 +728,68 @@ function farm_grazing_plan_rotation_delete_form_submit($form, &$form_state) {
 
   // Print a message.
   drupal_set_message(t('The rotation has been deleted. All rotations after it were automatically recalculated.'));
+}
+
+/**
+ * Fetch considerations for plan and return a key/value array of the records
+ * where the key is the paddock_id and the value is an array of records
+ * a key=0 is used for considerations NOT linked to any specific paddock
+ *
+ * @param $plan_obj - the plan to fetch considerations for
+ * @return array(paddock_id => array(records))
+ *
+ * record->entity_id
+ *       ->entity_type
+ *       ->type
+ *       ->start
+ *       ->end
+ *       ->name
+ *
+ */
+function farm_grazing_get_plan_considerations($plan_obj) {
+    $wrapper = entity_metadata_wrapper('farm_plan', $plan_obj->id);
+    $plan_start = $wrapper->field_farm_date_range->value->value();
+    $plan_end = $wrapper->field_farm_date_range->value2->value();
+
+    // we need to select considerations that overlap the plan start and end dates
+    //                   start           end
+    //                     |----plan------|
+    //          |---|   |====| |=====|  |====| |----|
+    //
+    // in the cases above we want the considerations represented  by |===| and not
+    // those represented by |---|
+    //
+
+    $sql = "SELECT e.entity_id, e.entity_type, c.type, c.start, c.end, c.name
+        FROM {farm_plan_consideration} c
+        LEFT JOIN {farm_plan_consideration_entity} e
+        ON c.id=e.consideration_id
+        WHERE c.start <= :plan_end AND c.end >= :plan_start
+        AND ( c.plan_id=:plan_id OR c.plan_id IS NULL)";
+
+    $records = db_query($sql, array(':plan_start' => $plan_start, ':plan_end' => $plan_end, ':plan_id' => $plan_obj->id));
+
+    $considerations = array();
+    foreach ($records as $record) {
+        $id = empty($record->entity_id) ? 0 : $record->entity_id;
+        $considerations[$id][] = $record;
+    }
+
+    return $considerations;
+}
+
+/**
+ * farm_grazing_get_rotation_svg($plan_obj, $paddock_id, $considerations, $start_str, $end_str)
+ */
+function farm_grazing_get_rotation_svg($plan_obj, $paddock_id, $considerations, $start_str, $end_str) {
+    module_load_include('inc', 'farm_grazing', 'farm_grazing.herds.rotations.plot');
+
+    /*
+    $plan_id =$plan_obj->id;
+    $svg = '<img src="' . base_path() . 'farm/grazing/plan/' . $plan_id .
+      '/plot/' . $paddock_id . '/' . $start_str . '/' . $end_str .
+      '">';
+     */
+    $svg = farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $considerations, $start_str, $end_str);
+    return $svg;
 }

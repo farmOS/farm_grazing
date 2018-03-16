@@ -121,45 +121,6 @@ function farm_grazing_schema() {
     ),
   );
 
-  // TODO: change start_date and end_date to support exclusions that are recurring
-
-  $schema['farm_grazing_paddock_exclusions'] = array(
-    'description' => 'Define general paddock exclusions',
-    'fields' => array(
-      'id' => array(
-        'description' => 'Exclusion ID',
-        'type' => 'serial',
-        'not null' => TRUE,
-      ),
-      'paddock_id' => array(
-        'description' => 'FK reference to a paddock',
-        'type' => 'int',
-        'not null' => TRUE,
-        'unsigned' => TRUE,
-      ),
-      'start_date' => array(
-        'description' => 'Planned start date for exclusion from paddock',
-        'type' => 'int',
-      ),
-      'end_date' => array(
-        'description' => 'Planned end date for exclusion from paddock',
-        'type' => 'int',
-      ),
-      'exclusion_type' => array(
-        'description' => '0=livestock, 1=special attention',
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => '0',
-      ),
-      'reason' => array(
-        'description' => 'Description of reason for exclusion',
-        'type' => 'varchar',
-        'length' => '255',
-      ),
-    ),
-    'primary key' => array('id'),
-  );
-
   $schema['farm_grazing_plan_paddock'] = array(
     'description' => 'Relate paddocks to a plan and productivity quality',
     'fields' => array(
@@ -281,4 +242,39 @@ function farm_grazing_update_7000(&$sandbox) {
  */
 function farm_grazing_update_7001(&$sandbox) {
   db_drop_field('farm_grazing_rotations', 'weight');
+}
+
+/**
+ * Migrate paddock exclusions to plan considerations.
+ */
+function farm_grazing_update_7002(&$sandbox) {
+
+  // Enable the Farm Plan Considerations module, if it isn't already.
+  $module = 'farm_plan_consideration';
+  if (!module_exists($module)) {
+    module_enable(array($module));
+  }
+
+  // Load all records from the exclusions table.
+  $result = db_query('SELECT * FROM {farm_grazing_paddock_exclusions}');
+
+  // Iterate through the exclusions.
+  foreach ($result as $record) {
+
+    // Create a new consideration.
+    $consideration = farm_plan_consideration_create('exclusion', $record->reason, $record->start_date, $record->end_date);
+
+    // Link it to the paddock entity.
+    $consideration->entities = array(
+      'taxonomy_term' => array(
+        $record->paddock_id
+      ),
+    );
+
+    // Save the consideration.
+    farm_plan_consideration_save($consideration);
+  }
+
+  // Drop the exclusions table.
+  db_drop_table('farm_grazing_paddock_exclusions');
 }

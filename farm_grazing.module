@@ -112,27 +112,16 @@ function farm_grazing_menu() {
     'weight' => 10,
   );
 
-  // Paddocks - Exclusions form.
+  // Add a new consideration.
   $items['farm/plan/%farm_plan/paddocks/exclusions'] = array(
     'title' => 'Exclusions',
     'description' => 'Define exclusion periods for paddocks.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('farm_grazing_exclusions_form', 2),
+    'page arguments' => array('farm_plan_consideration_form', 2),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(2),
-    'file' => 'farm_grazing.paddocks.exclusions.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 20,
-  );
-
-  $items['farm/grazing/exclusions/%/edit'] = array(
-    'title' => 'Edit/Delete Exclusion',
-    'description' => 'Allow paddock exclusions to be edited or deleted.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('farm_grazing_exclusions_edit_form', 3),
-    'access arguments' => array('edit any grazing farm plans'),
-    'file' => 'farm_grazing.paddocks.exclusions.inc',
-    'type' => MENU_CALLBACK,
   );
 
   // Paddocks - productivity.
@@ -341,6 +330,18 @@ function farm_grazing_feeds_tamper_default_alter(&$feeds_tampers) {
   $feeds_tamper->settings['date_format'] = 'Y-m-d';
   $feeds_tamper->weight = 2;
   $feeds_tampers[$feeds_tamper->id] = $feeds_tamper;
+}
+
+/**
+ * Implements hook_farm_plan_consideration_types().
+ */
+function farm_grazing_farm_plan_consideration_types() {
+  return array(
+    'farm_grazing_exclusion' => array(
+      'label' => t('Paddock exclusion'),
+      'color' => 'orange',
+    ),
+  );
 }
 
 /**
@@ -605,6 +606,129 @@ function farm_grazing_log_form_validate(&$form, &$form_state) {
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function farm_grazing_form_farm_plan_consideration_form_alter(&$form, &$form_state, $form_id) {
+
+  // Get the consideration from the form (bail if it doesn't exist).
+  if (empty($form['consideration']['#value'])) {
+    return;
+  }
+  $consideration = $form['consideration']['#value'];
+
+  // If this is the /paddocks/exclusions path, default the consideration type
+  // to 'farm_grazing_exclusion'.
+  if (arg(3) == 'paddocks' && arg(4) == 'exclusions') {
+    $form['type']['#default_value'] = 'farm_grazing_exclusion';
+    $consideration->type = 'farm_grazing_exclusion';
+  }
+
+  // Determine the consideration type, either from the consideration itself, or
+  // from the form fields.
+  $consideration_type = !empty($form_state['values']['type']) ? $form_state['values']['type'] : $consideration->type;
+
+  // Add a field for associating this consideration with one or more paddocks.
+  $exclusion_types = array(
+    'farm_grazing_exclusion',
+    'concern',
+    'urgent',
+  );
+  if (in_array($consideration_type, $exclusion_types)) {
+
+    // Load all paddocks and generate an options list.
+    $paddocks = farm_area_load_areas('paddock', 'name');
+    $paddock_options = array();
+    foreach ($paddocks as $paddock) {
+      $paddock_options[$paddock->tid] = $paddock->name;
+    }
+
+    // Determine if paddocks have already been selected for this consideration,
+    // and use them as the default value.
+    $default_paddock_ids = array();
+    if (!empty($consideration->entities['taxonomy_term'])) {
+      foreach ($consideration->entities['taxonomy_term'] as $id) {
+        $term = taxonomy_term_load($id);
+        if ($term->vocabulary_machine_name == 'farm_areas') {
+          if (!empty($term->field_farm_area_type) && $term->field_farm_area_type[LANGUAGE_NONE][0]['value'] == 'paddock') {
+            $default_paddock_ids[] = $id;
+          }
+        }
+      }
+    }
+
+    // Add a paddock selection field to the form.
+    $form['extra']['paddock_ids'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Paddocks'),
+      '#description' => t('Select the paddocks that this consideration is associated with, in the context of grazing plans.'),
+      '#options' => $paddock_options,
+      '#default_value' => $default_paddock_ids,
+    );
+
+    // This is only required if the consideration type is
+    // 'farm_grazing_exclusion'.
+    if ($consideration_type == 'farm_grazing_exclusion') {
+      $form['extra']['paddock_ids']['#required'] = TRUE;
+    }
+
+    // Add our submit function.
+    $form['#submit'][] = 'farm_grazing_consideration_form_submit';
+  }
+}
+
+/**
+ * Consideration form submit function.
+ */
+function farm_grazing_consideration_form_submit(&$form, &$form_state) {
+
+  // If paddock IDs were set, then save them to the consideration.
+  if (!empty($form_state['values']['paddock_ids']) && !empty($form_state['values']['consideration'])) {
+
+    // Get the consideration and paddock IDs from the form.
+    $consideration = $form_state['values']['consideration'];
+    $paddock_ids = $form_state['values']['paddock_ids'];
+
+    // Initialize the taxonomy_term array if it isn't already.
+    if (!isset($consideration->entities['taxonomy_term'])) {
+      $consideration->entities['taxonomy_term'] = array();
+    }
+
+    // Get the original paddock IDs from the form's default value.
+    $old_paddock_ids = array();
+    if (!empty($form['extra']['paddock_ids']['#default_value'])) {
+      $old_paddock_ids = $form['extra']['paddock_ids']['#default_value'];
+    }
+
+    // Filter out unselected paddocks.
+    $paddock_ids = array_filter($paddock_ids);
+
+    // Compare the old paddock IDs to the new ones, so we can determine if we
+    // need to keep, remove, or add any in the database.
+    $remove = array_diff($old_paddock_ids, $paddock_ids);
+    $add = array_diff($paddock_ids, $old_paddock_ids);
+
+    // Remove old paddock associations.
+    if (!empty($remove)) {
+      foreach ($consideration->entities['taxonomy_term'] as $key => $value) {
+        if (in_array($value, $remove)) {
+          unset($consideration->entities['taxonomy_term'][$key]);
+        }
+      }
+    }
+
+    // Add new paddock associations.
+    if (!empty($add)) {
+      foreach ($add as $paddock_id) {
+        $consideration->entities['taxonomy_term'][] = $paddock_id;
+      }
+    }
+
+    // Save the consideration.
+    farm_plan_consideration_save($consideration);
+  }
+}
+
+/**
  * Implements hook_entity_view().
  */
 function farm_grazing_entity_view($entity, $type, $view_mode, $langcode) {
@@ -678,7 +802,7 @@ function farm_grazing_help($path, $arg) {
       return '<p>' . t('Define your paddocks in the') . ' <a href="' . base_path() . 'farm/areas">Areas</a> ' . t('tab above. Select which paddocks you want available for use in this plan here and then use tabs "Exclusions", "Productivity", "Recovery" and "Summary" to add additional information about your paddocks.') . '</p>';
 
     case 'farm/plan/%/paddocks/exclusions':
-      return '<p>' . t('Enter dates when a paddock can not under any circumstances have a herd on it. Also enter dates for paddocks that need special attention and note that in the reason. Such paddocks could include a sacrificial paddock where you plan to run some animals on continuous graze, bare, eroding ground that needs healing, areas you want to rest for brush cover for wildlife, areas where you need to remove forage for fire protection, paddocks you plan to strip graze. Review the list of planning factors.') . '</p>';
+      return '<p>' . t('Enter dates when a paddock can not under any circumstances have a herd on it. Also enter dates for paddocks that need special attention and why. For example: sacrificial paddocks where you plan to run some animals on continuous graze, bare, eroding ground that needs healing, areas you want to rest for brush cover for wildlife, areas where you need to remove forage for fire protection, paddocks you plan to strip graze, and other considerations.') . '</p>';
 
     case 'farm/plan/%/paddocks/productivity':
       return '<p>' . t('For Forage Quality, you should enter ADA/H for each paddock, or rate it 1-10.') .
@@ -726,7 +850,7 @@ function farm_grazing_help($path, $arg) {
       '</p>';
 
     case 'farm/plan/%/herds/rotations':
-      return '<p>' . t('You can reorder the paddocks by grabbing the row and dragging it up or down in the table or enter numerical values in the row weights column. The calendar has the various planning events shown on it. The green is where that paddock will get grazed. You avoid trying to graze the paddock where you have an exclusion marked in red. Move it up/down to avoid the exclusion.') .
+      return '<p>' . t('Start by adding rotations for each herd. Select the herd you would like to rotate, and one or more paddocks to rotate through. After you have created some rotations, you can reorder the paddocks by moving them up or down in the list. The calendar has various planning events plotted on it, including grazing periods, recovery periods, and planning considerations that you entered earlier. The green is where that paddock will get grazed.') .
       '</p><p>' . t('You should also look back at the Herds/History tab to avoid bad patterns like repetitive grazing of the the same paddock at the start or end of a season or is getting more heavily used than others.') .
       '</p><p>' . t('Purple sections are where there are management events and orange areas indicate average paddock recovery time frames.') .
       '</p>';
