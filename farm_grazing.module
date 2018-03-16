@@ -627,11 +627,17 @@ function farm_grazing_form_farm_plan_consideration_form_alter(&$form, &$form_sta
   }
   $consideration = $form['consideration']['#value'];
 
-  // If the consideration type is set to 'farm_grazing_exclusion' (in the
-  // consideration itself, or in the form fields), add fields for linking this
-  // consideration to a specific paddock.
-  $exclusion_type = 'farm_grazing_exclusion';
-  if ($consideration->type == $exclusion_type || (!empty($form_state['values']['type']) && $form_state['values']['type'] == $exclusion_type)) {
+  // Determine the consideration type, either from the consideration itself, or
+  // from the form fields.
+  $consideration_type = !empty($form_state['values']['type']) ? $form_state['values']['type'] : $consideration->type;
+
+  // Add a field for associating this consideration with a paddock.
+  $exclusion_types = array(
+    'farm_grazing_exclusion',
+    'concern',
+    'urgent',
+  );
+  if (in_array($consideration_type, $exclusion_types)) {
 
     // Load all paddocks and generate an options list.
     $paddocks = farm_area_load_areas('paddock', 'name');
@@ -661,8 +667,13 @@ function farm_grazing_form_farm_plan_consideration_form_alter(&$form, &$form_sta
       '#description' => t('Select the paddock to create an exclusion for.'),
       '#options' => $paddock_options,
       '#default_value' => $default_paddock_id,
-      '#required' => TRUE,
     );
+
+    // This is only required if the consideration type is
+    // 'farm_grazing_exclusion'.
+    if ($consideration_type == 'farm_grazing_exclusion') {
+      $form['extra']['paddock_id']['#required'] = TRUE;
+    }
 
     // Add our submit function.
     $form['#submit'][] = 'farm_grazing_consideration_form_submit';
