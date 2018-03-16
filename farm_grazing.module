@@ -631,7 +631,7 @@ function farm_grazing_form_farm_plan_consideration_form_alter(&$form, &$form_sta
   // from the form fields.
   $consideration_type = !empty($form_state['values']['type']) ? $form_state['values']['type'] : $consideration->type;
 
-  // Add a field for associating this consideration with a paddock.
+  // Add a field for associating this consideration with one or more paddocks.
   $exclusion_types = array(
     'farm_grazing_exclusion',
     'concern',
@@ -646,33 +646,33 @@ function farm_grazing_form_farm_plan_consideration_form_alter(&$form, &$form_sta
       $paddock_options[$paddock->tid] = $paddock->name;
     }
 
-    // Determine if a paddock has already been selected for this consideration,
-    // and use that as the default value.
-    $default_paddock_id = NULL;
+    // Determine if paddocks have already been selected for this consideration,
+    // and use them as the default value.
+    $default_paddock_ids = array();
     if (!empty($consideration->entities['taxonomy_term'])) {
       foreach ($consideration->entities['taxonomy_term'] as $id) {
         $term = taxonomy_term_load($id);
         if ($term->vocabulary_machine_name == 'farm_areas') {
           if (!empty($term->field_farm_area_type) && $term->field_farm_area_type[LANGUAGE_NONE][0]['value'] == 'paddock') {
-            $default_paddock_id = $id;
+            $default_paddock_ids[] = $id;
           }
         }
       }
     }
 
     // Add a paddock selection field to the form.
-    $form['extra']['paddock_id'] = array(
-      '#type' => 'select',
-      '#title' => t('Paddock'),
-      '#description' => t('Select the paddock to create an exclusion for.'),
+    $form['extra']['paddock_ids'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Paddocks'),
+      '#description' => t('Select the paddocks that this consideration is associated with, in the context of grazing plans.'),
       '#options' => $paddock_options,
-      '#default_value' => $default_paddock_id,
+      '#default_value' => $default_paddock_ids,
     );
 
     // This is only required if the consideration type is
     // 'farm_grazing_exclusion'.
     if ($consideration_type == 'farm_grazing_exclusion') {
-      $form['extra']['paddock_id']['#required'] = TRUE;
+      $form['extra']['paddock_ids']['#required'] = TRUE;
     }
 
     // Add our submit function.
@@ -685,39 +685,49 @@ function farm_grazing_form_farm_plan_consideration_form_alter(&$form, &$form_sta
  */
 function farm_grazing_consideration_form_submit(&$form, &$form_state) {
 
-  // If a paddock ID was set, then save it to the consideration.
-  if (!empty($form_state['values']['paddock_id']) && !empty($form_state['values']['consideration'])) {
+  // If paddock IDs were set, then save them to the consideration.
+  if (!empty($form_state['values']['paddock_ids']) && !empty($form_state['values']['consideration'])) {
 
-    // Get the consideration and paddock ID from the form.
+    // Get the consideration and paddock IDs from the form.
     $consideration = $form_state['values']['consideration'];
-    $paddock_id = $form_state['values']['paddock_id'];
+    $paddock_ids = $form_state['values']['paddock_ids'];
 
     // Initialize the taxonomy_term array if it isn't already.
     if (!isset($consideration->entities['taxonomy_term'])) {
       $consideration->entities['taxonomy_term'] = array();
     }
 
-    // If the paddock_id already exists in the consideration, we don't need to
-    // do anything.
-    if (in_array($paddock_id, $consideration->entities['taxonomy_term'])) {
-      return;
+    // Get the original paddock IDs from the form's default value.
+    $old_paddock_ids = array();
+    if (!empty($form['extra']['paddock_ids']['#default_value'])) {
+      $old_paddock_ids = $form['extra']['paddock_ids']['#default_value'];
     }
 
-    // If an old paddock was referenced and we are changing it, remove that
-    // paddock reference.
-    if (!empty($form['extra']['paddock_id']['#default_value'])) {
-      $old_paddock_id = $form['extra']['paddock_id']['#default_value'];
-      if ($old_paddock_id != $paddock_id) {
-        foreach ($consideration->entities['taxonomy_term'] as $key => $value) {
-          if ($value == $old_paddock_id) {
-            unset ($consideration->entities['taxonomy_term'][$key]);
-          }
+    // Filter out unselected paddocks.
+    $paddock_ids = array_filter($paddock_ids);
+
+    // Compare the old paddock IDs to the new ones, so we can determine if we
+    // need to keep, remove, or add any in the database.
+    $remove = array_diff($old_paddock_ids, $paddock_ids);
+    $add = array_diff($paddock_ids, $old_paddock_ids);
+
+    // Remove old paddock associations.
+    if (!empty($remove)) {
+      foreach ($consideration->entities['taxonomy_term'] as $key => $value) {
+        if (in_array($value, $remove)) {
+          unset($consideration->entities['taxonomy_term'][$key]);
         }
       }
     }
 
-    // Add the new paddock reference and save the consideration.
-    $consideration->entities['taxonomy_term'][] = $paddock_id;
+    // Add new paddock associations.
+    if (!empty($add)) {
+      foreach ($add as $paddock_id) {
+        $consideration->entities['taxonomy_term'][] = $paddock_id;
+      }
+    }
+
+    // Save the consideration.
     farm_plan_consideration_save($consideration);
   }
 }
