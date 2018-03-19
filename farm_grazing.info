@@ -1,5 +1,5 @@
 name = Farm Grazing
-description = Holistic herd management and planning features for farmOS.
+description = Rotational grazing planning module for farmOS.
 core = 7.x
 package = farmOS Contrib
 dependencies[] = ctools
