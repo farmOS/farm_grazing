@@ -351,7 +351,7 @@ function farm_grazing_get_paddock_recovery($plan_id, $paddock_id, $end_date) {
           if ($growing) {
             // get the year month of the start of recovery period
             list($yr, $mon, $day) = explode('-', date('Y-m-d', $rec->r_start));
-            
+
             $recovery = db_query('SELECT (min_recovery+max_recovery)/2.0 AS avg_recovery FROM {farm_grazing_plan_recovery} WHERE plan_id=:plan_id AND month=:month', array(':plan_id' => $plan->id, ':month' => $yr . $mon))->fetchField();
           }
           else {

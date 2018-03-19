@@ -290,7 +290,7 @@ function theme_farm_grazing_plan_rotations_form($variables) {
     // This css and the following JS  are for doing tooltips over the rectangles in the SVG images
     // But this does not work with SVG in an IMG tag. So, the code needs to generate the SVG directly
     // into the TD and see if that works and if it does probably we should move the CSS and JS in files.
- 
+
   drupal_add_css('
 .heyo:hover {
   fill: #CC2929;
