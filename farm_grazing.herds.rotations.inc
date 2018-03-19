@@ -94,18 +94,32 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
     '#options' => $paddock_options,
     '#multiple' => TRUE,
   );
-  $form['add']['mode'] = array(
-    '#type' => 'select',
-    '#title' => t('Default Grazing days'),
-    '#description' => t('Select whether to use minimum, average or maximum grazing days for the paddocks added.'),
-    '#options' => array(
-      '1' => t('Minimum grazing days'),
-      '2' => t('Average grazing days'),
-      '3' => t('Maximum grazing days'),
-    ),
-    '#default_value' => '2',
-    '#required' => FALSE,
-  );
+
+  // If this is a growing season plan, add control to select min/avg/max days.
+  if ($grazing_growing_season) {
+    $form['add']['mode'] = array(
+      '#type' => 'select',
+      '#title' => t('Default Grazing days'),
+      '#description' => t('Select whether to use minimum, average or maximum grazing days for the paddocks added.'),
+      '#options' => array(
+        '1' => t('Minimum grazing days'),
+        '2' => t('Average grazing days'),
+        '3' => t('Maximum grazing days'),
+      ),
+      '#default_value' => '2',
+      '#required' => FALSE,
+    );
+  }
+
+  // Otherwise, default to average days. (Min, max, and avg will all be the
+  // same in non-growing plans).
+  else {
+    $form['add']['mode'] = array(
+      '#type' => 'value',
+      '#value' => '2',
+    );
+  }
+
   $form['add']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Add rotation'),
