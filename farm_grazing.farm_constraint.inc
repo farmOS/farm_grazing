@@ -14,7 +14,7 @@ function farm_grazing_farm_constraint($type, $bundle, $id) {
   $plan_references = array(
     'herd' => array(
       'type' => 'farm_asset',
-      'bundles' => 'group',
+      'bundle' => 'group',
       'tables' => array(
         'farm_grazing_rotations' => 'herd_id',
         'farm_grazing_herds' => 'herd_id',
