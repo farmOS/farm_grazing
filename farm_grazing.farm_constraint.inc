@@ -25,7 +25,6 @@ function farm_grazing_farm_constraint($type, $bundle, $id) {
       'bundle' => 'farm_areas',
       'tables' => array(
         'farm_grazing_rotations' => 'paddock_id',
-        'farm_grazing_paddock_exclusions' => 'paddock_id',
         'farm_grazing_plan_paddock' => 'paddock_id',
       ),
     ),
