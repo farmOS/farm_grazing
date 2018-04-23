@@ -164,11 +164,7 @@ function farm_grazing_plan_herds_form($form, &$form_state, $plan_obj) {
 
   // --------- Add table of herd details for each herd -----------------
 
-  $animal_types = farm_grazing_animal_types();
-  $type_options = array('' => '');
-  foreach ($animal_types as $animal_type) {
-    $type_options[$animal_type['type_id']] = $animal_type['name'];
-  }
+  $type_options = farm_grazing_animal_type_options();
 
   // Track whether or not the animal type or weight are missing from any
   // animals, because this will affect SAU and DMI calculations.
