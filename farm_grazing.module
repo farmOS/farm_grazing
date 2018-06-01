@@ -91,17 +91,28 @@ function farm_grazing_menu() {
     'weight' => 10,
   );
 
-  // Herds.
+  // Herds summary.
   $items['farm/plan/%farm_plan/herds'] = array(
     'title' => 'Herds',
     'description' => 'Manage herds in the plan (Select/Add/Combine/Split/Ship)',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('farm_grazing_plan_herds_form', 2),
+    'page arguments' => array('farm_grazing_plan_herds_manage_form', 2),
     'access callback' => 'farm_grazing_plan_access',
     'access arguments' => array(2),
     'file' => 'farm_grazing.herds.manage.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 20,
+  );
+
+  // Herd specifics.
+  $items['farm/plan/%farm_plan/herds/%'] = array(
+    'title' => 'Herd details',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('farm_grazing_plan_herds_detail_form', 2, 4),
+    'access callback' => 'farm_grazing_plan_access',
+    'access arguments' => array(2),
+    'file' => 'farm_grazing.herds.detail.inc',
+    'type' => MENU_NORMAL_ITEM,
   );
 
   // Paddocks - Select
@@ -810,9 +821,13 @@ function farm_grazing_theme() {
       'render element' => 'form',
       'file' => 'farm_grazing.paddocks.recovery.inc',
     ),
-    'farm_grazing_plan_herds_form' => array(
+    'farm_grazing_plan_herds_manage_form' => array(
       'render element' => 'form',
       'file' => 'farm_grazing.herds.manage.inc',
+    ),
+    'farm_grazing_plan_herds_detail_form' => array(
+      'render element' => 'form',
+      'file' => 'farm_grazing.herds.detail.inc',
     ),
     'farm_grazing_plan_rotations_form' => array(
       'render element' => 'form',

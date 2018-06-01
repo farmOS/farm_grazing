@@ -1,0 +1,14 @@
+form .error {
+  color: #ff0000;
+  font-weight: bold;
+}
+form input.error,
+form select.error {
+  border-color: #ff0000;
+  border-width: 2px;
+}
+
+/* Hide date field descriptions. */
+.form-type-date-popup .help-block {
+  display:none;
+}
