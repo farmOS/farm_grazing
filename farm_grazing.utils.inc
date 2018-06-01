@@ -676,7 +676,7 @@ function farm_grazing_validate_herd($herd_id, $plan_id, &$data, $silent = FALSE)
 
     // Missing animal types.
     if (!empty($missing_type)) {
-      drupal_set_message(t('@count animal(s) do not have an animal type.', array('@count' => $missing_weight)), 'error');
+      drupal_set_message(t('@count animal(s) do not have an animal type.', array('@count' => $missing_type)), 'error');
     }
 
     // Missing weight.
