@@ -672,7 +672,7 @@ function farm_grazing_validate_herd($herd_id, $plan_id, &$data, $silent = FALSE)
   if (empty($silent) && !empty($errors)) {
 
     // General message.
-    drupal_set_message('Some required data is missing from the herds/animals in this plan. Please see the errors below and add any data that may be missing. Fields that are required will be highlighted in the form below, along with any values that are calculated from those fields.', 'error');
+    drupal_set_message('Some required data is missing from the animals in this plan. This may adversely affect calculations. Please see the errors below and add any data that may be missing. Fields that are required will be highlighted in the form below, along with any values that are calculated from those fields.', 'error');
 
     // Missing animal types.
     if (!empty($missing_type)) {

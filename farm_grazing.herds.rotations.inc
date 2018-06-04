@@ -29,22 +29,17 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
   $query = db_query('SELECT p.*, t.name FROM {farm_grazing_plan_paddock} p LEFT JOIN taxonomy_term_data t ON p.paddock_id=t.tid WHERE plan_id=:plan_id ORDER BY t.name', array(':plan_id' => $plan));
   $paddock_records = $query->fetchAll();
 
-  // Validate the herds in the plan (silently). If error are detected, direct
-  // the user back to the herd management page to correct them. Do not show
-  // the rest of the rotations page.
+  // Validate the herds in the plan (silently). If errors are detected, direct
+  // the user back to the herd management page to correct them. Make it clear
+  // that missing data may adversely affect calculations.
   $errors = 0;
   foreach ($herd_records as $herd) {
     $data = array();
     $errors += farm_grazing_validate_herd($herd->herd_id, $herd->plan_id, $data, TRUE);
   }
   if (empty($herd_records) || !empty($errors)) {
-    $message = t('Some required data is missing from the herds/animals in this plan. Please correct these issues in the <a href="@herds_manage">Manage Herds</a> tab.', array('@herds_manage' => url('farm/plan/' . $plan . '/herds')));
-    return array(
-      'validation' => array(
-        '#type' => 'markup',
-        '#markup' => $message,
-      ),
-    );
+    $message = t('Some required data is missing from the animals in this plan. This may adversely affect calculations. Please correct these issues in the <a href="@herds_manage">Manage Herds</a> tab.', array('@herds_manage' => url('farm/plan/' . $plan . '/herds')));
+    drupal_set_message($message, 'warning');
   }
 
   $form['#tree'] = TRUE;
