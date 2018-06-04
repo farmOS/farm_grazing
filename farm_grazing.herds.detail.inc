@@ -170,7 +170,7 @@ function farm_grazing_plan_herds_detail_form_validate($form, &$form_state) {
   }
 
   // Iterate through the herds.
-  foreach ($form_state['values']['herd_details'] as $herd_id => $herd_details) {
+  foreach ($form_state['values']['herd_details'] as $herd_id => &$herd_details) {
 
     // If there are no animals in the herd, skip it.
     if (empty($herd_details['animals'])) {
@@ -178,7 +178,7 @@ function farm_grazing_plan_herds_detail_form_validate($form, &$form_state) {
     }
 
     // Iterate through the animals.
-    foreach ($herd_details['animals'] as $animal_id => $animal_details) {
+    foreach ($herd_details['animals'] as $animal_id => &$animal_details) {
 
       // Get the original $form array for this animal.
       $animal_form = $form['herd_details'][$herd_id]['animals'][$animal_id];
@@ -192,6 +192,21 @@ function farm_grazing_plan_herds_detail_form_validate($form, &$form_state) {
         'departure' => t('Planned departure'),
       );
       foreach ($required_fields as $field => $label) {
+
+        // If the field is 'type', and it is 0, set it to empty for comparison
+        // purposes.
+        if ($field == 'type' && $animal_details[$field] === "0") {
+          $animal_details[$field] = '';
+        }
+
+        // If the field is 'arrival' or 'departure', and it is NULL, set it to
+        // empty for comparison purposes. The Date Popup widget sets empty
+        // field values to NULL, not empty.
+        if (in_array($field, array('arrival', 'departure')) && is_null($animal_details[$field])) {
+          $animal_details[$field] = '';
+        }
+
+        // Compare the default form value to the submitted form value.
         if ($animal_form[$field]['#default_value'] != $animal_details[$field]) {
           if (empty($animal_details[$field])) {
             form_set_error('herd_details][' . $herd_id . '][animals][' . $animal_id . '][' . $field, $label . ' ' . t('is required.'));
