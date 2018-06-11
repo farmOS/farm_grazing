@@ -16,69 +16,85 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
   // Set the page title.
   drupal_set_title(t('Determine recovery periods'));
 
-  // get the plan id from the plan object
+  // Get the plan id from the plan object.
   $plan = $plan_obj->id;
   $wrapper = entity_metadata_wrapper('farm_plan', $plan);
+
+  // Check to see if this is a growing season plan.
   $grazing_growing_season = $wrapper->field_grazing_growing_season->value();
+
+  // Load the start and end times for the plan.
   $start_ts = $wrapper->field_farm_date_range->value->value();
   $end_ts = $wrapper->field_farm_date_range->value2->value();
 
+  // Build a table header.
   $header = array(
     t('Month'),
     t('Min. Recovery Days'),
     t('Max. Recovery Days'),
   );
 
-  // get the start date month and year
+  // Get the start date month and year.
   $start_date = new DateTime();
   $start_date->setTimestamp($start_ts);
 
-  // get the end date month and year
+  // Get the end date month and year.
   $end_date = new DateTime();
   $end_date->setTimestamp($end_ts);
 
-  // get the DateInterval between them
+  // Get the DateInterval between them.
   $diff = $start_date->diff($end_date);
 
-  // get the number of paddocks in the plan
+  // Get the number of paddocks in the plan.
   $num_paddocks = farm_grazing_get_paddock_count_for_plan($plan);
 
+  // Treat the form as a tree so that nested vales are accessible in submit.
   $form['#tree'] = TRUE;
 
+  // Start with an assumption that the form elements will not be disabled.
   $disabled = FALSE;
-  // non-growing season here.
+
+  // If this is a non-growing season plan...
   if (!$grazing_growing_season) {
 
+    // Load the necessary variables from the plan.
     $days_bulk_feeding = $wrapper->field_days_bulk_feeding->value();
     $days_of_drought_reserve = $wrapper->field_days_of_drought_reserve->value();
-    $start_ts = $wrapper->field_farm_date_range->value->value();
-    $end_ts = $wrapper->field_farm_date_range->value2->value();
-    $expected_days_non_growth = floor(($end_ts - $start_ts) / 3600 / 24);
     $expected_rotations = $wrapper->field_expected_rotations->value();
 
+    // Calculate the expected days of non-growth.
+    $expected_days_non_growth = floor(($end_ts - $start_ts) / 3600 / 24);
+
+    // Calculate the recovery period for all paddocks.
     $recovery_period = ($expected_days_non_growth + $days_of_drought_reserve
       - $days_bulk_feeding) / $expected_rotations;
 
+    // Disable input fields.
     $disabled = TRUE;
 
+    // Set the form description.
     $form['text'] = array(
       '#markup' => t('<p>Recovery period is computed for non-growing season plans.</p>'),
     );
-
   }
+
+  // Or, if this is a growing season plan...
   else {
 
+    // Set the form description.
     $form['text'] = array(
       '#markup' => t('<p>Enter your minimum and maximum recovery periods (in days) for each planned month of the growing season plan.</p>'),
     );
-
   }
 
+  // Store the plan object in the form values.
   $form['plan'] = array(
     '#type' => 'value',
     '#value' => $plan,
   );
 
+  // If this is a growing season plan, get the plan recovery information.
+  // Otherwise, initialize an empty array.
   if ($grazing_growing_season) {
     $minmax = farm_grazing_get_plan_recovery($plan);
   }
@@ -86,12 +102,14 @@ function farm_grazing_plan_recovery_form($form, &$form_state, $plan_obj) {
     $minmax = array();
   }
 
+  // Create a form element for the fields, themed with
+  // farm_grazing_paddocks_recovery.
   $form['months'] = array(
     '#theme' => 'farm_grazing_paddocks_recovery',
     '#header' => $header,
   );
 
-  // generate array of months between start and end
+  // Generate input fields for each month between the start and end dates.
   $num_months = $diff->y * 12 + $diff->m;
   $date = $start_date;
   $minmin = 999999999;
