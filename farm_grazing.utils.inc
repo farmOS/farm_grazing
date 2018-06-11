@@ -163,10 +163,44 @@ function farm_grazing_get_grazing_days_for_plan_id($plan_id, &$chk_min_recovery,
   // get the paddock count
   $paddock_cnt = farm_grazing_get_paddock_count_for_plan($plan);
 
-  $results = db_query('SELECT min(min_recovery) as minmin, max(max_recovery) as maxmax FROM {farm_grazing_plan_recovery} WHERE plan_id=:plan', array(':plan' => $plan));
-  foreach ($results as $record) {
-    $minmin = $record->minmin;
-    $maxmax = $record->maxmax;
+  // Load an entity metadata wrapper for the plan.
+  $plan_wrapper = entity_metadata_wrapper('farm_plan', $plan);
+
+  // Check to see if it is a growing or non-growing season plan.
+  $growing_season = $plan_wrapper->field_grazing_growing_season->value();
+
+  // If this is a growing season plan, get recovery time from the database.
+  if (!empty($growing_season)) {
+    $results = db_query('SELECT min(min_recovery) as minmin, max(max_recovery) as maxmax FROM {farm_grazing_plan_recovery} WHERE plan_id=:plan', array(':plan' => $plan));
+    foreach ($results as $record) {
+      $minmin = $record->minmin;
+      $maxmax = $record->maxmax;
+    }
+  }
+
+  // Otherwise, calculate the recovery time for non-growing season.
+  else {
+
+    // Load an entity metadata wrapper for the plan.
+    $wrapper = entity_metadata_wrapper('farm_plan', $plan);
+
+    // Load the necessary variables from the plan.
+    $start_ts = $wrapper->field_farm_date_range->value->value();
+    $end_ts = $wrapper->field_farm_date_range->value2->value();
+    $days_bulk_feeding = $wrapper->field_days_bulk_feeding->value();
+    $days_of_drought_reserve = $wrapper->field_days_of_drought_reserve->value();
+    $expected_rotations = $wrapper->field_expected_rotations->value();
+
+    // Calculate the expected days of non-growth.
+    $expected_days_non_growth = floor(($end_ts - $start_ts) / 3600 / 24);
+
+    // Calculate the recovery period for all paddocks.
+    $recovery_period = ($expected_days_non_growth + $days_of_drought_reserve
+        - $days_bulk_feeding) / $expected_rotations;
+
+    // Min and max grazing are the same in non-growing seasons.
+    $minmin = $recovery_period;
+    $maxmax = $recovery_period;
   }
 
   // avoid divide by zero
