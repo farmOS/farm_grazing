@@ -235,28 +235,31 @@ function farm_grazing_plan_rotations_form($form, &$form_state, $plan_obj) {
   $form['recalculate'] = array(
     '#type' => 'fieldset',
     '#title' => t('Recalculate all rotations'),
-    '#description' => t('This will recalculate the start and end dates of all rotations in this plan, and optionally reset the grazing days for each. All "Done" movements will not be affected.'),
+    '#description' => t('This will recalculate the start and end dates of all rotations in this plan, and optionally reset the grazing days for each.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
 
-  // If this is a growing season plan, add control to reset the number of
-  // grazing days on all rotations.
-  if ($grazing_growing_season) {
-    $form['recalculate']['reset_grazing_days'] = array(
-      '#type' => 'select',
-      '#title' => t('Reset grazing days?'),
-      '#description' => t('This will reset the grazing days for all rotations in this plan to either the minimum, average, or maximum for each paddock.'),
-      '#options' => array(
-        0 => t('No change'),
-        1 => t('Minimum'),
-        2 => t('Average'),
-        3 => t('Maximum'),
-      ),
-      '#default_value' => 0,
-      '#required' => TRUE,
-    );
+  // Add control to reset the number of grazing days on all rotations. If this
+  // is a non-growing season plan, remove the "Minimum" and "Maximum" options.
+  $reset_grazing_days_options = array(
+    0 => t('No change'),
+    1 => t('Minimum'),
+    2 => t('Average'),
+    3 => t('Maximum'),
+  );
+  if (!$grazing_growing_season) {
+    unset($reset_grazing_days_options[1]);
+    unset($reset_grazing_days_options[3]);
   }
+  $form['recalculate']['reset_grazing_days'] = array(
+    '#type' => 'select',
+    '#title' => t('Reset grazing days?'),
+    '#description' => t('This will reset the grazing days for all rotations in this plan. Only movements that are not "done" will be affected.'),
+    '#options' => $reset_grazing_days_options,
+    '#default_value' => 0,
+    '#required' => TRUE,
+  );
 
   // Submit button.
   $form['recalculate']['submit'] = array(
