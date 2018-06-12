@@ -1057,6 +1057,79 @@ function farm_grazing_plan_log_update($log) {
     $plan_wrapper = entity_metadata_wrapper('farm_plan', $rotation->plan_id);
     drupal_set_message(t('Rotations have been recalculated for plan %plan. <a href="@rotations_url">Review the updated rotations.</a>', array('%plan' => $plan_wrapper->label(), '@rotations_url' => url('farm/plan/' . $rotation->plan_id . '/herds/rotations'))));
   }
+
+  // If the "done" status of a log is being changed, we need to make sure that
+  // it does not break the "done" status of logs before/after it.
+  if (isset($log->original->done) && $log->original->done != $log->done) {
+
+    // Load utility functions.
+    module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
+
+    // Load all rotations for the same herd in the plan.
+    $rotations = farm_grazing_load_rotations($rotation->plan_id, $rotation->herd_id);
+
+    // If we are trying to set this log to "done"...
+    if (!empty($log->done)) {
+
+      // Find the rotation that comes before this one (if any).
+      $previous_rotation_id = NULL;
+      foreach ($rotations as $rotation_id => $r) {
+        if ($rotation_id == $rotation->id) {
+          break;
+        }
+        $previous_rotation_id = $rotation_id;
+      }
+
+      // Load the previous rotation's log (if any).
+      $previous_log = NULL;
+      if (!empty($previous_rotation_id)) {
+        $previous_log = log_load($rotations[$previous_rotation_id]->log_id);
+      }
+
+      // If the previous log is not "done", reset this log, print a message,
+      // and abort the function.
+      if (!empty($previous_log) && empty($previous_log->done)) {
+        $log->done = FALSE;
+        log_save($log);
+        $log_name = entity_label('log', $log);
+        drupal_set_message(t('The log %log_name could not be marked as "done" because the rotation that comes before it is not done yet.', array('%log_name' => $log_name)), 'error');
+        return;
+      }
+    }
+
+    // Or, if we are trying to set this log to "not done"...
+    elseif (empty($log->done)) {
+
+      // Find the rotation that comes after this one (if any).
+      $next_rotation_id = NULL;
+      $next = FALSE;
+      foreach ($rotations as $rotation_id => $r) {
+        if ($next) {
+          $next_rotation_id = $rotation_id;
+          break;
+        }
+        if ($rotation_id == $rotation->id) {
+          $next = TRUE;
+        }
+      }
+
+      // Load the next rotation's log (if any).
+      $next_log = NULL;
+      if (!empty($next_rotation_id)) {
+        $next_log = log_load($rotations[$next_rotation_id]->log_id);
+      }
+
+      // If the previous log is "done", reset this log, print a message, and
+      // abort the function.
+      if (!empty($next_log) && !empty($next_log->done)) {
+        $log->done = TRUE;
+        log_save($log);
+        $log_name = entity_label('log', $log);
+        drupal_set_message(t('The log %log_name could not be marked as "not done" because the rotation that comes after it is already done.', array('%log_name' => $log_name)), 'error');
+        return;
+      }
+    }
+  }
 }
 
 /**
