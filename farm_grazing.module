@@ -1040,7 +1040,7 @@ function farm_grazing_plan_log_update($log) {
       }
 
       // Recalculate the previous rotation's duration.
-      $duration = round(($log->timestamp - $rotations[$previous_rotation_id]->start_date) / 86400);
+      $duration = round(($log->timestamp - $rotations[$previous_rotation_id]->start_date) / 86400, 2);
       $rotations[$previous_rotation_id]->duration = $duration;
       drupal_write_record('farm_grazing_rotations', $rotations[$previous_rotation_id], array('id'));
 
