@@ -848,11 +848,25 @@ function farm_grazing_theme() {
  * Implements hook_help().
  */
 function farm_grazing_help($path, $arg) {
-  switch ($path) {
-    case 'farm/plans/grazing':
-      return '<p>' . t('Select an existing plan or create a new plan.') .
-        '</p><p>' . t('The planning factors are an important part of building your plan. You can edit these by clicking the "Edit" tab at any time. Read the description under the form field for "Planning factors".') . '</p>';
 
+  // If the path is /farm/plans/grazing, show general help text about grazing
+  // plans.
+  if ($path == 'farm/plans/grazing') {
+    return '<p>' . t('Select an existing plan or create a new plan.') .
+      '</p><p>' . t('The planning factors are an important part of building your plan. You can edit these by clicking the "Edit" tab at any time. Read the description under the form field for "Planning factors".') . '</p>';
+  }
+
+  // Or, if the path starts with 'farm/plan/%', then load the plan and see if
+  // it is a grazing plan. If not, bail. Otherwise continue.
+  if (strpos($path, 'farm/plan/%') === 0) {
+    $plan = farm_plan_load($arg[2]);
+    if (empty($plan) || $plan->type != 'grazing') {
+      return '';
+    }
+  }
+
+  // Add help text to all farm/plan/% paths.
+  switch ($path) {
     case 'farm/plan/%':
     case 'farm/plan/%/view':
       return '<p>' . t('Open/Close each of the sections below, "Getting Started", "Management Concerns", and Implementing the plan", by clicking on the section title.') . '</p>';
