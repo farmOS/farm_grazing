@@ -854,7 +854,7 @@ function farm_grazing_help($path, $arg) {
         '</p><p>' . t('The planning factors are an important part of building your plan. You can edit these by clicking the "Edit" tab at any time. Read the description under the form field for "Planning factors".') . '</p>';
 
     case 'farm/plan/%':
-    case 'farm/plan/%/default':
+    case 'farm/plan/%/view':
       return '<p>' . t('Open/Close each of the sections below, "Getting Started", "Management Concerns", and Implementing the plan", by clicking on the section title.') . '</p>';
 
     case 'farm/plan/%/paddocks':
