@@ -639,6 +639,11 @@ function farm_grazing_form_farm_plan_consideration_form_alter(&$form, &$form_sta
   }
   $consideration = $form['consideration']['#value'];
 
+  // If this is not a grazing plan, do not alter the form.
+  if (empty($form['plan']['#value']->type) || $form['plan']['#value']->type != 'grazing') {
+    return;
+  }
+
   // If this is the /paddocks/exclusions path, default the consideration type
   // to 'farm_grazing_exclusion'.
   if (arg(3) == 'paddocks' && arg(4) == 'exclusions') {
