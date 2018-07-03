@@ -997,6 +997,13 @@ function farm_grazing_plan_log_update($log) {
     return;
   }
 
+  // Similarly, this function itself calls log_save() in a few places below,
+  // which trigger this function to run again. So we add a flag and prevent it
+  // from running twice.
+  if (!empty($log->farm_grazing_log_save)) {
+    return;
+  }
+
   // Load the grazing rotation that this log is linked to.
   $rotation = db_query('SELECT * FROM {farm_grazing_rotations} WHERE log_id = :log_id', array(':log_id' => $log->id))->fetch();
 
@@ -1017,6 +1024,7 @@ function farm_grazing_plan_log_update($log) {
     if (isset($log->original->done) && $log->original->done != $log->done && !empty($log->done)) {
       $mark_as_done = TRUE;
       $log->done = FALSE;
+      $log->farm_grazing_log_save = TRUE;
       log_save($log);
     }
 
@@ -1027,6 +1035,7 @@ function farm_grazing_plan_log_update($log) {
 
       // Reset the log timestamp to what it was originally.
       $log->timestamp = $log->original->timestamp;
+      $log->farm_grazing_log_save = TRUE;
       log_save($log);
 
       // Set a warning message directing user to the rotations form.
@@ -1069,6 +1078,7 @@ function farm_grazing_plan_log_update($log) {
 
         // Reset the log timestamp to what it was originally.
         $log->timestamp = $log->original->timestamp;
+        $log->farm_grazing_log_save = TRUE;
         log_save($log);
 
         // Set a warning message directing user to the rotations form.
@@ -1095,6 +1105,7 @@ function farm_grazing_plan_log_update($log) {
     // If the log should be marked as done, do so now.
     if (!empty($mark_as_done)) {
       $log->done = TRUE;
+      $log->farm_grazing_log_save = TRUE;
       log_save($log);
     }
 
@@ -1135,6 +1146,7 @@ function farm_grazing_plan_log_update($log) {
       // and abort the function.
       if (!empty($previous_log) && empty($previous_log->done)) {
         $log->done = FALSE;
+        $log->farm_grazing_log_save = TRUE;
         log_save($log);
         $log_name = entity_label('log', $log);
         drupal_set_message(t('The log %log_name could not be marked as "done" because the rotation that comes before it is not done yet.', array('%log_name' => $log_name)), 'error');
@@ -1168,6 +1180,7 @@ function farm_grazing_plan_log_update($log) {
       // abort the function.
       if (!empty($next_log) && !empty($next_log->done)) {
         $log->done = TRUE;
+        $log->farm_grazing_log_save = TRUE;
         log_save($log);
         $log_name = entity_label('log', $log);
         drupal_set_message(t('The log %log_name could not be marked as "not done" because the rotation that comes after it is already done.', array('%log_name' => $log_name)), 'error');
