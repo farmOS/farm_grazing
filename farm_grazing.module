@@ -1009,6 +1009,22 @@ function farm_grazing_plan_log_update($log) {
   // and logs in the plan.
   if (!empty($log->original->timestamp) && $log->original->timestamp != $log->timestamp) {
 
+    // If the log is done, we cannot allow the timestamp to be changed, because
+    // if the logs that come after this one are also done, they will not be
+    // updated, which would create a discrepancy.
+    if (!empty($log->done)) {
+
+      // Reset the log timestamp to what it was originally.
+      $log->timestamp = $log->original->timestamp;
+      log_save($log);
+
+      // Set a warning message directing user to the rotations form.
+      drupal_set_message(t('The date of this movement log cannot be changed because it is already marked as "done". Changing the date would imply changes are needed for movements that come after it in the grazing plan !rotations.', array('!rotations' => l('Rotations form', 'farm/plan/' . $rotation->plan_id . '/herds/rotations'))), 'error');
+
+      // Abort this function entirely - no recalculations should take place.
+      return;
+    }
+
     // Load utility functions.
     module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
 
