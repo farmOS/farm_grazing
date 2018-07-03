@@ -102,7 +102,7 @@ function farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $considerations, $st
     $recovery = farm_grazing_get_paddock_recovery($plan, $paddock_id, $end_date);
   }
 
-  // Create a demo image.
+  // Create an image.
   $im = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' .
     '<svg xmlns="http://www.w3.org/2000/svg"' .
     ' xmlns:xlink= "http://www.w3.org/1999/xlink"' .

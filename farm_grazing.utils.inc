@@ -322,8 +322,8 @@ function farm_grazing_get_farm_plan_dates($plan_obj, $format = NULL) {
 /**
  * farm_grazing_get_num_months_between($date1, $date2)
  *
- * @param $date1    string YYYY-MM-DD
- * @param $date2    string YYYY-MM-DD
+ * @param $date1    string YYYY-MM-DD or timestamp
+ * @param $date2    string YYYY-MM-DD or timestamp
  * @returns array($start_year, $start_month, $number_of_months)
  */
 function farm_grazing_get_num_months_between($date1, $date2) {
@@ -481,7 +481,7 @@ function farm_grazing_overlap_in_minutes($startDate1, $endDate1, $startDate2, $e
  * date2 is before date1 return 0
  * @param date1 - string, YYYY-MM-DD
  * @param date2 - string, YYYY-MM-DD
- * @returns in - number of days between dates or 0
+ * @return int - number of days between dates or 0
  */
 function farm_grazing_get_days_between_dates($date1, $date2) {
   if ($date1 > $date2) {
