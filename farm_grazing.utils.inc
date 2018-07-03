@@ -331,6 +331,14 @@ function farm_grazing_get_num_months_between($date1, $date2) {
     return array();
   }
 
+  // convert timestamps
+  if (is_numeric($date1)) {
+    $date1 = date('Y-m-d', $date1);
+  }
+  if (is_numeric($date2)) {
+    $date2 = date('Y-m-d', $date2);
+  }
+
   list($y1, $m1, $d1) = explode('-', $date1);
   list($y2, $m2, $d2) = explode('-', $date2);
 
@@ -474,6 +482,27 @@ function farm_grazing_overlap_in_minutes($startDate1, $endDate1, $startDate2, $e
   // If the answer is greater than 0 use it.
   // If not, there is no overlap.
   return $overlap > 0 ? $overlap : 0;
+}
+
+/**
+ * compute number of days in a month
+ * @param year
+ * @param month
+ * @return int - number of days
+ */
+function farm_grazing_days_in_month($year, $month) {
+    $start = sprintf('%04d-%02d-01', $year, $month);
+    if ($month == 12) {
+      $next_yr = $year + 1;
+      $next_mo = 1;
+    }
+    else {
+      $next_yr = $year;
+      $next_mo = $month + 1;
+    }
+    // first day of next month
+    $end = sprintf('%04d-%02d-01', $next_yr, $next_mo);
+    return farm_grazing_get_days_between_dates($start, $end);
 }
 
 /**
