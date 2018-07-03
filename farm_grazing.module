@@ -1009,6 +1009,17 @@ function farm_grazing_plan_log_update($log) {
   // and logs in the plan.
   if (!empty($log->original->timestamp) && $log->original->timestamp != $log->timestamp) {
 
+    // If the log is being marked as "done" at the same time, we need to
+    // recalculate rotations first (before it is marked "done"), otherwise this
+    // log+rotation will be ignored in the recalculation function. So we store
+    // a reminder here, set the log status back to "not done", recalculate
+    // below, and then set it back to "done" afterwards.
+    if (isset($log->original->done) && $log->original->done != $log->done && !empty($log->done)) {
+      $mark_as_done = TRUE;
+      $log->done = FALSE;
+      log_save($log);
+    }
+
     // If the log is done, we cannot allow the timestamp to be changed, because
     // if the logs that come after this one are also done, they will not be
     // updated, which would create a discrepancy.
@@ -1080,6 +1091,12 @@ function farm_grazing_plan_log_update($log) {
     // Recalculate all rotations.
     $reset_durations = FALSE;
     farm_grazing_recalculate_rotations($rotation->plan_id, $rotation->herd_id, $rotations, $reset_durations, $start_time);
+
+    // If the log should be marked as done, do so now.
+    if (!empty($mark_as_done)) {
+      $log->done = TRUE;
+      log_save($log);
+    }
 
     // Print a message.
     $plan_wrapper = entity_metadata_wrapper('farm_plan', $rotation->plan_id);
