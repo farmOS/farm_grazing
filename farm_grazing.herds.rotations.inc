@@ -743,54 +743,6 @@ function farm_grazing_plan_rotation_delete_form_submit($form, &$form_state) {
 }
 
 /**
- * Fetch considerations for plan and return a key/value array of the records
- * where the key is the paddock_id and the value is an array of records
- * a key=0 is used for considerations NOT linked to any specific paddock
- *
- * @param $plan_obj - the plan to fetch considerations for
- * @return array(paddock_id => array(records))
- *
- * record->entity_id
- *       ->entity_type
- *       ->type
- *       ->start
- *       ->end
- *       ->name
- *
- */
-function farm_grazing_get_plan_considerations($plan_obj) {
-    $wrapper = entity_metadata_wrapper('farm_plan', $plan_obj->id);
-    $plan_start = $wrapper->field_farm_date_range->value->value();
-    $plan_end = $wrapper->field_farm_date_range->value2->value();
-
-    // we need to select considerations that overlap the plan start and end dates
-    //                   start           end
-    //                     |----plan------|
-    //          |---|   |====| |=====|  |====| |----|
-    //
-    // in the cases above we want the considerations represented  by |===| and not
-    // those represented by |---|
-    //
-
-    $sql = "SELECT e.entity_id, e.entity_type, c.type, c.start, c.end, c.name
-        FROM {farm_plan_consideration} c
-        LEFT JOIN {farm_plan_consideration_entity} e
-        ON c.id=e.consideration_id
-        WHERE c.start <= :plan_end AND c.end >= :plan_start
-        AND ( c.plan_id=:plan_id OR c.plan_id IS NULL)";
-
-    $records = db_query($sql, array(':plan_start' => $plan_start, ':plan_end' => $plan_end, ':plan_id' => $plan_obj->id));
-
-    $considerations = array();
-    foreach ($records as $record) {
-        $id = empty($record->entity_id) ? 0 : $record->entity_id;
-        $considerations[$id][] = $record;
-    }
-
-    return $considerations;
-}
-
-/**
  * farm_grazing_get_rotation_svg($plan_obj, $paddock_id, $considerations, $start_str, $end_str)
  */
 function farm_grazing_get_rotation_svg($plan_obj, $paddock_id, $considerations, $start_str, $end_str) {
