@@ -1068,7 +1068,8 @@ function farm_grazing_get_plan_considerations($plan_obj) {
         LEFT JOIN {farm_plan_consideration_entity} e
         ON c.id=e.consideration_id
         WHERE c.start <= :plan_end AND c.end >= :plan_start
-        AND ( c.plan_id=:plan_id OR c.plan_id IS NULL)";
+        AND ( c.plan_id=:plan_id OR c.plan_id IS NULL)
+        ORDER BY c.start";
 
     $records = db_query($sql, array(':plan_start' => $plan_start, ':plan_end' => $plan_end, ':plan_id' => $plan_obj->id));
 
