@@ -236,10 +236,8 @@ function farm_grazing_plan_herds_manage_form($form, &$form_state, $plan_obj) {
   $num_plan_months = $num_months;
   foreach ($herd_details as $this_herd) {
     // initial row for this herd
-    $row = array();
-    for ($i = 0; $i <= $num_plan_months; $i++) {
-      $row[] = 0;
-    }
+    $row = array_fill(0, $num_plan_months, 0);
+
     foreach ($this_herd['herd_data'] as $rec) {
       $sau = $rec['head_count'] * $rec['weight'] / 1000.0;
       $start_date = date_create_from_format('Y-m-d', $rec['arrival']);
