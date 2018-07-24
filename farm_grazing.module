@@ -191,6 +191,19 @@ function farm_grazing_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  // Herds - Projections of weight and head count
+  $items['farm/plan/%farm_plan/herds/projections'] = array(
+    'title' => 'Projections',
+    'description' => 'Define projected weight and head count changes',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('farm_grazing_plan_projections_form', 2),
+    'access callback' => 'farm_grazing_plan_access',
+    'access arguments' => array(2),
+    'file' => 'farm_grazing.herds.projections.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 20,
+  );
+
   // Herds - Historical grazing patterns.
   $items['farm/plan/%farm_plan/herds/history'] = array(
     'title' => 'History',
