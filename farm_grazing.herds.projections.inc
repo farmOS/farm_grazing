@@ -114,37 +114,28 @@ function farm_grazing_plan_projections_form($form, &$form_state, $plan_obj, $her
         $data = $herd['data'];
         asort($data);
 
-        $titles = array(
-            'births' => t('Births'),
-            'culls' => t('Culls'),
-            'weight' => t('Avg Weight'),
-            'head_count' => t('Plan Head Count'),
-            'total_hc' => t('Projected Head Count'),
-        );
+        $titles = farm_grazing_herd_projections_titles();
 
         $form['section'][$herd_id]['table'] = array();
         foreach ($data as $month => $items) {
-            $form['section'][$herd_id]['table'][$month] = array();
+            $id = "proj-$plan_id-$herd_id-$month-0";
             foreach ($items as $key => $val) {
                 if ($key == 'proj_id') {
-                    $form['section'][$herd_id]['table'][$month][$key] = array(
-                        '#type' => 'hidden',
-                        '#value' => $val,
-                    );
+                    $id = "proj-$plan_id-$herd_id-$month-$val";
                 }
                 elseif ($key == 'head_count' or $key == 'total_hc') {
-                    $form['section'][$herd_id]['table'][$month][$key] = array(
+                    $form['section'][$herd_id]['table'][$key][$month] = array(
                         '#prefix' => '<p>',
                         '#markup' => $val,
                         '#suffix' => '</p>',
-                        '#title' => $titles[$key],
                     );
                 }
                 else {
-                    $form['section'][$herd_id]['table'][$month][$key] = array(
+                    $form['section'][$herd_id]['table'][$key][$month] = array(
                         '#type' => 'textfield',
                         '#title' => $titles[$key],
-                        'default_value' => $val,
+                        '#default_value' => $val,
+                        '#attributes' => array('id' => "$id-$key"),
                     );
                 }
             }
@@ -153,6 +144,23 @@ function farm_grazing_plan_projections_form($form, &$form_state, $plan_obj, $her
 
     return $form;
 }
+
+
+/**
+ * farm_grazing_herd_projections_titles()
+ *
+ * @return array of row titles
+ */
+function farm_grazing_herd_projections_titles() {
+    return array(
+        'proj_id' => '',
+        'weight' => t('Avg Weight'),
+        'head_count' => t('Plan Head Count'),
+        'births' => t('Births'),
+        'culls' => t('Culls'),
+        'total_hc' => t('Projected Head Count'),
+    );
+};
 
 
 /**
@@ -366,21 +374,52 @@ function theme_farm_grazing_get_herd_projections_form(&$vars) {
     $output .= drupal_render($form['plan_id']);
     $output .= drupal_render($form['text']);
 
-    foreach ($form['section'] as $herd_id => $herd) {
+    $titles = farm_grazing_herd_projections_titles();
 
-        $output .= drupal_render($form['section'][$herd_id]['title']);
-        
-        $header = array('');
+    $header = array('&nbsp;');
+    $rows = array();
+    $first = TRUE;
+    if (! empty($form['section'])) {
+        foreach ($form['section'] as $herd_id => &$herd) {
+            $output .= drupal_render($herd['title']);
+            if (! empty($herd['table'])) {
+                foreach (element_children($herd['table']) as $key) {
+                    $months =& $herd['table'][$key];
+                    $data = array(
+                        drupal_render(
+                            array(
+                                '#prefix' => '<p>',
+                                '#markup' => titles[$key],
+                                '#suffix' => '</p>',
+                            )
+                        )
+                    );
 
-        $rows = array();
+                    if (! empty($months)) {
+                        foreach ($months as $month => $item) {
 
-        $output .= theme('table', array(
-            'header' => $header,
-            'rows' => $rows,
-            'empty' => t('No data available'),
-            'attributes' => array('id' => 'herd_projection_table_' . $herd_id),
-        ));
+                            if ($first) {
+                                $header[] = $month;
+                            }
+
+                            $data[] = drupal_render($item);
+                        }
+                    }
+                }
+            }
+            $rows[] = array('data' => $data);
+            $first = FALSE;
+        }
     }
+
+    $output .= theme('table', array(
+        'header' => $header,
+        'rows' => $rows,
+        'empty' => t('No data available'),
+        'attributes' => array('id' => 'herd_projection_table_' . $herd_id),
+    ));
+
+    $output .= drupal_render_children($form);
 
     return $output;
 }
