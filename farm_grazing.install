@@ -327,3 +327,60 @@ function farm_grazing_update_7002(&$sandbox) {
   // Drop the exclusions table.
   db_drop_table('farm_grazing_paddock_exclusions');
 }
+
+/**
+ * Add Herd Projection Table
+ */
+function farm_grazing_update_7003(&$sandbox) {
+  $schema['farm_grazing_herd_projections'] = array(
+      'description' => 'Planed projection for a herd in a plan for weight and head count over life of plan',
+      'fields' => array(
+            'proj_id' => array(
+                 'description' => 'Unique id for this projection record.',
+                 'type' => 'serial',
+                 'not null' => TRUE,
+             ),
+             'plan_id' => array(
+                 'description' => 'Plan ID',
+                 'type' => 'int',
+                 'not null' => TRUE,
+             ),
+             'herd_id' => array(
+                 'description' => 'Herd ID',
+                 'type' => 'int',
+                 'not null' => TRUE,
+             ),
+             'year_month' => array(
+                 'description' => 'Integer year month, like YYYYMM for the each month in the plan.',
+                 'type' => 'int',
+                 'not null' => TRUE,
+                 'unsigned' => TRUE,
+                 'default' => 0,
+             ),
+             'births' => array(
+                 'description' => 'Projected birth count for this month.',
+                 'type' => 'int',
+                 'not null' => TRUE,
+                 'unsigned' => TRUE,
+                 'default' => 0,
+             ),
+             'culls' => array(
+                 'description' => 'Projected cull count for this month.',
+                 'type' => 'int',
+                 'not null' => TRUE,
+                 'unsigned' => TRUE,
+                 'default' => 0,
+             ),
+             'avg_weight' => array(
+                 'description' => 'Projected average animal weight for this month.',
+                 'type' => 'float',
+                 'not null' => TRUE,
+                 'default' => 0,
+             ),
+         ),
+         'primary key' => array('proj_id'),
+     );
+
+     db_create_table('farm_grazing_herd_projections', $schema['farm_grazing_herd_projections']);
+}
+
