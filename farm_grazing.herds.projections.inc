@@ -36,7 +36,7 @@
 /**
  * Plan Herd projections page callback.
  */
-function farm_grazing_plan_projections_form($form, &$form_state, $plan_obj, $herd_id) {
+function farm_grazing_plan_projections_form($form, &$form_state, $plan_obj) {
 
     // Load utility functions.
     module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
@@ -45,9 +45,9 @@ function farm_grazing_plan_projections_form($form, &$form_state, $plan_obj, $her
     drupal_add_css(drupal_get_path('module', 'farm_grazing') . '/css/herds.css');
 
     // get the plan id from the plan object
-    $plan = $plan_obj->id;
+    $plan_id = $plan_obj->id;
 
-    $wrapper = entity_metadata_wrapper('farm_plan', $plan);
+    $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
     $start_ts = $wrapper->field_farm_date_range->value->value();
     $end_ts = $wrapper->field_farm_date_range->value2->value();
 
@@ -95,8 +95,10 @@ function farm_grazing_plan_projections_form($form, &$form_state, $plan_obj, $her
     );
 
 
-    // fetch the data we nesd to build the form
+    // fetch the data we need to build the form
     $herds = farm_grazing_get_herd_projections_for_plan($plan_id);
+
+    kpr($herds);
 
     // build the form from the data structure
 
@@ -117,9 +119,10 @@ function farm_grazing_plan_projections_form($form, &$form_state, $plan_obj, $her
         $titles = farm_grazing_herd_projections_titles();
 
         $form['section'][$herd_id]['table'] = array();
-        foreach ($data as $month => $items) {
-            $id = "proj-$plan_id-$herd_id-$month-0";
-            foreach ($items as $key => $val) {
+        foreach ($data as $key => $months) {
+            foreach (array_keys($months) as $month) {
+                $id = "proj-$plan_id-$herd_id-$month-0";
+                $val = $data[$key][$month];
                 if ($key == 'proj_id') {
                     $id = "proj-$plan_id-$herd_id-$month-$val";
                 }
@@ -141,6 +144,8 @@ function farm_grazing_plan_projections_form($form, &$form_state, $plan_obj, $her
             }
         }
     }
+
+    kpr($form);
 
     return $form;
 }
@@ -201,7 +206,7 @@ function farm_grazing_get_herd_projections_for_plan($plan_id) {
    foreach ($result as $row) {
         if (!empty($row->herd_id)) {
             $herd = farm_asset_load($row->herd_id);
-            $data = farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months);
+            $data = farm_grazing_get_herd_projections($plan_id, $row->herd_id, $plan_months);
             $plan_herds[] = array(
                 'herd_id' => $row->herd_id,
                 'name' => $herd->name,
@@ -254,32 +259,63 @@ function farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months) {
     // get plan start and end dates
     $wrapper = entity_metadata_wrapper('farm_plan', $plan_id);
     $p_start_ts = $wrapper->field_farm_date_range->value->value();
-    $p_start_ym = new Date();
+    $p_start_ym = new DateTime();
     $p_start_ym->setTimestamp($p_start_ts);
     $p_start_ym = $p_start_ym->format('Ym');
     $p_end_ts = $wrapper->field_farm_date_range->value2->value();
-    $p_end_ym = new Date();
+    $p_end_ym = new DateTime();
     $p_end_ym->setTimestamp($p_end_ts);
     $p_end_ym = $p_end_ym->format('Ym');
 
     $herd_data = array();
     farm_grazing_get_grazing_group_detailed_info($herd_id, $herd_data);
 
-    // cycle through the animals in the head and the months in the plan
-    // and summarize iheadcnt and avg_weight by month
+    // initialize data array for all months in plan
 
+    $date = new DateTime();
+    $date->setDate($plan_months[0], $plan_months[1], 1);
     $data = array();
-    foreach ($herd_data as $rec) {
-        $start_date = date_create_from_format('Y-m-d', $rec['arrival']);
-        $end_date = date_create_from_format('Y-m-d', $rec['departure']);
+    for ($i=0; $i<$plan_months[2]; $i++) {
+        $key = $date->format('Ym');
+        $data['proj_id'][$key] = 0;
+        $data['weight'][$key] = 0;
+        $data['head_count'][$key] = 0;
+        $data['births'][$key] = 0;
+        $data['culls'][$key] = 0;
+        $data['total_hc'][$key] = 0;
 
-        // If the start/end date are empty or outside the plan dates
-        // use the plan's start/end date.
-        if (empty($start_date) or $start_date < $p_start_ts) {
+        $date->modify('+1 month');
+    }
+
+    // cycle through the animals in the head and the months in the plan
+    // and summarize headcnt and avg_weight by month
+
+    foreach ($herd_data as $rec) {
+
+        if (empty($rec['arrival']) or $rec['arrival'] == '') {
             $start_date = new DateTime();
             $start_date->setTimestamp($p_start_ts);
         }
-        if (empty($end_date) or $end_date > $p_end_ts) {
+        else {
+            $start_date = date_create_from_format('Y-m-d', $rec['arrival']);
+        }
+        $start_date_ts = $start_date->getTimestamp();
+        if (empty($rec['departure']) or $rec['departure'] == '') {
+            $end_date = new DateTime();
+            $end_date->setTimestamp($p_end_ts);
+        }
+        else {
+            $end_date = date_create_from_format('Y-m-d', $rec['departure']);
+        }
+        $end_date_ts = $end_date->getTimestamp();
+
+        // If the start/end date are empty or outside the plan dates
+        // use the plan's start/end date.
+        if ($start_date_ts < $p_start_ts) {
+            $start_date = new DateTime();
+            $start_date->setTimestamp($p_start_ts);
+        }
+        if ($end_date_ts > $p_end_ts) {
             $end_date = new DateTime();
             $end_date->setTimestamp($p_end_ts);
         }
@@ -296,13 +332,13 @@ function farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months) {
         $date->setDate($y, $m, 1);
 
         // sum by month
-        for ($i = 0; $i <= $plan_months[2]; $i++) {
+        for ($i = 0; $i < $num_months; $i++) {
             $key = $date->format('Ym');
-            $data[$key]['proj_id'] = 0;
-            $data[$key]['head_count'] += $rec['head_count'];
-            $data[$key]['weight'] += $rec['head_count'] * $rec['weight'];
-            $data[$key]['births'] = 0;
-            $data[$key]['culls'] = 0;
+            $data['proj_id'][$key] = 0;
+            $data['head_count'][$key] += $rec['head_count'];
+            $data['weight'][$key] += $rec['head_count'] * $rec['weight'];
+            $data['births'][$key] = 0;
+            $data['culls'][$key] = 0;
 
             // TODO: do we need to add an error class if there is missing animal data??
             // like: farm_grazing.herds.manage.inc:273
@@ -311,27 +347,28 @@ function farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months) {
             $date->modify('+1 month');
         }
 
-        // convert sum weight to average weight
-        foreach ($data as $key => $val) {
-            if ($val['head_count'] > 0) {
-                $data[$key]['weight'] = $data[$key]['weight'] / $val['head_count'];
+        // convert sum weight to average weight (avoid divide by zero)
+        foreach (array_keys($data['head_count']) as $month) {
+            $val = $data['head_count'][$month];
+            if ($val > 0) {
+                $data['weight'][$month] /= $val;
             }
         }
     }
 
     // get database records from farm_grazing_herd_projection for plan_id, herd_id order by year_month
 
-    $result = db_query('SELECT * FROM {farm_grazing_herd_projections} WHERE plan_id=:plan_id and herd_id=:herd_id ORDER BY year_month', array(':plan_id' => $plan_id, ':herd_id' => $herd_id));
+    $result = db_query("SELECT * FROM {farm_grazing_herd_projections} WHERE plan_id=:plan_id and herd_id=:herd_id ORDER BY 'year_month'", array(':plan_id' => $plan_id, ':herd_id' => $herd_id));
     foreach ($result as $rec) {
-        $key = '' . $rec->year_month;
-        if (array_key_exists($key, $data)) {
+        $month = '' . $rec->year_month;
+        if (array_key_exists($month, $data['head_count'])) {
             // add fields from DB and over write the avg_weight with the DB value
-            $data[$key]['proj_id'] = $rec->proj_id;
-            $data[$key]['births'] = $rec->births;
-            $data[$key]['culls'] = $rec->culls;
-            $data[$key]['weight'] = $rec->avg_weight;
+            $data['proj_id'][$month] = $rec->proj_id;
+            $data['births'][$month] = $rec->births;
+            $data['culls'][$month] = $rec->culls;
+            $data['weight'][$month] = $rec->avg_weight;
         }
-        elseif (!array_key_exists($key, $data) or $key < $p_start_ym or $key > $p_end_ym) {
+        elseif (!array_key_exists($month, $data['head_count']) or $month < $p_start_ym or $key > $p_end_ym) {
             // if the key does not exist then we have no initial head count so something is wrong
             // if the key is outside the paln dates then we don't need this record, probably the plan dates changed
             db_delete('farm_grazing_herd_projections')
@@ -339,7 +376,12 @@ function farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months) {
                 -execute();
         }
 
-        $data[$key]['total_hc'] = $data[$key]['head_count'] + $data[$key]['births'] - $data[$key]['culls'];
+    }
+
+    // compute total head count after births and culls
+
+    foreach (array_keys($data['head_count']) as $month) {
+        $data['total_hc'][$month] = $data['head_count'][$month] + $data['births'][$month] - $data['culls'][$month];
     }
 
     return $data;
@@ -385,15 +427,12 @@ function theme_farm_grazing_get_herd_projections_form(&$vars) {
             if (! empty($herd['table'])) {
                 foreach (element_children($herd['table']) as $key) {
                     $months =& $herd['table'][$key];
-                    $data = array(
-                        drupal_render(
-                            array(
-                                '#prefix' => '<p>',
-                                '#markup' => titles[$key],
-                                '#suffix' => '</p>',
-                            )
-                        )
+                    $row_title = array(
+                        '#prefix' => '<p>',
+                        '#markup' => titles[$key],
+                        '#suffix' => '</p>',
                     );
+                    $data = array(drupal_render($row_title));
 
                     if (! empty($months)) {
                         foreach ($months as $month => $item) {
@@ -412,12 +451,16 @@ function theme_farm_grazing_get_herd_projections_form(&$vars) {
         }
     }
 
-    $output .= theme('table', array(
+    $table = array(
         'header' => $header,
         'rows' => $rows,
         'empty' => t('No data available'),
         'attributes' => array('id' => 'herd_projection_table_' . $herd_id),
-    ));
+    );
+
+    kpr($table);
+
+    $output .= theme('table', $table);
 
     $output .= drupal_render_children($form);
 

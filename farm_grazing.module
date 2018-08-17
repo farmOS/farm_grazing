@@ -859,6 +859,10 @@ function farm_grazing_theme() {
       'render element' => 'form',
       'file' => 'farm_grazing.plan.dashboard.inc',
     ),
+    'farm_grazing_plan_projections_form' => array(
+      'render element' => 'form',
+      'file' => 'farm_grazing.herds.projections.inc',
+    ),
   );
 }
 
