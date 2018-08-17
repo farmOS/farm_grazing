@@ -80,6 +80,7 @@ function farm_grazing_plan_projections_form($form, &$form_state, $plan_obj) {
     drupal_set_title(t('Herd Projections for Plan'));
 
     $form['#tree'] = TRUE;
+    $form['#theme'] = 'theme_farm_grazing_plan_projections_form';
 
     $form['plan_id'] = array(
       '#type' => 'value',
