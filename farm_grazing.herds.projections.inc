@@ -113,17 +113,16 @@ function farm_grazing_plan_projections_form($form, &$form_state, $plan_obj) {
 
         // sort the data by the months
         $data = $herd['data'];
-        //asort($data);
 
         $titles = farm_grazing_herd_projections_titles();
 
         $form['section'][$herd_id]['table'] = array();
         foreach ($data as $key => $months) {
             foreach (array_keys($months) as $month) {
-                $id = "proj-$plan_id-$herd_id-$month-0";
+                $id = "proj-$plan_id-$herd_id-$month-" . $data['proj_id'][$month];
                 $val = $data[$key][$month];
                 if ($key == 'proj_id') {
-                    $id = "proj-$plan_id-$herd_id-$month-$val";
+                    // NOP
                 }
                 elseif ($key == 'head_count' or $key == 'total_hc') {
                     $form['section'][$herd_id]['table'][$key][$month] = array(
@@ -208,7 +207,7 @@ function farm_grazing_herd_projections_titles() {
  *      herd_id => int
  *      name => string
  *      data => array(
- *          year_month => array(
+ *          yr_mon => array(
  *              proj_id => int | 0      db table rec or 0 if no record yet
  *              weight => float         count by month in plan
  *              head_count => int       initial head cnt by month
@@ -263,7 +262,7 @@ function farm_grazing_get_herd_projections_for_plan($plan_id) {
  *      Array(year_start, month_start, num_months)
  *
  *  @return array(          data for herd_id
- *    year_month => array(          YYYYMM for the month in the plan
+ *    yr_mon => array(          YYYYMM for the month in the plan
  *      proj_id => int | 0          db table rec or 0 if no record yet
  *      weight => float             avg weight for herd in this month
  *      head_count => int           initial head cnt this month
@@ -361,12 +360,12 @@ function farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months) {
 
         // sum by month
         for ($i = 0; $i < $num_months; $i++) {
-            $key = $date->format('Ym');
-            $data['proj_id'][$key] = 0;
-            $data['head_count'][$key] += $rec['head_count'];
-            $data['weight'][$key] += $rec['head_count'] * $rec['weight'];
-            $data['births'][$key] = 0;
-            $data['culls'][$key] = 0;
+            $month = $date->format('Ym');
+            $data['proj_id'][$month] = 0;
+            $data['head_count'][$month] += $rec['head_count'];
+            $data['weight'][$month] += $rec['head_count'] * $rec['weight'];
+            $data['births'][$month] = 0;
+            $data['culls'][$month] = 0;
 
             // TODO: do we need to add an error class if there is missing animal data??
             // like: farm_grazing.herds.manage.inc:273
@@ -384,11 +383,11 @@ function farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months) {
         }
     }
 
-    // get database records from farm_grazing_herd_projection for plan_id, herd_id order by year_month
+    // get database records from farm_grazing_herd_projection for plan_id, herd_id order by yr_mon
 
-    $result = db_query("SELECT * FROM {farm_grazing_herd_projections} WHERE plan_id=:plan_id and herd_id=:herd_id ORDER BY 'year_month'", array(':plan_id' => $plan_id, ':herd_id' => $herd_id));
+    $result = db_query("SELECT * FROM {farm_grazing_herd_projections} WHERE plan_id=:plan_id and herd_id=:herd_id ORDER BY yr_mon", array(':plan_id' => $plan_id, ':herd_id' => $herd_id));
     foreach ($result as $rec) {
-        $month = '' . $rec->year_month;
+        $month = $rec->yr_mon;
         if (array_key_exists($month, $data['head_count'])) {
             // add fields from DB and over write the avg_weight with the DB value
             $data['proj_id'][$month] = $rec->proj_id;
@@ -401,7 +400,7 @@ function farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months) {
             // if the key is outside the paln dates then we don't need this record, probably the plan dates changed
             db_delete('farm_grazing_herd_projections')
                 ->condition('proj_id', $rec->proj_id)
-                -execute();
+                ->execute();
         }
 
     }
@@ -429,8 +428,74 @@ function farm_grazing_get_herd_projections_form_validate($form, &$form_state) {
  *
  */
 function farm_grazing_get_herd_projections_form_submit($form, &$form_state) {
-    dpm('submit');
-    dpm($form);
+
+    $plan_id = $form['plan_id']['#value'];
+
+    // list of fields we need to update
+    $fields = array('births', 'culls', 'weight');
+
+    // collect data for inserts and updates
+    $data = array();
+    foreach (element_children($form['section']) as $herd_id) {
+        foreach ($fields as $field) {
+            $item = $form['section'][$herd_id]['table'][$field];
+            foreach (element_children($item) as $yr_mon) {
+                // decode the field id and make sure things are ok
+                // $parts = ('proj', plan_id, herd_id, Ym, proj_id, field)
+                $parts = explode('-', $item[$yr_mon]['#attributes']['id']);
+                if ($plan_id != $parts[1] or $herd_id != $parts[2] or $yr_mon != $parts[3] or $field != $parts[5]) {
+                    form_error($item[$yr_mon], t('A field id for %name does not match the data!', array('%name' => $field)));
+                }
+                else {
+                    // if proj_id is set then use that value
+                    if ($parts[4] != 0) {
+                        $data[$plan_id][$herd_id][$yr_mon]['proj_id'] = $parts[4];
+                    }
+                    $field2 = $field;
+                    if ($field == 'weight') {
+                        $field2 = 'avg_weight';
+                    }
+                    $data[$plan_id][$herd_id][$yr_mon][$field2] = $item[$yr_mon]['#value'];
+                }
+            }
+        }
+    }
+
+    // at this point we should have a data structure like:
+    // $data[plan_id][herd_id][yr_mon] = array(
+    //      proj_id => ...,
+    //      births => ...,
+    //      culls => ...,
+    //      avg_weight => ...,
+    //      yr_mon => ...,
+    //  );
+    //  where each terminal array is a record to be updated/inserted
+    //  with some minor additions
+
+    // update the database
+    foreach (element_children($data) as $plan_id) {
+        foreach (element_children($data[$plan_id]) as $herd_id) {
+            foreach (element_children($data[$plan_id][$herd_id]) as $yr_mon) {
+                // get the record to be updated/inserted
+                $record = $data[$plan_id][$herd_id][$yr_mon];
+
+                // add the minor additions to it
+                $record['plan_id'] = $plan_id;
+                $record['herd_id'] = $herd_id;
+                $record['yr_mon'] = $yr_mon;
+
+                // update or insert it as appropriate
+                if (array_key_exists('proj_id', $data[$plan_id][$herd_id][$yr_mon])) {
+                    // update existing record
+                    drupal_write_record('farm_grazing_herd_projections', $record, 'proj_id');
+                }
+                else {
+                    // insert a new record
+                    drupal_write_record('farm_grazing_herd_projections', $record);
+                }
+            }
+        }
+    }
 }
 
 /**
@@ -446,7 +511,7 @@ function theme_farm_grazing_plan_projections_form(&$vars) {
 
     $titles = farm_grazing_herd_projections_titles();
 
-    $header = array('&nbsp;');
+    $header = array('Year Month');
     $rows = array();
     $first = TRUE;
     foreach (element_children($form['section']) as $herd_id) {

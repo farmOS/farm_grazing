@@ -241,7 +241,7 @@ function farm_grazing_schema() {
         'type' => 'int',
         'not null' => TRUE,
       ),
-      'year_month' => array(
+      'yr_mon' => array(
         'description' => 'Integer year month, like YYYYMM for the each month in the plan.',
         'type' => 'int',
         'not null' => TRUE,
@@ -350,7 +350,7 @@ function farm_grazing_update_7003(&$sandbox) {
                  'type' => 'int',
                  'not null' => TRUE,
              ),
-             'year_month' => array(
+             'yr_mon' => array(
                  'description' => 'Integer year month, like YYYYMM for the each month in the plan.',
                  'type' => 'int',
                  'not null' => TRUE,
