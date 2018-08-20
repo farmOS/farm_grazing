@@ -99,8 +99,6 @@ function farm_grazing_plan_projections_form($form, &$form_state, $plan_obj) {
     // fetch the data we need to build the form
     $herds = farm_grazing_get_herd_projections_for_plan($plan_id);
 
-    kpr($herds);
-
     // build the form from the data structure
 
     foreach ($herds as $herd) {
@@ -134,20 +132,50 @@ function farm_grazing_plan_projections_form($form, &$form_state, $plan_obj) {
                         '#suffix' => '</p>',
                     );
                 }
+                elseif ($key == 'weight') {
+                    $form['section'][$herd_id]['table'][$key][$month] = array(
+                        '#type' => 'textfield',
+                        '#default_value' => $val,
+                        '#title' => $titles[$key],
+                        '#title_display' => 'invisible',
+                        '#attributes' => array('id' => "$id-$key"),
+                        '#element_validate' => array('element_validate_number_positive'),
+                    );
+                }
                 else {
                     $form['section'][$herd_id]['table'][$key][$month] = array(
                         '#type' => 'textfield',
                         '#default_value' => $val,
+                        '#title' => $titles[$key],
+                        '#title_display' => 'invisible',
                         '#attributes' => array('id' => "$id-$key"),
+                        '#element_validate' => array('element_validate_integer', 'element_validate_number_positive'),
                     );
                 }
             }
         }
     }
 
-    kpr($form);
+    $form['submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Save Changes'),
+        '#validate' => array('farm_grazing_get_herd_projections_form_validate'),
+        '#submit' => array('farm_grazing_get_herd_projections_form_submit'),
+    );
 
     return $form;
+}
+
+
+/**
+ * element_validate_number_positive($element, &$form_state)
+ */
+function element_validate_number_positive($element, &$form_state) {
+    $value = $element['#value'];
+    if ($value != '' && (! is_numeric($value) || $value < 0)) {
+        form_error($element, t('%name must be a number >= 0.',
+            array('%name' => $element['#title'])));
+    }
 }
 
 
@@ -393,7 +421,6 @@ function farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months) {
  *
  */
 function farm_grazing_get_herd_projections_form_validate($form, &$form_state) {
-
 }
 
 
@@ -402,7 +429,8 @@ function farm_grazing_get_herd_projections_form_validate($form, &$form_state) {
  *
  */
 function farm_grazing_get_herd_projections_form_submit($form, &$form_state) {
-
+    dpm('submit');
+    dpm($form);
 }
 
 /**
@@ -455,8 +483,6 @@ function theme_farm_grazing_plan_projections_form(&$vars) {
         'empty' => t('No data available'),
         'attributes' => array('id' => 'herd_projection_table_' . $herd_id),
     );
-
-    kpr($table);
 
     $output .= theme('table', $table);
 
