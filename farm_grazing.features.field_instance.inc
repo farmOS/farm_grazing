@@ -212,6 +212,96 @@ function farm_grazing_field_default_field_instances() {
     ),
   );
 
+  // Exported field_instance:
+  // 'farm_plan-grazing-field_grazing_avg_annual_precip'.
+  $field_instances['farm_plan-grazing-field_grazing_avg_annual_precip'] = array(
+    'bundle' => 'grazing',
+    'default_value' => array(
+      0 => array(
+        'value' => 0,
+      ),
+    ),
+    'deleted' => 0,
+    'description' => 'Expected average annual precipitation.',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'number',
+        'settings' => array(
+          'decimal_separator' => '.',
+          'prefix_suffix' => TRUE,
+          'scale' => 2,
+          'thousand_separator' => '',
+        ),
+        'type' => 'number_decimal',
+        'weight' => 8,
+      ),
+    ),
+    'entity_type' => 'farm_plan',
+    'field_name' => 'field_grazing_avg_annual_precip',
+    'label' => 'Average Annual Precipitation',
+    'required' => 0,
+    'settings' => array(
+      'max' => '',
+      'min' => 0,
+      'prefix' => '',
+      'suffix' => '',
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'number',
+      'settings' => array(),
+      'type' => 'number',
+      'weight' => 5,
+    ),
+  );
+
+  // Exported field_instance:
+  // 'farm_plan-grazing-field_grazing_avg_season_precip'.
+  $field_instances['farm_plan-grazing-field_grazing_avg_season_precip'] = array(
+    'bundle' => 'grazing',
+    'default_value' => array(
+      0 => array(
+        'value' => 0,
+      ),
+    ),
+    'deleted' => 0,
+    'description' => 'Expected average precipitation for the Season.',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'number',
+        'settings' => array(
+          'decimal_separator' => '.',
+          'prefix_suffix' => TRUE,
+          'scale' => 2,
+          'thousand_separator' => '',
+        ),
+        'type' => 'number_decimal',
+        'weight' => 9,
+      ),
+    ),
+    'entity_type' => 'farm_plan',
+    'field_name' => 'field_grazing_avg_season_precip',
+    'label' => 'Average Season Precipitation',
+    'required' => 0,
+    'settings' => array(
+      'max' => '',
+      'min' => 0,
+      'prefix' => '',
+      'suffix' => '',
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'number',
+      'settings' => array(),
+      'type' => 'number',
+      'weight' => 6,
+    ),
+  );
+
   // Exported field_instance: 'farm_plan-grazing-field_grazing_growing_season'.
   $field_instances['farm_plan-grazing-field_grazing_growing_season'] = array(
     'bundle' => 'grazing',
@@ -249,15 +339,71 @@ function farm_grazing_field_default_field_instances() {
     ),
   );
 
+  // Exported field_instance:
+  // 'farm_plan-grazing-field_growing_season_date_range'.
+  $field_instances['farm_plan-grazing-field_growing_season_date_range'] = array(
+    'bundle' => 'grazing',
+    'deleted' => 0,
+    'description' => 'Expected start and end of the growing season.',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'date',
+        'settings' => array(
+          'format_type' => 'long',
+          'fromto' => 'both',
+          'multiple_from' => '',
+          'multiple_number' => '',
+          'multiple_to' => '',
+          'show_remaining_days' => FALSE,
+        ),
+        'type' => 'date_default',
+        'weight' => 10,
+      ),
+    ),
+    'entity_type' => 'farm_plan',
+    'field_name' => 'field_growing_season_date_range',
+    'label' => 'Growing Season Date Range',
+    'required' => 0,
+    'settings' => array(
+      'default_value' => 'now',
+      'default_value2' => 'same',
+      'default_value_code' => '',
+      'default_value_code2' => '',
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'date',
+      'settings' => array(
+        'increment' => 15,
+        'input_format' => 'm/d/Y - H:i:s',
+        'input_format_custom' => '',
+        'label_position' => 'above',
+        'no_fieldset' => 0,
+        'text_parts' => array(),
+        'year_range' => '-3:+3',
+      ),
+      'type' => 'date_popup',
+      'weight' => 7,
+    ),
+  );
+
   // Translatables
   // Included for use with string extractors like potx.
+  t('Average Annual Precipitation');
+  t('Average Season Precipitation');
   t('Date range');
   t('Days bulk feeding');
   t('Days of drought reserve');
   t('Define the date range for this grazing plan.');
   t('Does this plan take place during the growing season? Uncheck this box if your paddocks will not have actively growing forage during the date range of the plan. This will affect some calculations and recommendations when you are planning your rotations, and will utilize the settings below.');
+  t('Expected average annual precipitation.');
+  t('Expected average precipitation for the Season.');
   t('Expected number of rotations');
+  t('Expected start and end of the growing season.');
   t('Gather the team of people that implemented last years plan and that will be responsible for this year\'s plan. Consider your goals and the goals for the landscape you wish to create. Make a list of factors that will touch on livestock, wildlife, crops, haying, etc. Think through how the entire ranch will be used considering the number of cells, herds, stocking rates, cropping, drought reserve and biological monitoring. Enter all ideas in this planning factors field for future reference.');
+  t('Growing Season Date Range');
   t('Growing season');
   t('Planning factors');
 

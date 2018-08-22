@@ -51,6 +51,9 @@ function farm_grazing_field_group_info() {
     'weight' => '3',
     'children' => array(
       0 => 'field_farm_grazing_factors',
+      1 => 'field_grazing_avg_annual_precip',
+      2 => 'field_grazing_avg_season_precip',
+      3 => 'field_growing_season_date_range',
     ),
     'format_type' => 'field_group_easy_responsive_tabs_nav_item',
     'format_settings' => array(
@@ -77,8 +80,8 @@ function farm_grazing_field_group_info() {
     'weight' => '0',
     'children' => array(
       0 => 'group_farm_general',
-      1 => 'group_non_growing',
-      2 => 'group_farm_misc',
+      1 => 'group_farm_misc',
+      2 => 'group_non_growing',
     ),
     'format_type' => 'field_group_easy_responsive_tabs_nav',
     'format_settings' => array(
@@ -113,10 +116,10 @@ function farm_grazing_field_group_info() {
     'label' => 'Non-growing season',
     'weight' => '2',
     'children' => array(
-      0 => 'field_grazing_growing_season',
-      1 => 'field_days_bulk_feeding',
-      2 => 'field_days_of_drought_reserve',
-      3 => 'field_expected_rotations',
+      0 => 'field_days_bulk_feeding',
+      1 => 'field_days_of_drought_reserve',
+      2 => 'field_expected_rotations',
+      3 => 'field_grazing_growing_season',
     ),
     'format_type' => 'field_group_easy_responsive_tabs_nav_item',
     'format_settings' => array(
