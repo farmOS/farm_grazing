@@ -267,7 +267,7 @@ function farm_grazing_plan_herds_manage_form($form, &$form_state, $plan_obj) {
       // sum up the sau by month
       for ($i = 0; $i <= $num_months; $i++) {
         $key = $date->format('Ym');
-        if (isset($helper[$key])) {
+        if (isset($helper[$key]) and isset($row[$helper[$key]])) {
           $row[$helper[$key]] = $row[$helper[$key]] + $sau;
 
           // If there is missing data, add an error class.
