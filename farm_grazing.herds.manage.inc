@@ -411,6 +411,11 @@ function farm_grazing_plan_herds_add_submit($form, &$form_state) {
  */
 function farm_grazing_plan_herd_remove_form($form, &$form_state, $plan_obj, $herd_id) {
 
+  if (!is_numberic($herd_id)) {
+      drupal_set_message(t('Invalid herd_id, must be a positive integer.'), 'error');
+      return;
+  }
+
   // Load the herd
   $herd = farm_asset_load($herd_id);
 

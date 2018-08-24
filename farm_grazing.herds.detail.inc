@@ -16,6 +16,11 @@ function farm_grazing_plan_herds_detail_form($form, &$form_state, $plan_obj, $he
   // Add herds CSS.
   drupal_add_css(drupal_get_path('module', 'farm_grazing') . '/css/herds.css');
 
+  if (!is_numeric($herd_id)) {
+      drupal_set_message(t('Invalid herd_id, must be a positive integer.'), 'error');
+      return;
+  }
+
   // get the plan id from the plan object
   $plan = $plan_obj->id;
 
