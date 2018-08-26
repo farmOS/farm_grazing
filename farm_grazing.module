@@ -365,6 +365,10 @@ function farm_grazing_farm_plan_consideration_types() {
       'label' => t('Paddock exclusion'),
       'color' => 'orange',
     ),
+    'non-grazing' => array(
+      'label' => t('Non-grazing paddock'),
+      'color' => 'bisque',
+    ),
   );
 }
 
