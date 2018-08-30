@@ -288,7 +288,7 @@ function farm_grazing_plan_herds_manage_form($form, &$form_state, $plan_obj) {
   // sum the columns in each row to get totals
   $peak_sau = 0;
   $totals = array(t('Total SAU'));
-  for ($i = 0; $i <= $num_plan_months; $i++) {
+  for ($i = 0; $i < $num_plan_months; $i++) {
     $sum = 0;
     foreach ($rows as $row) {
       if (isset($row[$i + 1])) {
