@@ -91,7 +91,7 @@ function farm_grazing_plan_projections_form($form, &$form_state, $plan_obj) {
     // Return markup.
     $form['text'] = array(
       '#markup' => t('<p>' .
-        t('You can enter births, harvests and avg. weight changes for the herd(s) on a month by month basis over the plan. The initial headcount is based on the arrival and departure dates defined for the animals in the herd and total monthly head count is based on that plus births and minus harvests.') .
+        t('You can enter births, harvests and avg. weight changes for the herd(s) on a month by month basis over the plan. The initial headcount is based on the arrival and departure dates defined for the animals in the herd and total monthly head count is based on that plus births and minus harvests. Adjustments to Plan Head Count is the running sum or births - harvests over each month, so plan - adj = projected head count.') .
         '</p>' .
         ''),
     );
@@ -125,7 +125,7 @@ function farm_grazing_plan_projections_form($form, &$form_state, $plan_obj) {
                 if ($key == 'proj_id') {
                     // NOP
                 }
-                elseif ($key == 'head_count' or $key == 'total_hc') {
+                elseif ($key == 'head_count' or $key == 'total_hc' or $key == 'hc_adj') {
                     $form['section'][$herd_id]['table'][$key][$month] = array(
                         '#prefix' => '<p>',
                         '#markup' => $val,
@@ -191,6 +191,7 @@ function farm_grazing_herd_projections_titles() {
         'head_count' => t('Plan Head Count'),
         'births' => t('Births'),
         'harvests' => t('Harvests'),
+        'hc_adj' => t('Adjustment to Plan Head Count'),
         'total_hc' => t('Projected Head Count'),
     );
 };
@@ -309,6 +310,7 @@ function farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months) {
         $data['head_count'][$key] = 0;
         $data['births'][$key] = 0;
         $data['harvests'][$key] = 0;
+        $data['hc_adj'][$key] = 0;
         $data['total_hc'][$key] = 0;
         $data['weight'][$key] = 0;
 
@@ -367,6 +369,7 @@ function farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months) {
             $data['weight'][$month] += $rec['head_count'] * $rec['weight'];
             $data['births'][$month] = 0;
             $data['harvests'][$month] = 0;
+            $data['hc_adj'][$month] = 0;
 
             // TODO: do we need to add an error class if there is missing animal data??
             // like: farm_grazing.herds.manage.inc:273
@@ -387,6 +390,7 @@ function farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months) {
     // get database records from farm_grazing_herd_projection for plan_id, herd_id order by yr_mon
 
     $result = db_query("SELECT * FROM {farm_grazing_herd_projections} WHERE plan_id=:plan_id and herd_id=:herd_id ORDER BY yr_mon", array(':plan_id' => $plan_id, ':herd_id' => $herd_id));
+    $hc_adj = 0;
     foreach ($result as $rec) {
         $month = $rec->yr_mon;
         if (array_key_exists($month, $data['head_count'])) {
@@ -395,6 +399,8 @@ function farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months) {
             $data['births'][$month] = $rec->births;
             $data['harvests'][$month] = $rec->harvests;
             $data['weight'][$month] = $rec->avg_weight;
+            $hc_adj += $rec->births - $rec->harvests;
+            $data['hc_adj'][$month] = $hc_adj;
         }
         elseif (!array_key_exists($month, $data['head_count']) or $month < $p_start_ym or $key > $p_end_ym) {
             // if the key does not exist then we have no initial head count so something is wrong
@@ -409,7 +415,7 @@ function farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months) {
     // compute total head count after births and harvests
 
     foreach (array_keys($data['head_count']) as $month) {
-        $data['total_hc'][$month] = $data['head_count'][$month] + $data['births'][$month] - $data['harvests'][$month];
+        $data['total_hc'][$month] = $data['head_count'][$month] + $data['hc_adj'][$month];
     }
 
     return $data;
