@@ -255,8 +255,8 @@ function farm_grazing_schema() {
         'unsigned' => TRUE,
         'default' => 0,
       ),
-      'culls' => array(
-        'description' => 'Projected cull count for this month.',
+      'harvests' => array(
+        'description' => 'Projected harvest count for this month.',
         'type' => 'int',
         'not null' => TRUE,
         'unsigned' => TRUE,
@@ -364,8 +364,8 @@ function farm_grazing_update_7003(&$sandbox) {
                  'unsigned' => TRUE,
                  'default' => 0,
              ),
-             'culls' => array(
-                 'description' => 'Projected cull count for this month.',
+             'harvests' => array(
+                 'description' => 'Projected harvest count for this month.',
                  'type' => 'int',
                  'not null' => TRUE,
                  'unsigned' => TRUE,

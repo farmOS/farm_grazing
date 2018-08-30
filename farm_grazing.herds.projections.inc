@@ -18,8 +18,9 @@
  *     Avg. Weight      | ... | ... | ... | ... | ... | ...
  *     Initial Head Cnt | ... | ... | ... | ... | ... | ...
  *     Births           | ... | ... | ... | ... | ... | ...
- *     Culls            | ... | ... | ... | ... | ... | ...
- *     Head Count       | ... | ... | ... | ... | ... | ...
+ *     Harvests         | ... | ... | ... | ... | ... | ...
+ *     Head Count Adj.  | ... | ... | ... | ... | ... | ...
+ *     Total Head Cnt   | ... | ... | ... | ... | ... | ...
  *
  *   repeat for additional herds
  *
@@ -29,7 +30,7 @@
  *
  * Where:
  *   - Initial Head Cnt comes from arrival and departure dates
- *   - Head Count is computed as Initial + births - Culls
+ *   - Head Count is computed as Initial + births - harvests
  *   - and these two fields are not editable
  */
 
@@ -90,7 +91,7 @@ function farm_grazing_plan_projections_form($form, &$form_state, $plan_obj) {
     // Return markup.
     $form['text'] = array(
       '#markup' => t('<p>' .
-        t('You can enter births, culls and avg. weight changes for the herd(s) on a month by month basis over the plan. The initial headcount is based on the arrival and departure dates defined for the animals in the herd and total monthly head count is based on that plus births and minus culls.') .
+        t('You can enter births, harvests and avg. weight changes for the herd(s) on a month by month basis over the plan. The initial headcount is based on the arrival and departure dates defined for the animals in the herd and total monthly head count is based on that plus births and minus harvests.') .
         '</p>' .
         ''),
     );
@@ -189,7 +190,7 @@ function farm_grazing_herd_projections_titles() {
         'weight' => t('Avg Weight'),
         'head_count' => t('Plan Head Count'),
         'births' => t('Births'),
-        'culls' => t('Culls'),
+        'harvests' => t('Harvests'),
         'total_hc' => t('Projected Head Count'),
     );
 };
@@ -212,7 +213,7 @@ function farm_grazing_herd_projections_titles() {
  *              weight => float         count by month in plan
  *              head_count => int       initial head cnt by month
  *              births => int           num births by month
- *              culls => init           num culls by month
+ *              harvests => int         num harvests by month
  *          ),
  *      ),
  *    ),
@@ -267,7 +268,7 @@ function farm_grazing_get_herd_projections_for_plan($plan_id) {
  *      weight => float             avg weight for herd in this month
  *      head_count => int           initial head cnt this month
  *      births => int               num births this month
- *      culls => int                num culls this month
+ *      harvests => int             num harvests this month
  *    ),
  *    ...                    repeated for num_months
  *  )
@@ -307,7 +308,7 @@ function farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months) {
         $data['proj_id'][$key] = 0;
         $data['head_count'][$key] = 0;
         $data['births'][$key] = 0;
-        $data['culls'][$key] = 0;
+        $data['harvests'][$key] = 0;
         $data['total_hc'][$key] = 0;
         $data['weight'][$key] = 0;
 
@@ -365,7 +366,7 @@ function farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months) {
             $data['head_count'][$month] += $rec['head_count'];
             $data['weight'][$month] += $rec['head_count'] * $rec['weight'];
             $data['births'][$month] = 0;
-            $data['culls'][$month] = 0;
+            $data['harvests'][$month] = 0;
 
             // TODO: do we need to add an error class if there is missing animal data??
             // like: farm_grazing.herds.manage.inc:273
@@ -392,7 +393,7 @@ function farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months) {
             // add fields from DB and over write the avg_weight with the DB value
             $data['proj_id'][$month] = $rec->proj_id;
             $data['births'][$month] = $rec->births;
-            $data['culls'][$month] = $rec->culls;
+            $data['harvests'][$month] = $rec->harvests;
             $data['weight'][$month] = $rec->avg_weight;
         }
         elseif (!array_key_exists($month, $data['head_count']) or $month < $p_start_ym or $key > $p_end_ym) {
@@ -405,10 +406,10 @@ function farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months) {
 
     }
 
-    // compute total head count after births and culls
+    // compute total head count after births and harvests
 
     foreach (array_keys($data['head_count']) as $month) {
-        $data['total_hc'][$month] = $data['head_count'][$month] + $data['births'][$month] - $data['culls'][$month];
+        $data['total_hc'][$month] = $data['head_count'][$month] + $data['births'][$month] - $data['harvests'][$month];
     }
 
     return $data;
@@ -432,7 +433,7 @@ function farm_grazing_get_herd_projections_form_submit($form, &$form_state) {
     $plan_id = $form['plan_id']['#value'];
 
     // list of fields we need to update
-    $fields = array('births', 'culls', 'weight');
+    $fields = array('births', 'harvests', 'weight');
 
     // collect data for inserts and updates
     $data = array();
@@ -465,7 +466,7 @@ function farm_grazing_get_herd_projections_form_submit($form, &$form_state) {
     // $data[plan_id][herd_id][yr_mon] = array(
     //      proj_id => ...,
     //      births => ...,
-    //      culls => ...,
+    //      harvests => ...,
     //      avg_weight => ...,
     //      yr_mon => ...,
     //  );
