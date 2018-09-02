@@ -264,14 +264,13 @@ function farm_grazing_get_herd_projections_for_plan($plan_id) {
  *      Array(year_start, month_start, num_months)
  *
  *  @return array(          data for herd_id
- *    yr_mon => array(          YYYYMM for the month in the plan
- *      proj_id => int | 0          db table rec or 0 if no record yet
- *      weight => float             avg weight for herd in this month
- *      head_count => int           initial head cnt this month
- *      births => int               num births this month
- *      harvests => int             num harvests this month
- *    ),
- *    ...                    repeated for num_months
+ *      proj_id => array(yr_mon => int | 0, ...),          db table rec or 0 if no record yet
+ *      weight => array(yr_mon => float, ...),             avg weight for herd by month
+ *      head_count => array(yr_mon => int, ...),           initial head cnt by month
+ *      births => array(yr_mon => int, ...),               num births by month
+ *      harvests => array(yr_mon => int, ...),             num harvests by month
+ *      hc_adj => array(yr_mon => int, ...),               run total of head count adjustments by month
+ *      total_hc => array(yr_mon => int, ...),             total head count after adjustments by month
  *  )
  *
  *  Issues that need to be dealt with here:
@@ -377,13 +376,13 @@ function farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months) {
             // increment the month
             $date->modify('+1 month');
         }
+    }
 
-        // convert sum weight to average weight (avoid divide by zero)
-        foreach (array_keys($data['head_count']) as $month) {
-            $val = $data['head_count'][$month];
-            if ($val > 0) {
-                $data['weight'][$month] /= $val;
-            }
+    // convert sum weight to average weight (avoid divide by zero)
+    foreach (array_keys($data['head_count']) as $month) {
+        $val = $data['head_count'][$month];
+        if ($val > 0) {
+            $data['weight'][$month] /= $val;
         }
     }
 
@@ -400,6 +399,9 @@ function farm_grazing_get_herd_projections($plan_id, $herd_id, $plan_months) {
             $data['harvests'][$month] = $rec->harvests;
             $data['weight'][$month] = $rec->avg_weight;
             $hc_adj += $rec->births - $rec->harvests;
+            if ($data['head_count'][$month] == 0 and $hc_adj < 0) {
+                $hc_adj = 0;
+            }
             $data['hc_adj'][$month] = $hc_adj;
         }
         elseif (!array_key_exists($month, $data['head_count']) or $month < $p_start_ym or $key > $p_end_ym) {
@@ -518,7 +520,7 @@ function theme_farm_grazing_plan_projections_form(&$vars) {
 
     $titles = farm_grazing_herd_projections_titles();
 
-    $header = array('Year Month');
+    $header = array('&nbsp;');
     $rows = array();
     $first = TRUE;
     foreach (element_children($form['section']) as $herd_id) {
@@ -527,7 +529,8 @@ function theme_farm_grazing_plan_projections_form(&$vars) {
             if ($first) {
                 foreach (element_children($form['section'][$herd_id]['table'][$key]) as $month) {
                     $months[] = $month;
-                    $header[] = $month;
+                    $date = DateTime::createFromFormat('Ym', $month);
+                    $header[] = $date->format('M Y');
                 }
                 $first = FALSE;
             }

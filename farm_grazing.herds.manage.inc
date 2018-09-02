@@ -12,6 +12,7 @@ function farm_grazing_plan_herds_manage_form($form, &$form_state, $plan_obj) {
 
   // Load utility functions.
   module_load_include('inc', 'farm_grazing', 'farm_grazing.utils');
+  module_load_include('inc', 'farm_grazing', 'farm_grazing.herds.projections');
 
   // Add herds CSS.
   drupal_add_css(drupal_get_path('module', 'farm_grazing') . '/css/herds.css');
@@ -51,7 +52,10 @@ function farm_grazing_plan_herds_manage_form($form, &$form_state, $plan_obj) {
       t('A herd is defined as a group of animals that will be rotated between paddocks together regardless of the make up of animals in the herd.') .
       '</p><p>' .
       t('You can define animals <a href="@add_animal">HERE</a> and assign them to a group. See the Help for more information.', array('@add_animal' => url('farm/asset/add/animal'))) .
-      '</p>' .
+      '</p><p>' .
+      t('The "Summary of Herds in Plan" does NOT include projections, it is based on the planned arrival and departure dates only.') .
+      '</p><p>' .
+      t('Using the next tab "Projections", you can define births and harvests for the herd and provide monthly average weights for the herds. After adding projections you chould come back to the "Manage" tab and review how that impacts Peak Monthly SAU and Stocking Rate for your plan.') .
       ''),
   );
 
@@ -214,12 +218,14 @@ function farm_grazing_plan_herds_manage_form($form, &$form_state, $plan_obj) {
 
   // generate array of months between start and end
   $num_months = $diff->y * 12 + $diff->m;
-  $date = $start_date;
+
+  $plan_months = farm_grazing_get_num_months_between($start_ts, $end_ts);
 
   $header = array('Herd');
 
   // generate the header text
   $helper = array();
+  $date = clone $start_date;
   for ($i = 0; $i <= $num_months; $i++) {
     $key = $date->format('Ym');
     $helper[$key] = $i;
@@ -238,51 +244,29 @@ function farm_grazing_plan_herds_manage_form($form, &$form_state, $plan_obj) {
     // initial row for this herd
     $row = array_fill(0, $num_plan_months, 0);
 
-    foreach ($this_herd['herd_data'] as $rec) {
-      $sau = $rec['head_count'] * $rec['weight'] / 1000.0;
-      $start_date = date_create_from_format('Y-m-d', $rec['arrival']);
-      $end_date = date_create_from_format('Y-m-d', $rec['departure']);
+    $herd_id = $this_herd['herd_id'];
+    $data = farm_grazing_get_herd_projections($plan, $herd_id, $plan_months);
 
-      // If the start/end date are empty, use the plan's start/end date.
-      if (empty($start_date)) {
-        $start_date = new DateTime();
-        $start_date->setTimestamp($start_ts);
-      }
-      if (empty($end_date)) {
-        $end_date = new DateTime();
-        $end_date->setTimestamp($end_ts);
-      }
+    $date = clone $start_date;
+    for ($i=0; $i<$plan_months[1]; $i++) {
+        $month = $date->format('Ym');
 
-      // get the DateInterval between them
-      $diff = $start_date->diff($end_date);
-
-      // generate array of months between start and end
-      $num_months = $diff->y * 12 + $diff->m;
-
-      // force the date to first day of month
-      list($y, $m, $d) = explode(',', $start_date->format('Y,m,d'));
-      $date = new DateTime();
-      $date->setDate($y, $m, 1);
-
-      // sum up the sau by month
-      for ($i = 0; $i <= $num_months; $i++) {
-        $key = $date->format('Ym');
-        if (isset($helper[$key]) and isset($row[$helper[$key]])) {
-          $row[$helper[$key]] = $row[$helper[$key]] + $sau;
-
-          // If there is missing data, add an error class.
-          if (!empty($missing_animal_data)) {
-            $row[$helper[$key]] = '<span class="error">' . $row[$helper[$key]] . '</span>';
-          }
+        if (isset($helper[$month]) and isset($row[$helper[$month]])) {
+            $row[$helper[$month]] = round($data['total_hc'][$month] * $data['weight'][$month] / 1000.0, 1);
+            // If there is missing data, add an error class.
+            if (!empty($missing_animal_data)) {
+                $row[$helper[$month]] = '<span class="error">' . $row[$helper[$month]] . '</span>';
+            }
         }
 
         // increment the month
         $date->modify('+1 month');
-      }
     }
+
     array_unshift($row, $this_herd['herd_name']);
     array_push($row, $this_herd['herd_id']);
     $rows[] = $row;
+
   }
 
   // sum the columns in each row to get totals
@@ -315,7 +299,7 @@ function farm_grazing_plan_herds_manage_form($form, &$form_state, $plan_obj) {
   // Add table SAU by Plan Month for each herd
   $form['section_3']['title'] = array(
     '#prefix' => '<h4>',
-    '#markup' => t('SAU by Month'),
+    '#markup' => t('Projected SAU by Month'),
     '#suffix' => '</h4>',
   );
 
