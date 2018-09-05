@@ -55,7 +55,7 @@ function farm_grazing_plan_herds_manage_form($form, &$form_state, $plan_obj) {
       '</p><p>' .
       t('The "Summary of Herds in Plan" does NOT include projections, it is based on the planned arrival and departure dates only.') .
       '</p><p>' .
-      t('Using the next tab "Projections", you can define births and harvests for the herd and provide monthly average weights for the herds. After adding projections you chould come back to the "Manage" tab and review how that impacts Peak Monthly SAU and Stocking Rate for your plan.') .
+      t('Using the next tab "Projections", you can define births and harvests for the herd and provide monthly average weights for the herds. After adding projections you should come back to this "Manage" tab and review how that impacts Peak Monthly SAU and Stocking Rate for your plan.') .
       ''),
   );
 
