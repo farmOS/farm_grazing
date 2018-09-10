@@ -91,7 +91,7 @@ function farm_grazing_select_paddocks_form_submit($form, &$form_state) {
   // first add records that have been selected and don't already exist
   foreach ($paddocks as $key => $id) {
     // if the incoming selection exists in the db we have nothing to do
-    if (isset($old_selected[$key]) || in_array($key, $old_selected)) {
+    if (in_array($key, $old_selected)) {
       continue;
     }
     db_insert('farm_grazing_plan_paddock')
