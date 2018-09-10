@@ -109,7 +109,7 @@ function farm_grazing_select_paddocks_form_submit($form, &$form_state) {
     // if an existing db record is in the incoming selections
     // we have nothing to do
     // otherwise we should delete it
-    if (isset($paddocks[$key]) || array_key_exists($key, $paddocks)) {
+    if (array_key_exists($key, $paddocks)) {
       continue;
     }
     db_delete('farm_grazing_plan_paddock')
