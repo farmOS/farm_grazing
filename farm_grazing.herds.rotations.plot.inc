@@ -122,8 +122,8 @@ function farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $considerations, $st
                 if ($rec->type != 'urgent') {
                     continue;
                 }
-                $c_start = date('Y-m-d', $rec->start);
-                $c_end = date('Y-m-d', $rec->end);
+                $c_start = date('Y-m-d', $rec->start_time);
+                $c_end = date('Y-m-d', $rec->end_time);
                 $sday = farm_grazing_get_days_between_dates($plan_start, $c_start);
                 $eday = farm_grazing_get_days_between_dates($plan_start, $c_end);
                 $x1 = $sday * $day_width;
@@ -148,8 +148,8 @@ function farm_grazing_plan_plot_svg($plan_obj, $paddock_id, $considerations, $st
                 if ($rec->type != 'concern') {
                     continue;
                 }
-                $c_start = date('Y-m-d', $rec->start);
-                $c_end = date('Y-m-d', $rec->end);
+                $c_start = date('Y-m-d', $rec->start_time);
+                $c_end = date('Y-m-d', $rec->end_time);
                 $sday = farm_grazing_get_days_between_dates($plan_start, $c_start);
                 $eday = farm_grazing_get_days_between_dates($plan_start, $c_end);
                 $x1 = $sday * $day_width;
@@ -267,8 +267,8 @@ function farm_grazing_get_paddock_exclusions($plan_id, $paddock_id) {
 
   // get query paddock exclusions
   $records = db_query("SELECT e.entity_id as paddock_id,
-      c.start as start_date,
-      c.end as end_date,
+      c.start_time as start_date,
+      c.end_time as end_date,
       c.name as exclusion_type
       FROM {farm_plan_consideration} c JOIN {farm_plan_consideration_entity} e ON c.id=e.consideration_id
       WHERE c.type='farm_grazing_exclusion' AND e.entity_type='taxonomy_term' AND e.entity_id=:paddock_id",

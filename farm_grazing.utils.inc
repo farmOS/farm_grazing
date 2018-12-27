@@ -1063,13 +1063,13 @@ function farm_grazing_get_plan_considerations($plan_obj) {
     // those represented by |---|
     //
 
-    $sql = "SELECT e.entity_id, e.entity_type, c.type, c.start, c.end, c.name
+    $sql = "SELECT e.entity_id, e.entity_type, c.type, c.start_time, c.end_time, c.name
         FROM {farm_plan_consideration} c
         LEFT JOIN {farm_plan_consideration_entity} e
         ON c.id=e.consideration_id
-        WHERE c.start <= :plan_end AND c.end >= :plan_start
+        WHERE c.start_time <= :plan_end AND c.end_time >= :plan_start
         AND ( c.plan_id=:plan_id OR c.plan_id IS NULL)
-        ORDER BY c.start";
+        ORDER BY c.start_time";
 
     $records = db_query($sql, array(':plan_start' => $plan_start, ':plan_end' => $plan_end, ':plan_id' => $plan_obj->id));
 
