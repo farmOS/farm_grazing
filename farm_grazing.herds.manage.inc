@@ -67,7 +67,7 @@ function farm_grazing_plan_herds_manage_form($form, &$form_state, $plan_obj) {
   // Build a list of other herds to select from (excluding ones that are
   // are already in the plan.
   $herd_options = array();
-  $result = db_query("SELECT id, name FROM {farm_asset} WHERE type='group' AND archived IS NULL ORDER BY name");
+  $result = db_query("SELECT id, name FROM {farm_asset} WHERE type='group' AND archived = 0 ORDER BY name");
   foreach ($result as $row) {
     if (!empty($row->id) && !array_key_exists($row->id, $plan_herds)) {
       $herd_options[$row->id] = $row->name;
