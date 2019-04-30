@@ -12,6 +12,7 @@ dependencies[] = farm_fields
 dependencies[] = farm_group
 dependencies[] = farm_inventory
 dependencies[] = farm_livestock
+dependencies[] = farm_livestock_area_types
 dependencies[] = farm_movement
 dependencies[] = farm_plan
 dependencies[] = farm_plan_consideration
