@@ -52,8 +52,11 @@ function farm_grazing_permission() {
 function farm_grazing_farm_access_perms($role) {
   $perms = array();
 
-  // If the role is "Farm Manager", grant access to grazing configuration.
-  if ($role == 'Farm Manager') {
+  // Load the list of farm roles.
+  $roles = farm_access_roles();
+
+  // If this role has 'config' access, grant access to grazing configuration.
+  if (!empty($roles[$role]['access']['config'])) {
     $perms[] = 'administer farm_grazing module';
   }
 
