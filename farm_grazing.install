@@ -121,6 +121,11 @@ function farm_grazing_schema() {
     ),
   );
 
+  /**
+   * @todo
+   * Use {farm_plan_area} table instead.
+   * Depends on moving paddock quality to logs.
+   */
   $schema['farm_grazing_plan_paddock'] = array(
     'description' => 'Relate paddocks to a plan and productivity quality',
     'fields' => array(
@@ -178,6 +183,10 @@ function farm_grazing_schema() {
     'primary key' => array('plan_id', 'month'),
   );
 
+  /**
+   * @todo
+   * Use {farm_plan_asset} table instead.
+   */
   $schema['farm_grazing_herds'] = array(
     'description' => 'An arbitrary collection of farmOS groups that will be rotated together as a single herd.',
     'fields' => array(
