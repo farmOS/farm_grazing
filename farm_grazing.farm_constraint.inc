@@ -10,7 +10,8 @@
  */
 function farm_grazing_farm_constraint($type, $bundle, $id) {
 
-  // Define grazing plan references to check for.
+  // Define plan references to check for
+  // (see farm_constraint_table_references_exist()).
   $plan_references = array(
     'herd' => array(
       'type' => 'farm_asset',
@@ -36,17 +37,7 @@ function farm_grazing_farm_constraint($type, $bundle, $id) {
       ),
     ),
   );
-  foreach ($plan_references as $info) {
-    if ($type == $info['type'] && $bundle == $info['bundle']) {
-      foreach ($info['tables'] as $table => $column) {
-        $exists = db_query('SELECT COUNT(*) FROM {' . $table . '} WHERE ' . $column . ' = :id', array(':id' => $id))->fetchField();
-        if (!empty($exists)) {
-          return TRUE;
-        }
-      }
-    }
-  }
 
-  // If nothing was found, return FALSE.
-  return FALSE;
+  // Check to see if references exist.
+  return farm_constraint_table_references_exist($plan_references, $type, $bundle, $id);
 }

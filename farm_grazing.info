@@ -8,6 +8,7 @@ dependencies[] = entity
 dependencies[] = farm_area
 dependencies[] = farm_asset
 dependencies[] = farm_asset_property
+dependencies[] = farm_constraint
 dependencies[] = farm_fields
 dependencies[] = farm_group
 dependencies[] = farm_inventory
