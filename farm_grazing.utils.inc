@@ -599,7 +599,7 @@ function farm_grazing_get_grazing_group_detailed_info($asset_id, &$data) {
     $dmi_factor = farm_grazing_get_animal_type_dmi_factor($type);
 
     // Get the weight value and units, if they exist.
-    $weight = farm_livestock_animal_weight($asset);
+    $weight = farm_livestock_weight($asset);
     $weight_value = !empty($weight['value']) ? $weight['value'] : '';
     $weight_units = !empty($weight['units']) ? $weight['units'] : '';
 
