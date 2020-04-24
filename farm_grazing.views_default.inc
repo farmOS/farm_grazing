@@ -44,34 +44,43 @@ function farm_grazing_views_default_views() {
   $handler->display->display_options['style_options']['columns'] = array(
     'id' => 'id',
     'name' => 'name',
-    'type' => 'type',
+    'field_farm_date_range' => 'field_farm_date_range',
+    'field_grazing_growing_season' => 'field_grazing_growing_season',
     'active' => 'active',
   );
-  $handler->display->display_options['style_options']['default'] = '-1';
+  $handler->display->display_options['style_options']['class'] = '';
+  $handler->display->display_options['style_options']['default'] = 'name';
   $handler->display->display_options['style_options']['info'] = array(
     'id' => array(
-      'sortable' => 0,
-      'default_sort_order' => 'asc',
+      'sortable' => 1,
+      'default_sort_order' => 'desc',
       'align' => '',
       'separator' => '',
       'empty_column' => 0,
     ),
     'name' => array(
+      'sortable' => 1,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'field_farm_date_range' => array(
       'sortable' => 0,
       'default_sort_order' => 'asc',
       'align' => '',
       'separator' => '',
       'empty_column' => 0,
     ),
-    'type' => array(
-      'sortable' => 0,
+    'field_grazing_growing_season' => array(
+      'sortable' => 1,
       'default_sort_order' => 'asc',
       'align' => '',
       'separator' => '',
       'empty_column' => 0,
     ),
     'active' => array(
-      'sortable' => 0,
+      'sortable' => 1,
       'default_sort_order' => 'asc',
       'align' => '',
       'separator' => '',
@@ -118,18 +127,6 @@ function farm_grazing_views_default_views() {
   $handler->display->display_options['fields']['active']['table'] = 'farm_plan';
   $handler->display->display_options['fields']['active']['field'] = 'active';
   $handler->display->display_options['fields']['active']['not'] = 0;
-  /* Sort criterion: Farm plan: Name */
-  $handler->display->display_options['sorts']['name']['id'] = 'name';
-  $handler->display->display_options['sorts']['name']['table'] = 'farm_plan';
-  $handler->display->display_options['sorts']['name']['field'] = 'name';
-  $handler->display->display_options['sorts']['name']['exposed'] = TRUE;
-  $handler->display->display_options['sorts']['name']['expose']['label'] = 'Name';
-  /* Sort criterion: Farm plan: Active */
-  $handler->display->display_options['sorts']['active']['id'] = 'active';
-  $handler->display->display_options['sorts']['active']['table'] = 'farm_plan';
-  $handler->display->display_options['sorts']['active']['field'] = 'active';
-  $handler->display->display_options['sorts']['active']['exposed'] = TRUE;
-  $handler->display->display_options['sorts']['active']['expose']['label'] = 'Active';
   /* Filter criterion: Farm plan: Farm plan type */
   $handler->display->display_options['filters']['type']['id'] = 'type';
   $handler->display->display_options['filters']['type']['table'] = 'farm_plan';
