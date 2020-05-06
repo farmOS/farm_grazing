@@ -39,5 +39,7 @@ function farm_grazing_farm_constraint($type, $bundle, $id) {
   );
 
   // Check to see if references exist.
-  return farm_constraint_table_references_exist($plan_references, $type, $bundle, $id);
+  if (farm_constraint_table_references_exist($plan_references, $type, $bundle, $id)) {
+    return TRUE;
+  }
 }
