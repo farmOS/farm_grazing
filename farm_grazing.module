@@ -539,6 +539,11 @@ function farm_grazing_form_farm_asset_form_alter(&$form, &$form_state, $form_id)
 
   // Planned departure date.
   $planned_departure = farm_asset_property_get($asset->id, 'farm_grazing_planned_departure');
+  /**
+   * @todo
+   * Encountered on Paicines:
+   * Notice: A non well formed numeric value encountered in farm_grazing_form_farm_asset_form_alter() (line 545 of /var/www/html/sites/all/modules/farm/farm_grazing/farm_grazing.module).
+   */
   $form['farm_grazing']['farm_grazing_planned_departure'] = array(
     '#type' => 'date_select',
     '#title' => t('Planned departure date'),
